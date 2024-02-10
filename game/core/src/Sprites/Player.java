@@ -1,0 +1,221 @@
+package Sprites;
+
+import Screens.PlayScreen;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
+import com.mygdx.game.MyGDXGame;
+
+public class Player extends Sprite {
+    private static final int FRAME_WIDTH = 32;
+    private static final int FRAME_HEIGHT = 32;
+    private static final float ANIMATION_SPEED = 0.1f;
+    private static final float PLAYER_RADIUS = 8 / MyGDXGame.PPM;
+    private static final float LINEAR_DAMPING = 4f;
+    private static final float PLAYER_HEIGHT = 64 / MyGDXGame.PPM;
+    private static final float PLAYER_WIDTH = 64 / MyGDXGame.PPM;
+    private static final float VELOCITY_THRESHOLD = 0.8f;
+
+    // Enums for player state and direction
+    public enum State {
+        RUNNING,
+        STANDING
+    }
+
+    public enum runDirection {
+        UPPER,
+        RIGHT,
+        LOWER,
+        UP,
+        DOWN
+    }
+
+    public State currentState;
+    public State prevState;
+    public runDirection currentDirection;
+    public runDirection prevRunDirection;
+    public World world;
+    public Body b2body;
+    private TextureRegion playerStand;
+    private Animation<TextureRegion> playerRunUpper;
+    private Animation<TextureRegion> playerRun;
+    private Animation<TextureRegion> playerRunLower;
+    private Animation<TextureRegion> playerRunUp;
+    private Animation<TextureRegion> playerRunDown;
+    private boolean runningRight;
+    private float stateTimer;
+
+
+
+    public Player(World world, PlayScreen screen) {
+        super(screen.getAtlas().findRegion("player_spritesheet"));
+        this.world = world;
+        currentState = State.STANDING;
+        currentDirection = runDirection.RIGHT;
+        stateTimer = 0;
+        runningRight = true;
+
+        initializeAnimations();
+        definePlayer();
+
+        playerStand = new TextureRegion(getTexture(), 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
+
+        setBounds(0, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
+        setRegion(playerStand);
+    }
+
+    /**
+     * Initializes player animations using sprite sheet regions.
+     */
+    private void initializeAnimations() {
+        playerRunUpper = createAnimation(0, 3, 1);
+        playerRunLower = createAnimation(0, 3, 2);
+        playerRun = createAnimation(0, 5, 3);
+        playerRunDown = createAnimation(0, 3, 4);
+        playerRunUp = createAnimation(0, 3, 5);
+    }
+
+    /**
+     * Creates an animation from specified sprite sheet region parameters.
+     *
+     * @param startFrame The starting frame index in the sprite sheet.
+     * @param endFrame   The ending frame index in the sprite sheet.
+     * @param row        The row index in the sprite sheet.
+     * @return The created animation.
+     */
+    private Animation<TextureRegion> createAnimation(int startFrame, int endFrame, int row) {
+        Array<TextureRegion> frames = new Array<>();
+        for (int i = startFrame; i <= endFrame; i++) {
+            frames.add(new TextureRegion(getTexture(), i * FRAME_WIDTH, row * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT));
+        }
+        return new Animation<>(ANIMATION_SPEED, frames);
+    }
+
+    /**
+     * Updates the player's position and sets the appropriate animation frame.
+     *
+     * @param delta The time elapsed since the last frame.
+     */
+    public void update(float delta) {
+        setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
+        setRegion(getFrame(delta));
+    }
+
+
+    /**
+     * Retrieves the current animation frame based on the player's state and direction.
+     *
+     * @param dt The time elapsed since the last frame.
+     * @return The current animation frame.
+     */
+    public TextureRegion getFrame(float dt) {
+        currentState = getState();
+
+        // If we are standing, then there is no point in continuing and we can return playerStand
+        if (currentState == State.STANDING) {
+            return playerStand;
+        }
+
+        currentDirection = getRunDirection();
+
+        TextureRegion region;
+
+        // We will only check the right side directions. If it's left, then we can flip the region
+        // The UPPER and LOWER mean upper right and lower right respectively (maybe change the names)
+        switch (currentDirection) {
+            case UPPER:
+                region = playerRunUpper.getKeyFrame(stateTimer, true);
+                break;
+            case RIGHT:
+                region = playerRun.getKeyFrame(stateTimer, true);
+                break;
+            case LOWER:
+                region = playerRunLower.getKeyFrame(stateTimer, true);
+                break;
+            case UP:
+                region = playerRunUp.getKeyFrame(stateTimer, true);
+                break;
+            case DOWN:
+                region = playerRunDown.getKeyFrame(stateTimer, true);
+                break;
+            default:
+                region = playerStand;
+                break;
+        }
+        // Start the animation from the start if currentState or currentDirection have changed
+        stateTimer = (currentState == prevState && currentDirection == prevRunDirection) ? stateTimer + dt : 0;
+
+        // We will check if linear velocity indicates right or left movement and also check whether the region is already flipped
+        if (b2body.getLinearVelocity().x < 0 && !region.isFlipX()) {
+            region.flip(true, false);
+            runningRight = false;
+        } else if (b2body.getLinearVelocity().x > 0 && region.isFlipX()) {
+            region.flip(true, false);
+            runningRight = true;
+        }
+
+        prevState = currentState;
+        prevRunDirection = currentDirection;
+
+        return region;
+    }
+
+    /**
+     * Retrieves the current state of the player (standing or running) based on linear velocity.
+     *
+     * @return The current state of the player.
+     */
+    private State getState() {
+        float velocityX = b2body.getLinearVelocity().x;
+        float velocityY = b2body.getLinearVelocity().y;
+        float velocityThreshold = VELOCITY_THRESHOLD; // Added a velocity threshold as we want the standing texture to be rendered right away not when velocity reaches zero
+
+        if (Math.abs(velocityX) < velocityThreshold && Math.abs(velocityY) < velocityThreshold) {
+            return State.STANDING;
+        }
+
+        return State.RUNNING;
+    }
+
+    /**
+     * Retrieves the current running direction of the player based on linear velocity.
+     *
+     * @return The current running direction of the player (right side).
+     */
+    private runDirection getRunDirection() {
+        float velocityX = Math.abs(b2body.getLinearVelocity().x); // We only care for positive x here so for example if running direction is upper left, then we want to return upper right
+        float velocityY = b2body.getLinearVelocity().y;
+
+        if (velocityX > 0) {
+            if (velocityY > 0) return runDirection.UPPER;
+            else if (velocityY < 0) return runDirection.LOWER;
+            else return runDirection.RIGHT;
+        } else {
+            if (velocityY > 0) return runDirection.UP;
+            else if (velocityY < 0) return runDirection.DOWN;
+            else return null; // We should never reach this point hopefully as it means that the player isn't running
+        }
+    }
+
+    /**
+     * Defines the player's Box2D body and fixture.
+     */
+    public void definePlayer() {
+        BodyDef bdef = new BodyDef();
+        bdef.position.set(PLAYER_WIDTH, PLAYER_HEIGHT);
+        bdef.type = BodyDef.BodyType.DynamicBody;
+        b2body = world.createBody(bdef);
+
+        FixtureDef fdef = new FixtureDef();
+        CircleShape shape = new CircleShape();
+        shape.setRadius(PLAYER_RADIUS);
+
+        fdef.shape = shape;
+        b2body.createFixture(fdef);
+
+        // Set linear damping to simulate friction
+        b2body.setLinearDamping(LINEAR_DAMPING);
+    }
+}
