@@ -37,7 +37,7 @@ public class Player extends Sprite {
     public runDirection currentDirection;
     public runDirection prevRunDirection;
     public World world;
-    public Body b2body;
+    public static Body b2body;
     private TextureRegion playerStand;
     private Animation<TextureRegion> playerRunUpper;
     private Animation<TextureRegion> playerRun;
@@ -102,7 +102,6 @@ public class Player extends Sprite {
         setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
         setRegion(getFrame(delta));
     }
-
 
     /**
      * Retrieves the current animation frame based on the player's state and direction.

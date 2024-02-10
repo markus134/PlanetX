@@ -60,21 +60,29 @@ public class PlayScreen implements Screen, InputProcessor {
         return atlas;
     }
 
+    private void sendPositionToServer() {
+        MyGDXGame.client.sendTCP(player.b2body.getPosition().x + "," + player.b2body.getPosition().y);
+    }
+
     private void handleInput() {
         if (keyPresses > 0) {
             for (Integer keypress : keysPressed) {
                 switch (keypress) {
                     case Input.Keys.W:
                         player.b2body.applyLinearImpulse(new Vector2(0, 0.1f), player.b2body.getWorldCenter(), true);
+                        sendPositionToServer();
                         break;
                     case Input.Keys.S:
                         player.b2body.applyLinearImpulse(new Vector2(0, -0.1f), player.b2body.getWorldCenter(), true);
+                        sendPositionToServer();
                         break;
                     case Input.Keys.D:
                         player.b2body.applyLinearImpulse(new Vector2(0.1f, 0), player.b2body.getWorldCenter(), true);
+                        sendPositionToServer();
                         break;
                     case Input.Keys.A:
                         player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
+                        sendPositionToServer();
                         break;
                 }
             }
