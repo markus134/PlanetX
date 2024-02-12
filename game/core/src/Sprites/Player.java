@@ -8,6 +8,8 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
 
+import java.util.ArrayList;
+
 public class Player extends Sprite {
     private static final int FRAME_WIDTH = 32;
     private static final int FRAME_HEIGHT = 32;
@@ -37,15 +39,17 @@ public class Player extends Sprite {
     public runDirection currentDirection;
     public runDirection prevRunDirection;
     public World world;
-    public static Body b2body;
+    public Body b2body;
     private TextureRegion playerStand;
     private Animation<TextureRegion> playerRunUpper;
     private Animation<TextureRegion> playerRun;
     private Animation<TextureRegion> playerRunLower;
     private Animation<TextureRegion> playerRunUp;
     private Animation<TextureRegion> playerRunDown;
-    private boolean runningRight;
+    public ArrayList<TextureRegion> playerAllFrames = new ArrayList<>();
+    public boolean runningRight;
     private float stateTimer;
+    public TextureRegion region;
 
 
 
@@ -61,6 +65,7 @@ public class Player extends Sprite {
         definePlayer();
 
         playerStand = new TextureRegion(getTexture(), 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
+        playerAllFrames.add(playerStand);
 
         setBounds(0, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
         setRegion(playerStand);
@@ -88,7 +93,9 @@ public class Player extends Sprite {
     private Animation<TextureRegion> createAnimation(int startFrame, int endFrame, int row) {
         Array<TextureRegion> frames = new Array<>();
         for (int i = startFrame; i <= endFrame; i++) {
-            frames.add(new TextureRegion(getTexture(), i * FRAME_WIDTH, row * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT));
+            TextureRegion textureRegion = new TextureRegion(getTexture(), i * FRAME_WIDTH, row * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT);
+            frames.add(textureRegion);
+            playerAllFrames.add(textureRegion);
         }
         return new Animation<>(ANIMATION_SPEED, frames);
     }
@@ -100,7 +107,8 @@ public class Player extends Sprite {
      */
     public void update(float delta) {
         setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
-        setRegion(getFrame(delta));
+        region = getFrame(delta);
+        setRegion(region);
     }
 
     /**
