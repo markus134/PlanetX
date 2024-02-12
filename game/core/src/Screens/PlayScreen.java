@@ -33,6 +33,8 @@ public class PlayScreen implements Screen, InputProcessor {
     private TextureAtlas atlas;
     private int keyPresses = 0;
     private HashSet<Integer> keysPressed;
+    private float prevPosX = 0;
+    private float prevPosY = 0;
 
     public PlayScreen(MyGDXGame game) {
         atlas = new TextureAtlas("player_spritesheet.atlas");
@@ -60,9 +62,6 @@ public class PlayScreen implements Screen, InputProcessor {
         return atlas;
     }
 
-    private void sendPositionToServer() {
-        MyGDXGame.client.sendTCP(player.b2body.getPosition().x + "," + player.b2body.getPosition().y);
-    }
 
     private void handleInput() {
         if (keyPresses > 0) {
@@ -70,19 +69,15 @@ public class PlayScreen implements Screen, InputProcessor {
                 switch (keypress) {
                     case Input.Keys.W:
                         player.b2body.applyLinearImpulse(new Vector2(0, 0.1f), player.b2body.getWorldCenter(), true);
-                        sendPositionToServer();
                         break;
                     case Input.Keys.S:
                         player.b2body.applyLinearImpulse(new Vector2(0, -0.1f), player.b2body.getWorldCenter(), true);
-                        sendPositionToServer();
                         break;
                     case Input.Keys.D:
                         player.b2body.applyLinearImpulse(new Vector2(0.1f, 0), player.b2body.getWorldCenter(), true);
-                        sendPositionToServer();
                         break;
                     case Input.Keys.A:
                         player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
-                        sendPositionToServer();
                         break;
                 }
             }
@@ -98,6 +93,14 @@ public class PlayScreen implements Screen, InputProcessor {
 
         gameCam.update();
         renderer.setView(gameCam);
+
+        // It is used to send the position of the player to the server
+        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y){
+            MyGDXGame.client.sendTCP(gameCam.position.x + "," + gameCam.position.y);
+
+            prevPosX = gameCam.position.x;
+            prevPosY = gameCam.position.y;
+        }
     }
 
     @Override
