@@ -29,6 +29,7 @@ public class GameServer {
 
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     System.out.println("Server received: " + object);
+
                     playerInstanceCoordinates.put(connection.getID(), object);
 
                     server.sendToAllTCP(
@@ -36,6 +37,7 @@ public class GameServer {
                                     .map(entry -> entry.getKey() + ":" + entry.getValue())
                                     .collect(Collectors.joining("/"))
                     );
+
                 }
             }
         });
