@@ -72,7 +72,7 @@ public class PlayScreen implements Screen, InputProcessor {
             for (Integer keypress : keysPressed) {
                 switch (keypress) {
                     case Input.Keys.W:
-                        player.b2body.applyLinearImpulse(new Vector2(0, 0.1f), player.b2body.getWorldCenter(), true); 
+                        player.b2body.applyLinearImpulse(new Vector2(0, 0.1f), player.b2body.getWorldCenter(), true);
                         break;
                     case Input.Keys.S:
                         player.b2body.applyLinearImpulse(new Vector2(0, -0.1f), player.b2body.getWorldCenter(), true);
