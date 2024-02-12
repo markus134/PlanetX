@@ -9,9 +9,6 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
 public class Player extends Sprite {
     private static final int FRAME_WIDTH = 32;

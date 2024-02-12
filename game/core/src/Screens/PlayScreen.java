@@ -19,7 +19,6 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 
-import javax.print.attribute.standard.MediaSize;
 import java.util.HashSet;
 import java.util.Map;
 
