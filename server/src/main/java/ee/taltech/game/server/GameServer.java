@@ -40,6 +40,13 @@ public class GameServer {
 
                 }
             }
+
+            @Override
+            public void disconnected(Connection connection) {
+                System.out.println("Player disconnected: " + connection.getID());
+                playerInstanceCoordinates.remove(connection.getID());
+            }
+
         });
     }
 

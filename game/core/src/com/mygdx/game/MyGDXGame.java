@@ -1,95 +1,118 @@
-package com.mygdx.game;
+    package com.mygdx.game;
 
-import Screens.PlayScreen;
-import Sprites.Player;
-import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.esotericsoftware.kryonet.Client;
-import com.esotericsoftware.kryonet.Connection;
-import com.esotericsoftware.kryonet.FrameworkMessage;
-import com.esotericsoftware.kryonet.Listener;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+    import Screens.PlayScreen;
+    import Sprites.OtherPlayer;
+    import com.badlogic.gdx.Game;
+    import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+    import com.badlogic.gdx.physics.box2d.World;
+    import com.esotericsoftware.kryonet.Client;
+    import com.esotericsoftware.kryonet.Connection;
+    import com.esotericsoftware.kryonet.FrameworkMessage;
+    import com.esotericsoftware.kryonet.Listener;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+    import java.io.IOException;
+    import java.util.ArrayList;
+    import java.util.HashMap;
+    import java.util.Map;
 
-public class MyGDXGame extends Game {
-    public SpriteBatch batch;
-    public final static int V_WIDTH = 1920;
-    public final static int V_HEIGHT = 1080;
-    public final static float PPM = 100;
+    public class MyGDXGame extends Game {
+        public SpriteBatch batch;
+        public final static int V_WIDTH = 1920;
+        public final static int V_HEIGHT = 1080;
+        public final static float PPM = 100;
 
-    public static Client client;
+        public static Client client;
 
-    private Object lastReceivedData;
-    private Map<Integer, SpriteBatch> spriteDict = new HashMap<>();
-    private Map<Integer, String[]> coordinateDict = new HashMap<>();
+        private Object lastReceivedData;
+        public static Map<Integer, OtherPlayer> playerDict = new HashMap<>();
+        private PlayScreen playScreen;
 
-    @Override
-    public void create() {
-        batch = new SpriteBatch();
-        setScreen(new PlayScreen(this));
+        @Override
+        public void create() {
+            batch = new SpriteBatch();
+            playScreen = new PlayScreen(this);
+            setScreen(playScreen);
 
-        client = new Client();
-        client.start();
-        client.sendTCP("Start");
-        try {
-            client.connect(5000, "localHost", 8080, 8081);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        client.addListener(new Listener.ThreadedListener(new Listener() {
-            @Override
-            public void received(Connection connection, Object object) {
-                if (!(object instanceof FrameworkMessage.KeepAlive)) {
-                    System.out.println("received: " + object);
-                    lastReceivedData = object;
-                }
+            client = new Client();
+            client.start();
+            client.sendTCP("Start");
+            try {
+                client.connect(5000, "localHost", 8080, 8081);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        }));
-    }
-
-    @Override
-    public void render() {
-        super.render();
-        if (lastReceivedData != null) {
-            String[] playersData = lastReceivedData.toString().split("/");
-
-            for (String playerData : playersData) {
-                String[] parts = playerData.split(":");
-                int id = Integer.parseInt(parts[0]);
-
-                if (!spriteDict.containsKey(id)){
-                    spriteDict.put(id, new SpriteBatch());
+            client.addListener(new Listener.ThreadedListener(new Listener() {
+                @Override
+                public void received(Connection connection, Object object) {
+                    if (!(object instanceof FrameworkMessage.KeepAlive)) {
+                        System.out.println("received: " + object);
+                        lastReceivedData = object;
+                    }
                 }
-                // id:x,y|id:x,y
-                if (id != client.getID()){
-                    String[] coordinates = parts[1].split(",");
-                    spriteDict.get(id).begin();
+            }));
+        }
 
-                    // magic numbers. Got them through testing.
-                    spriteDict.get(id).draw(new Texture("testplayer.png"),
-                            (20 * Float.parseFloat(coordinates[0]) + (float) V_WIDTH/ 6 - 30),
-                            (20 * Float.parseFloat(coordinates[1]) + (float) V_HEIGHT / 5));
-                    spriteDict.get(id).end();
+        @Override
+        public void render() {
+            super.render();
+
+            if (lastReceivedData != null) {
+                String[] playersData = lastReceivedData.toString().split("/");
+                World world = playScreen.world;
+                ArrayList<Integer> allConnectionIDs = new ArrayList<>();
+
+                // Collect IDs from the latest received data
+                for (String playerData : playersData) {
+                    String[] parts = playerData.split(":");
+                    int id = Integer.parseInt(parts[0]);
+                    allConnectionIDs.add(id);
                 }
+
+                // Update existing players or create new ones
+                for (String playerData : playersData) {
+                    String[] parts = playerData.split(":");
+                    int id = Integer.parseInt(parts[0]);
+
+                    if (id != client.getID()) {
+                        String[] coordinates = parts[1].split(",");
+                        float otherPlayerPosX = Float.parseFloat(coordinates[0]);
+                        float otherPlayerPosY = Float.parseFloat(coordinates[1]);
+                        int frameIndex = Integer.parseInt(coordinates[2]);
+                        boolean runningRight = Boolean.parseBoolean(coordinates[3]);
+
+                        // If playerDict contains id, then update the data, otherwise add it to playerDict
+                        if (playerDict.containsKey(id)) {
+                            OtherPlayer otherPlayer = playerDict.get(id);
+                            otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+                        } else {
+                            OtherPlayer otherPlayer = new OtherPlayer(world, playScreen, otherPlayerPosX, otherPlayerPosY);
+                            playerDict.put(id, otherPlayer);
+                            otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+                        }
+                    }
+                }
+
+                // Remove disconnected players and destroy associated Box2D objects
+                playerDict.keySet().removeIf(id -> {
+                    if (!allConnectionIDs.contains(id)) {
+                        // Player disconnected, destroy associated Box2D objects
+                        OtherPlayer otherPlayer = playerDict.get(id);
+                        world.destroyBody(otherPlayer.b2body);
+                        return true; // Remove the player from the map
+                    }
+                    return false;
+                });
+            }
+        }
+
+        @Override
+        public void dispose() {
+            client.close();
+
+            try {
+                client.dispose();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
     }
-
-    @Override
-    public void dispose() {
-        client.close();
-
-        try {
-            client.dispose();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-}

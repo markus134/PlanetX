@@ -1,5 +1,6 @@
 package Screens;
 
+import Sprites.OtherPlayer;
 import Sprites.Player;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -18,23 +19,27 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 
+import javax.print.attribute.standard.MediaSize;
 import java.util.HashSet;
+import java.util.Map;
 
 public class PlayScreen implements Screen, InputProcessor {
     private MyGDXGame game;
-    private OrthographicCamera gameCam;
+    public OrthographicCamera gameCam;
     private Viewport gamePort;
     private TiledMap map;
     private TmxMapLoader mapLoader;
     private OrthogonalTiledMapRenderer renderer;
-    private World world;
+    public World world;
     private Box2DDebugRenderer b2dr;
-    private Player player;
+    public Player player;
     private TextureAtlas atlas;
     private int keyPresses = 0;
     private HashSet<Integer> keysPressed;
     private float prevPosX = 0;
     private float prevPosY = 0;
+    private int startPosX = MyGDXGame.V_WIDTH / 2;
+    private int startPosY = MyGDXGame.V_HEIGHT / 2;
 
     public PlayScreen(MyGDXGame game) {
         atlas = new TextureAtlas("player_spritesheet.atlas");
@@ -63,12 +68,13 @@ public class PlayScreen implements Screen, InputProcessor {
     }
 
 
+
     private void handleInput() {
         if (keyPresses > 0) {
             for (Integer keypress : keysPressed) {
                 switch (keypress) {
                     case Input.Keys.W:
-                        player.b2body.applyLinearImpulse(new Vector2(0, 0.1f), player.b2body.getWorldCenter(), true);
+                        Player.b2body.applyLinearImpulse(new Vector2(0, 0.1f), player.b2body.getWorldCenter(), true);
                         break;
                     case Input.Keys.S:
                         player.b2body.applyLinearImpulse(new Vector2(0, -0.1f), player.b2body.getWorldCenter(), true);
@@ -95,8 +101,8 @@ public class PlayScreen implements Screen, InputProcessor {
         renderer.setView(gameCam);
 
         // It is used to send the position of the player to the server
-        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y){
-            MyGDXGame.client.sendTCP(gameCam.position.x + "," + gameCam.position.y);
+        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState){
+            MyGDXGame.client.sendTCP(gameCam.position.x + "," + gameCam.position.y + "," + player.playerAllFrames.indexOf(player.region) + "," + player.runningRight);
 
             prevPosX = gameCam.position.x;
             prevPosY = gameCam.position.y;
@@ -118,6 +124,12 @@ public class PlayScreen implements Screen, InputProcessor {
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();
         player.draw(game.batch); // Draw the player after rendering the physics world
+
+        // Draw the other players within the game
+        for (Map.Entry<Integer, OtherPlayer> entry : MyGDXGame.playerDict.entrySet()) {
+            OtherPlayer otherPlayer = entry.getValue();
+            otherPlayer.draw(game.batch);
+        }
         game.batch.end();
     }
 
