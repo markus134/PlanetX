@@ -39,7 +39,7 @@ public class Player extends Sprite {
     public runDirection currentDirection;
     public runDirection prevRunDirection;
     public World world;
-    public static Body b2body;
+    public Body b2body;
     private TextureRegion playerStand;
     private Animation<TextureRegion> playerRunUpper;
     private Animation<TextureRegion> playerRun;

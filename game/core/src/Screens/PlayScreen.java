@@ -37,8 +37,7 @@ public class PlayScreen implements Screen, InputProcessor {
     private HashSet<Integer> keysPressed;
     private float prevPosX = 0;
     private float prevPosY = 0;
-    private int startPosX = MyGDXGame.V_WIDTH / 2;
-    private int startPosY = MyGDXGame.V_HEIGHT / 2;
+
 
     public PlayScreen(MyGDXGame game) {
         atlas = new TextureAtlas("player_spritesheet.atlas");
@@ -73,7 +72,7 @@ public class PlayScreen implements Screen, InputProcessor {
             for (Integer keypress : keysPressed) {
                 switch (keypress) {
                     case Input.Keys.W:
-                        Player.b2body.applyLinearImpulse(new Vector2(0, 0.1f), player.b2body.getWorldCenter(), true);
+                        player.b2body.applyLinearImpulse(new Vector2(0, 0.1f), player.b2body.getWorldCenter(), true);
                         break;
                     case Input.Keys.S:
                         player.b2body.applyLinearImpulse(new Vector2(0, -0.1f), player.b2body.getWorldCenter(), true);
