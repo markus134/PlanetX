@@ -9,12 +9,14 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
@@ -37,6 +39,8 @@ public class PlayScreen implements Screen, InputProcessor {
     private HashSet<Integer> keysPressed;
     private float prevPosX = 0;
     private float prevPosY = 0;
+    public float startPosX;
+    public float startPosY;
 
 
     public PlayScreen(MyGDXGame game) {
@@ -53,8 +57,35 @@ public class PlayScreen implements Screen, InputProcessor {
 
         world = new World(new Vector2(0, 0), true); // Set gravity as null as we have a top down game
         b2dr = new Box2DDebugRenderer();
+
+
+        for (MapObject object : map.getLayers().get(4).getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rectangle = ((RectangleMapObject) object).getRectangle(); // This is actually a point but LibGDX treats points as rectangles with height and width as 0
+            startPosX = rectangle.getX();
+            startPosY = rectangle.getY();
+        }
+
+        BodyDef bdef = new BodyDef();
+        PolygonShape shape = new PolygonShape();
+        FixtureDef fdef = new FixtureDef();
+        Body body;
+
+        // Create the box2d walls
+        for (MapObject object : map.getLayers().get(5).getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rectangle = ((RectangleMapObject) object).getRectangle();
+
+            bdef.type = BodyDef.BodyType.StaticBody;
+            bdef.position.set((rectangle.getX() + rectangle.getWidth() / 2) / MyGDXGame.PPM, (rectangle.getY() + rectangle.getHeight() / 2) / MyGDXGame.PPM);
+
+            body = world.createBody(bdef);
+
+            shape.setAsBox(rectangle.getWidth() / 2 / MyGDXGame.PPM, rectangle.getHeight() / 2 / MyGDXGame.PPM);
+            fdef.shape = shape;
+            body.createFixture(fdef);
+        }
         player = new Player(world, this);
     }
+
 
     @Override
     public void show() {
@@ -117,7 +148,8 @@ public class PlayScreen implements Screen, InputProcessor {
 
         renderer.render();
 
-        b2dr.render(world, gameCam.combined);
+        // Uncomment the following line if you want to see box2d lines
+        // b2dr.render(world, gameCam.combined);
 
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();

@@ -62,7 +62,7 @@ public class Player extends Sprite {
         runningRight = true;
 
         initializeAnimations();
-        definePlayer();
+        definePlayer(screen.startPosX, screen.startPosY);
 
         playerStand = new TextureRegion(getTexture(), 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
         playerAllFrames.add(playerStand);
@@ -209,9 +209,9 @@ public class Player extends Sprite {
     /**
      * Defines the player's Box2D body and fixture.
      */
-    public void definePlayer() {
+    public void definePlayer(float startX, float startY) {
         BodyDef bdef = new BodyDef();
-        bdef.position.set(PLAYER_WIDTH, PLAYER_HEIGHT);
+        bdef.position.set(startX / MyGDXGame.PPM, startY / MyGDXGame.PPM);
         bdef.type = BodyDef.BodyType.DynamicBody;
         b2body = world.createBody(bdef);
 
