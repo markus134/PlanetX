@@ -6,8 +6,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
@@ -17,12 +19,23 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.scenes.scene2d.Event;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
 
-import java.util.HashSet;
-import java.util.Map;
+
+import java.util.*;
 
 public class PlayScreen implements Screen, InputProcessor {
     private MyGDXGame game;
@@ -41,7 +54,12 @@ public class PlayScreen implements Screen, InputProcessor {
     private float prevPosY = 0;
     public float startPosX;
     public float startPosY;
-
+    private Stage stage; //it is used for debug table
+    private Table debugTable;
+    private Label[] labelArray = new Label[4]; //the number corresponds to the amount of displayed variables
+    private float mapCenterX = 7.52667f;
+    private float mapCenterY = 8.15333f;
+    private TextButton button;
 
     public PlayScreen(MyGDXGame game) {
         atlas = new TextureAtlas("player_spritesheet.atlas");
@@ -57,7 +75,6 @@ public class PlayScreen implements Screen, InputProcessor {
 
         world = new World(new Vector2(0, 0), true); // Set gravity as null as we have a top down game
         b2dr = new Box2DDebugRenderer();
-
 
         for (MapObject object : map.getLayers().get(4).getObjects().getByType(RectangleMapObject.class)) {
             Rectangle rectangle = ((RectangleMapObject) object).getRectangle(); // This is actually a point but LibGDX treats points as rectangles with height and width as 0
@@ -84,8 +101,71 @@ public class PlayScreen implements Screen, InputProcessor {
             body.createFixture(fdef);
         }
         player = new Player(world, this);
+
+        //debug table generation
+        stage = new Stage(new ScreenViewport());
+        debugTable = new Table();
+        debugTable.top().left();
+        debugTable.setFillParent(true);
+
+        Label debugLabel = new Label("Debug Info", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
+        debugLabel.setAlignment(Align.left);
+        debugTable.add(debugLabel);
+
+        // you should write the variables that you want to display here
+        // and update the updateLabelValues() method
+        String[][] arraysOfVariablesWithValues = {
+                {"X", Float.toString(player.b2body.getPosition().x)},
+                {"Y", Float.toString(player.b2body.getPosition().y)},
+                {"xFromCenter", "0"},
+                {"yFromCenter", "0"}
+        };
+        addDebugLabels(arraysOfVariablesWithValues);
+
+        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
+        buttonStyle.font = new BitmapFont();
+        buttonStyle.fontColor = Color.WHITE;
+        button = new TextButton("Click me", buttonStyle);
+
+        button.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                buttonClick();
+            }
+        });
+
+        button.setPosition(0, 0);
+        button.setSize(200, 50);
+
+        debugTable.add(button).padTop(10);
+        stage.addActor(debugTable);
     }
 
+    private void buttonClick() {
+        System.out.println("Button Clicked!");
+        // Add your button click logic here
+    }
+
+    private void addDebugLabels(String[][] listOfVariablesWithValues) {
+
+        for (int i = 0; i < listOfVariablesWithValues.length; i++) {
+            Label name = new Label(listOfVariablesWithValues[i][0], new Label.LabelStyle(new BitmapFont(), Color.WHITE));
+            Label value = new Label(listOfVariablesWithValues[i][1], new Label.LabelStyle(new BitmapFont(), Color.WHITE));
+
+            debugTable.row();
+            debugTable.add(name).padRight(10);
+            debugTable.add(value).row();
+
+            labelArray[i] = value;
+        }
+    }
+
+    private void updateLabelValues() {
+        labelArray[0].setText(Float.toString(player.b2body.getPosition().x));
+        labelArray[1].setText(Float.toString(player.b2body.getPosition().y));
+        labelArray[2].setText(Float.toString(player.b2body.getPosition().x - mapCenterX));
+        labelArray[3].setText(Float.toString(player.b2body.getPosition().y - mapCenterY));
+    }
 
     @Override
     public void show() {
@@ -95,7 +175,6 @@ public class PlayScreen implements Screen, InputProcessor {
     public TextureAtlas getAtlas() {
         return atlas;
     }
-
 
 
     private void handleInput() {
@@ -118,8 +197,9 @@ public class PlayScreen implements Screen, InputProcessor {
             }
         }
     }
+
     public void update(float dt) {
-        world.step(1/60f, 6, 2);
+        world.step(1 / 60f, 6, 2);
 
         player.update(dt);
 
@@ -130,7 +210,7 @@ public class PlayScreen implements Screen, InputProcessor {
         renderer.setView(gameCam);
 
         // It is used to send the position of the player to the server
-        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState){
+        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState) {
             MyGDXGame.client.sendTCP(gameCam.position.x + "," + gameCam.position.y + "," + player.playerAllFrames.indexOf(player.region) + "," + player.runningRight);
 
             prevPosX = gameCam.position.x;
@@ -161,6 +241,11 @@ public class PlayScreen implements Screen, InputProcessor {
             otherPlayer.draw(game.batch);
         }
         game.batch.end();
+
+        // rendering debug table
+        updateLabelValues();
+        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
+        stage.draw();
     }
 
     @Override
@@ -170,6 +255,8 @@ public class PlayScreen implements Screen, InputProcessor {
         // Clear the keys because for some reason the input processor bugs out when resizing the window
         keyPresses = 0;
         keysPressed.clear();
+
+        stage.getViewport().update(width, height, true);
     }
 
     @Override
@@ -260,7 +347,6 @@ public class PlayScreen implements Screen, InputProcessor {
         world.dispose();
         b2dr.dispose();
         atlas.dispose();
+        stage.dispose();
     }
-
-
 }

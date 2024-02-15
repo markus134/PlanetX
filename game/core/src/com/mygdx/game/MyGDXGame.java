@@ -27,6 +27,7 @@
         public static Map<Integer, OtherPlayer> playerDict = new HashMap<>();
         private PlayScreen playScreen;
 
+
         @Override
         public void create() {
             batch = new SpriteBatch();
