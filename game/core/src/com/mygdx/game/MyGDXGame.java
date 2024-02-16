@@ -1,5 +1,6 @@
     package com.mygdx.game;
 
+    import Screens.MenuScreen;
     import Screens.PlayScreen;
     import Sprites.OtherPlayer;
     import com.badlogic.gdx.Game;
@@ -25,14 +26,15 @@
 
         private Object lastReceivedData;
         public static Map<Integer, OtherPlayer> playerDict = new HashMap<>();
-        private PlayScreen playScreen;
-
+        public static PlayScreen playScreen;
+        private MenuScreen menu;
 
         @Override
         public void create() {
             batch = new SpriteBatch();
             playScreen = new PlayScreen(this);
-            setScreen(playScreen);
+            menu = new MenuScreen(this);
+            setScreen(menu);
 
             client = new Client();
             client.start();
