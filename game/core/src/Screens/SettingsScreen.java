@@ -43,6 +43,8 @@ public class SettingsScreen extends ScreenAdapter {
         Table table = new Table();
         table.setFillParent(true);
 
+
+        FreeTypeFontGenerator.setMaxTextureSize(2048);
         // font file downloaded from google fonts
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("PermanentMarker-Regular.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
@@ -52,7 +54,7 @@ public class SettingsScreen extends ScreenAdapter {
 
         Label.LabelStyle labelStyle = new Label.LabelStyle();
         labelStyle.font = font;
-        Label titleLabel = new Label("Options", labelStyle);
+        Label titleLabel = new Label("Settings", labelStyle);
 
         Skin skin = new Skin(Gdx.files.internal("uiskin/uiskin.json"));
         TextButton.TextButtonStyle style = skin.get("round", TextButton.TextButtonStyle.class);
