@@ -55,8 +55,12 @@ public class PlayScreen implements Screen, InputProcessor {
     private Label[] labelArray = new Label[4]; //the number corresponds to the amount of displayed variables
     private float mapCenterX = 7.52667f;
     private float mapCenterY = 8.15333f;
-    private TextButton button;
 
+    /**
+     * Constructor for the PlayScreen.
+     *
+     * @param game The Game instance representing the main game.
+     */
     public PlayScreen(MyGDXGame game) {
         atlas = new TextureAtlas("player_spritesheet.atlas");
         this.game = game;
@@ -121,12 +125,20 @@ public class PlayScreen implements Screen, InputProcessor {
         stage.addActor(debugTable);
     }
 
+    /**
+     * Handles the logic for button clicks.
+     */
     private void buttonClick() {
         System.out.println("Button Clicked!");
         // Add your button click logic here
         // This will later be used to regenerate the map without closing and reopening the program
     }
 
+    /**
+     * Adds debug labels to the debug table.
+     *
+     * @param listOfVariablesWithValues Array of variable names and their initial values.
+     */
     private void addDebugLabels(String[][] listOfVariablesWithValues) {
         // debug table layout
         for (int i = 0; i < listOfVariablesWithValues.length; i++) {
@@ -141,6 +153,9 @@ public class PlayScreen implements Screen, InputProcessor {
         }
     }
 
+    /**
+     * Updates the values of the debug labels.
+     */
     private void updateLabelValues() {
         labelArray[0].setText(Float.toString(player.b2body.getPosition().x));
         labelArray[1].setText(Float.toString(player.b2body.getPosition().y));
@@ -148,16 +163,26 @@ public class PlayScreen implements Screen, InputProcessor {
         labelArray[3].setText(Float.toString(player.b2body.getPosition().y - mapCenterY));
     }
 
+    /**
+     * Shows the PlayScreen and sets the input processor.
+     */
     @Override
     public void show() {
         Gdx.input.setInputProcessor(this);
     }
 
+    /**
+     * Gets the texture atlas used in the game.
+     *
+     * @return The texture atlas.
+     */
     public TextureAtlas getAtlas() {
         return atlas;
     }
 
-
+    /**
+     * Handles player input.
+     */
     private void handleInput() {
         if (keyPresses > 0) {
             for (Integer keypress : keysPressed) {
@@ -183,6 +208,11 @@ public class PlayScreen implements Screen, InputProcessor {
         }
     }
 
+    /**
+     * Updates the game logic.
+     *
+     * @param dt The time elapsed since the last frame.
+     */
     public void update(float dt) {
         world.step(1 / 60f, 6, 2);
 
@@ -203,6 +233,11 @@ public class PlayScreen implements Screen, InputProcessor {
         }
     }
 
+    /**
+     * Renders the game.
+     *
+     * @param delta The time elapsed since the last frame.
+     */
     @Override
     public void render(float delta) {
         handleInput();
@@ -233,6 +268,12 @@ public class PlayScreen implements Screen, InputProcessor {
         stage.draw();
     }
 
+    /**
+     * Resizes the viewport.
+     *
+     * @param width  The new width.
+     * @param height The new height.
+     */
     @Override
     public void resize(int width, int height) {
         gamePort.update(width, height);
@@ -259,6 +300,12 @@ public class PlayScreen implements Screen, InputProcessor {
 
     }
 
+    /**
+     * Handles the key down event.
+     *
+     * @param keycode The keycode of the pressed key.
+     * @return True to indicate that the input event was handled.
+     */
     @Override
     public boolean keyDown(int keycode) {
         keysPressed.add(keycode);
@@ -267,6 +314,12 @@ public class PlayScreen implements Screen, InputProcessor {
         return true; // Return true to indicate that the input event was handled
     }
 
+    /**
+     * Handles the key up event.
+     *
+     * @param keycode The keycode of the released key.
+     * @return True to indicate that the input event was handled.
+     */
     @Override
     public boolean keyUp(int keycode) {
         keysPressed.remove(keycode);
@@ -325,6 +378,9 @@ public class PlayScreen implements Screen, InputProcessor {
         return false;
     }
 
+    /**
+     * Disposes of resources used by the PlayScreen.
+     */
     @Override
     public void dispose() {
         map.dispose();

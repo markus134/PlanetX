@@ -15,6 +15,9 @@ public class GameServer {
     private Server server;
     private Map<Integer, Object> playerInstanceCoordinates = new HashMap<>();
 
+    /**
+     * Constructor for GameServer. Initializes the KryoNet server and binds it to the specified ports.
+     */
     public GameServer() {
         server = new Server();
         server.start();
@@ -25,7 +28,13 @@ public class GameServer {
         }
 
         server.addListener(new Listener() {
-            public void received (Connection connection, Object object) {
+            /**
+             * Handles received messages from clients. Updates player coordinates and broadcasts the updated state to all clients.
+             *
+             * @param connection The connection object representing the client connection.
+             * @param object The received object from the client.
+             */
+            public void received(Connection connection, Object object) {
 
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     System.out.println("Server received: " + object);
@@ -41,6 +50,11 @@ public class GameServer {
                 }
             }
 
+            /**
+             * Handles disconnection events. Removes the disconnected player's data from the server.
+             *
+             * @param connection The connection object representing the disconnected client.
+             */
             @Override
             public void disconnected(Connection connection) {
                 System.out.println("Player disconnected: " + connection.getID());
@@ -50,6 +64,11 @@ public class GameServer {
         });
     }
 
+    /**
+     * The entry point of the server. Creates and starts an instance of the GameServer.
+     *
+     * @param args The command-line arguments (not used in this example).
+     */
     public static void main(String[] args) {
 
         GameServer gameServer = new GameServer();

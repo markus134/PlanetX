@@ -24,7 +24,6 @@ public class OtherPlayer extends Sprite {
     public ArrayList<TextureRegion> playerAllFrames = new ArrayList<>();
 
 
-
     public OtherPlayer(World world, PlayScreen screen, float posX, float posY) {
         super(screen.getAtlas().findRegion("player_spritesheet"));
         this.world = world;
