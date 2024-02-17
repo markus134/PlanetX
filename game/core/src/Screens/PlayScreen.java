@@ -118,22 +118,6 @@ public class PlayScreen implements Screen, InputProcessor {
         };
         addDebugLabels(arraysOfVariablesWithValues);
 
-        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
-        buttonStyle.font = new BitmapFont();
-        buttonStyle.fontColor = Color.WHITE;
-        button = new TextButton("Click me", buttonStyle);
-
-        button.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                buttonClick();
-            }
-        });
-
-        button.setPosition(0, 0);
-        button.setSize(200, 50);
-
-        debugTable.add(button).padTop(10);
         stage.addActor(debugTable);
     }
 
@@ -188,6 +172,9 @@ public class PlayScreen implements Screen, InputProcessor {
                         break;
                     case Input.Keys.A:
                         player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
+                        break;
+                    case Input.Keys.B:
+                        buttonClick();
                         break;
                 }
             }
