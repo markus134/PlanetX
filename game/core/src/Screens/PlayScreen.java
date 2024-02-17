@@ -124,10 +124,11 @@ public class PlayScreen implements Screen, InputProcessor {
     private void buttonClick() {
         System.out.println("Button Clicked!");
         // Add your button click logic here
+        // This will later be used to regenerate the map without closing and reopening the program
     }
 
     private void addDebugLabels(String[][] listOfVariablesWithValues) {
-
+        // debug table layout
         for (int i = 0; i < listOfVariablesWithValues.length; i++) {
             Label name = new Label(listOfVariablesWithValues[i][0], new Label.LabelStyle(new BitmapFont(), Color.WHITE));
             Label value = new Label(listOfVariablesWithValues[i][1], new Label.LabelStyle(new BitmapFont(), Color.WHITE));
@@ -174,6 +175,7 @@ public class PlayScreen implements Screen, InputProcessor {
                         player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
                         break;
                     case Input.Keys.B:
+                        // this will later be used to regenerate the map
                         buttonClick();
                         break;
                 }

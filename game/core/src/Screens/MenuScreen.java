@@ -23,11 +23,15 @@ import static com.mygdx.game.MyGDXGame.client;
 
 public class MenuScreen extends ScreenAdapter {
     private Stage stage;
-    private Game game;
+    private final Game game;
     private SpriteBatch batch;
-    private Sprite backgroundSprite;
+    public static Sprite backgroundSprite;
     private Texture backgroundTexture;
-    private SettingsScreen settingsScreen;
+    private final SettingsScreen settingsScreen;
+    public static TextButton.TextButtonStyle textButtonStyle;
+    public static Label.LabelStyle labelStyle;
+    public static Skin skin;
+
 
     public MenuScreen(MyGDXGame game) {
         this.game = game;
@@ -49,24 +53,25 @@ public class MenuScreen extends ScreenAdapter {
         table.setFillParent(true);
 
         // font file downloaded from google fonts
+        FreeTypeFontGenerator.setMaxTextureSize(2048);
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("PermanentMarker-Regular.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
         parameter.size = 200;
         BitmapFont font = generator.generateFont(parameter);
         generator.dispose(); // if not disposed it might cause memory issues
 
-        Label.LabelStyle labelStyle = new Label.LabelStyle();
+        labelStyle = new Label.LabelStyle();
         labelStyle.font = font;
         Label titleLabel = new Label("Planet X", labelStyle);
 
-        Skin skin = new Skin(Gdx.files.internal("uiskin/uiskin.json"));
-        TextButton.TextButtonStyle style = skin.get("round", TextButton.TextButtonStyle.class);
-        style.font.getData().setScale(2.5f);
+        skin = new Skin(Gdx.files.internal("uiskin/uiskin.json"));
+        textButtonStyle = skin.get("round", TextButton.TextButtonStyle.class);
+        textButtonStyle.font.getData().setScale(2.5f);
 
-        TextButton singlePlayerButton = new TextButton("SinglePlayer", style);
-        TextButton multiPlayerButton = new TextButton("MultiPlayer", style);
-        TextButton exitButton = new TextButton("Exit", style);
-        TextButton settingsButton = new TextButton("Settings", style);
+        TextButton singlePlayerButton = new TextButton("SinglePlayer", textButtonStyle);
+        TextButton multiPlayerButton = new TextButton("MultiPlayer", textButtonStyle);
+        TextButton exitButton = new TextButton("Exit", textButtonStyle);
+        TextButton settingsButton = new TextButton("Settings", textButtonStyle);
 
         singlePlayerButton.addListener(new ClickListener() {
             @Override
@@ -110,7 +115,7 @@ public class MenuScreen extends ScreenAdapter {
         });
 
         table.add(titleLabel).padBottom(20f).center();
-        table.row(); // Move to the next row for the buttons
+        table.row();
         table.add(singlePlayerButton).pad(20f).row();
         table.add(multiPlayerButton).pad(20f).row();
         table.add(settingsButton).pad(20f).row();

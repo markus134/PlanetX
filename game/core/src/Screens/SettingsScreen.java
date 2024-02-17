@@ -1,13 +1,14 @@
 package Screens;
 
+import OverridenClasses.MenuSlider;
+import OverridenClasses.SoundButton;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -16,13 +17,18 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 
+import static Screens.MenuScreen.labelStyle;
+import static Screens.MenuScreen.textButtonStyle;
+import static Screens.MenuScreen.skin;
+
+
 public class SettingsScreen extends ScreenAdapter {
     private Stage stage;
-    private SpriteBatch batch;
-    private Sprite backgroundSprite;
+    private final MenuScreen menuScreen;
+    private final MyGDXGame game;
+    private Batch batch;
     private Texture backgroundTexture;
-    private MenuScreen menuScreen;
-    private MyGDXGame game;
+    private Sprite backgroundSprite;
 
     SettingsScreen(MenuScreen menuScreen, MyGDXGame game) {
         this.menuScreen = menuScreen;
@@ -35,7 +41,7 @@ public class SettingsScreen extends ScreenAdapter {
         Viewport viewport = new ExtendViewport(MyGDXGame.V_WIDTH, MyGDXGame.V_HEIGHT);
         stage = new Stage(viewport);
 
-        backgroundTexture = new Texture(Gdx.files.internal("MenuBack.jpg")); // Replace with your image file name
+        backgroundTexture = new Texture(Gdx.files.internal("MenuBack.jpg"));
         backgroundSprite = new Sprite(backgroundTexture);
         backgroundSprite.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch = new SpriteBatch();
@@ -43,27 +49,16 @@ public class SettingsScreen extends ScreenAdapter {
         Table table = new Table();
         table.setFillParent(true);
 
-
-        FreeTypeFontGenerator.setMaxTextureSize(2048);
-        // font file downloaded from google fonts
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("PermanentMarker-Regular.ttf"));
-        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 200;
-        BitmapFont font = generator.generateFont(parameter);
-        generator.dispose(); // if not disposed it might cause memory issues
-
-        Label.LabelStyle labelStyle = new Label.LabelStyle();
-        labelStyle.font = font;
         Label titleLabel = new Label("Settings", labelStyle);
 
-        Skin skin = new Skin(Gdx.files.internal("uiskin/uiskin.json"));
-        TextButton.TextButtonStyle style = skin.get("round", TextButton.TextButtonStyle.class);
-        style.font.getData().setScale(2.5f);
+        MenuSlider soundSlider = new MenuSlider(0, 100, 10, false, skin, 300f);
+        MenuSlider musicSlider = new MenuSlider(0, 100, 10, false, skin, 300f);
 
-        TextButton musicButton = new TextButton("Music", style);
-        TextButton soundButton = new TextButton("Sound", style);
-        TextButton backButton = new TextButton("Back", style);
-        TextButton someButton = new TextButton("Something else", style);
+        SoundButton soundButton = new SoundButton(skin, "sound", 100f);
+        SoundButton musicButton = new SoundButton(skin, "music", 100f);
+
+        TextButton backButton = new TextButton("Back", textButtonStyle);
+        TextButton someButton = new TextButton("For future use", textButtonStyle);
 
         backButton.addListener(new ClickListener() {
             @Override
@@ -72,12 +67,15 @@ public class SettingsScreen extends ScreenAdapter {
             }
         });
 
-        table.add(titleLabel).padBottom(30f).center().expandX();
-        table.row(); // Move to the next row for the buttons
-        table.add(musicButton).pad(20f).row();
-        table.add(soundButton).pad(20f).row();
+        // aligning the table
+        table.add(titleLabel).padBottom(30f).center().colspan(2).row();
+        table.row();
+        table.add(soundButton).pad(20f);
+        table.add(soundSlider).padBottom(20f).row();
+        table.add(musicButton).pad(20f);
+        table.add(musicSlider).padBottom(20f).row();
         table.add(someButton).pad(20f).row();
-        table.add(backButton).pad(20f);
+        table.add(backButton).center().colspan(2).padTop(40f);
 
         stage.addActor(table);
 
