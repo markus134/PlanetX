@@ -30,11 +30,20 @@ public class SettingsScreen extends ScreenAdapter {
     private Texture backgroundTexture;
     private Sprite backgroundSprite;
 
+    /**
+     * Creates a new instance of SettingsScreen.
+     *
+     * @param menuScreen The MenuScreen instance to return to when the user clicks the "Back" button.
+     * @param game       The main game instance.
+     */
     SettingsScreen(MenuScreen menuScreen, MyGDXGame game) {
         this.menuScreen = menuScreen;
         this.game = game;
     }
 
+    /**
+     * Called when this screen is displayed. Initializes the UI elements and sets up the input processor.
+     */
     @Override
     public void show() {
 
@@ -82,6 +91,11 @@ public class SettingsScreen extends ScreenAdapter {
         Gdx.input.setInputProcessor(stage);
     }
 
+    /**
+     * Renders the screen with the specified delta time.
+     *
+     * @param delta The time in seconds since the last render.
+     */
     public void render(float delta) {
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
 
@@ -95,6 +109,9 @@ public class SettingsScreen extends ScreenAdapter {
         stage.draw();
     }
 
+    /**
+     * Called when the screen is hidden. Disposes of resources used by the screen.
+     */
     @Override
     public void hide() {
         backgroundTexture.dispose();
@@ -102,6 +119,12 @@ public class SettingsScreen extends ScreenAdapter {
         stage.dispose();
     }
 
+    /**
+     * Called when the screen is resized. Updates the stage's viewport accordingly.
+     *
+     * @param width  The new width.
+     * @param height The new height.
+     */
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);

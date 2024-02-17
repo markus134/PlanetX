@@ -52,7 +52,6 @@ public class Player extends Sprite {
     public TextureRegion region;
 
 
-
     public Player(World world, PlayScreen screen) {
         super(screen.getAtlas().findRegion("player_spritesheet"));
         this.world = world;

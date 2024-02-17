@@ -32,12 +32,19 @@ public class MenuScreen extends ScreenAdapter {
     public static Label.LabelStyle labelStyle;
     public static Skin skin;
 
-
+    /**
+     * Constructor for the MenuScreen.
+     *
+     * @param game The Game instance representing the main game.
+     */
     public MenuScreen(MyGDXGame game) {
         this.game = game;
         settingsScreen = new SettingsScreen(this, game);
     }
 
+    /**
+     * Called when the MenuScreen is displayed.
+     */
     @Override
     public void show() {
 
@@ -126,6 +133,11 @@ public class MenuScreen extends ScreenAdapter {
         Gdx.input.setInputProcessor(stage);
     }
 
+    /**
+     * Renders the MenuScreen.
+     *
+     * @param delta The time in seconds since the last render.
+     */
     public void render(float delta) {
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
 
@@ -139,6 +151,9 @@ public class MenuScreen extends ScreenAdapter {
         stage.draw();
     }
 
+    /**
+     * Called when the MenuScreen is no longer the current screen.
+     */
     @Override
     public void hide() {
         backgroundTexture.dispose();
@@ -146,6 +161,12 @@ public class MenuScreen extends ScreenAdapter {
         stage.dispose();
     }
 
+    /**
+     * Called when the window is resized.
+     *
+     * @param width  The new width.
+     * @param height The new height.
+     */
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
