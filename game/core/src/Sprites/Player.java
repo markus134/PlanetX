@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Player extends Sprite {
     private static final int FRAME_WIDTH = 32;
@@ -47,6 +48,7 @@ public class Player extends Sprite {
     private Animation<TextureRegion> playerRunUp;
     private Animation<TextureRegion> playerRunDown;
     public ArrayList<TextureRegion> playerAllFrames = new ArrayList<>();
+    private HashMap<TextureRegion, Integer> frameIndexMap = new HashMap<>();
     public boolean runningRight;
     private float stateTimer;
     public TextureRegion region;
@@ -66,6 +68,11 @@ public class Player extends Sprite {
         playerStand = new TextureRegion(getTexture(), 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
         playerAllFrames.add(playerStand);
 
+        // Put all frames into a hashmap, so we wouldn't have to search the whole list everytime we want to get the current frame's index
+        for (int i = 0; i < playerAllFrames.size(); i++) {
+            frameIndexMap.put(playerAllFrames.get(i), i);
+        }
+
         setBounds(0, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
         setRegion(playerStand);
     }
@@ -79,6 +86,10 @@ public class Player extends Sprite {
         playerRun = createAnimation(0, 5, 3);
         playerRunDown = createAnimation(0, 3, 4);
         playerRunUp = createAnimation(0, 3, 5);
+    }
+
+    public int getCurrentFrameIndex() {
+        return frameIndexMap.getOrDefault(region, -1);
     }
 
     /**
