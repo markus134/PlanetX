@@ -12,18 +12,15 @@ import com.mygdx.game.MyGDXGame;
 public class Bullet extends Sprite {
     private World world;
     public Body body;
-    private boolean isDestroyed;
     private Texture texture;
     private static final int FRAME_WIDTH = 32;
     private static final int FRAME_HEIGHT = 32;
     private boolean shouldDestroy = false;
 
     public Bullet(World world, float x, float y) {
-        // Assuming you have a bullet texture, replace "bulletTexturePath" with the actual path
         texture = new Texture("Bullets/01.png");
 
         this.world = world;
-        this.isDestroyed = false;
 
         // Create the Box2D body for the bullet
         BodyDef bodyDef = new BodyDef();
@@ -60,9 +57,7 @@ public class Bullet extends Sprite {
     }
 
     public void destroy() {
-        // Destroy the Box2D body and mark the bullet as destroyed
         world.destroyBody(body);
-        isDestroyed = true;
     }
 
     public void setShouldDestroy() {

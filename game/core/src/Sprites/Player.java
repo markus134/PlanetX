@@ -9,12 +9,13 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Player extends Sprite {
     private static final int FRAME_WIDTH = 32;
     private static final int FRAME_HEIGHT = 32;
     private static final float ANIMATION_SPEED = 0.1f;
-    private static final float PLAYER_RADIUS = 16 / MyGDXGame.PPM;
+    private static final float PLAYER_RADIUS = 8 / MyGDXGame.PPM;
     private static final float LINEAR_DAMPING = 4f;
     private static final float PLAYER_HEIGHT = 64 / MyGDXGame.PPM;
     private static final float PLAYER_WIDTH = 64 / MyGDXGame.PPM;
@@ -47,10 +48,10 @@ public class Player extends Sprite {
     private Animation<TextureRegion> playerRunUp;
     private Animation<TextureRegion> playerRunDown;
     public ArrayList<TextureRegion> playerAllFrames = new ArrayList<>();
+    private HashMap<TextureRegion, Integer> frameIndexMap = new HashMap<>();
     public boolean runningRight;
     private float stateTimer;
     public TextureRegion region;
-
 
 
     public Player(World world, PlayScreen screen) {
@@ -67,6 +68,11 @@ public class Player extends Sprite {
         playerStand = new TextureRegion(getTexture(), 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
         playerAllFrames.add(playerStand);
 
+        // Put all frames into a hashmap, so we wouldn't have to search the whole list everytime we want to get the current frame's index
+        for (int i = 0; i < playerAllFrames.size(); i++) {
+            frameIndexMap.put(playerAllFrames.get(i), i);
+        }
+
         setBounds(0, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
         setRegion(playerStand);
     }
@@ -80,6 +86,10 @@ public class Player extends Sprite {
         playerRun = createAnimation(0, 5, 3);
         playerRunDown = createAnimation(0, 3, 4);
         playerRunUp = createAnimation(0, 3, 5);
+    }
+
+    public int getCurrentFrameIndex() {
+        return frameIndexMap.getOrDefault(region, -1);
     }
 
     /**
@@ -205,6 +215,7 @@ public class Player extends Sprite {
             else return null; // We should never reach this point hopefully as it means that the player isn't running
         }
     }
+
 
     /**
      * Defines the player's Box2D body and fixture.
