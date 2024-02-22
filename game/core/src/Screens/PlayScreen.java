@@ -1,5 +1,10 @@
 package Screens;
 
+<<<<<<< Updated upstream
+=======
+import ObjectsToSend.BulletData;
+import Scenes.Debug;
+>>>>>>> Stashed changes
 import Sprites.OtherPlayer;
 import Sprites.Player;
 import com.badlogic.gdx.Gdx;
@@ -18,6 +23,7 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+<<<<<<< Updated upstream
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -27,9 +33,22 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+=======
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.Manifold;
+import com.badlogic.gdx.physics.box2d.World;
+>>>>>>> Stashed changes
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
+import Bullets.BulletManager;
+import Bullets.Bullet;
+import ObjectsToSend.PlayerData;
 
 import java.util.*;
 
@@ -50,11 +69,18 @@ public class PlayScreen implements Screen, InputProcessor {
     private float prevPosY = 0;
     public float startPosX;
     public float startPosY;
+<<<<<<< Updated upstream
     private Stage stage; //it is used for debug table
     private Table debugTable;
     private Label[] labelArray = new Label[4]; //the number corresponds to the amount of displayed variables
     private float mapCenterX = 7.52667f;
     private float mapCenterY = 8.15333f;
+=======
+    private Debug debug;
+    private Vector3 touchPoint; // Added to store the touch point in world coordinates
+    public BulletManager bulletManager;
+    private float bulletSpeed = 5.0f; // Adjust the bullet speed as needed
+>>>>>>> Stashed changes
 
     /**
      * Constructor for the PlayScreen.
@@ -102,6 +128,7 @@ public class PlayScreen implements Screen, InputProcessor {
         }
         player = new Player(world, this);
 
+<<<<<<< Updated upstream
         //debug table generation
         stage = new Stage(new ScreenViewport());
         debugTable = new Table();
@@ -123,6 +150,43 @@ public class PlayScreen implements Screen, InputProcessor {
         addDebugLabels(arraysOfVariablesWithValues);
 
         stage.addActor(debugTable);
+=======
+        debug = new Debug(game.batch, player);
+
+        touchPoint = new Vector3();
+
+        // Initialize BulletManager
+        bulletManager = new BulletManager(world);
+
+        // Inside the constructor
+        world.setContactListener(new ContactListener() {
+            @Override
+            public void beginContact(Contact contact) {
+                Fixture fixtureA = contact.getFixtureA();
+                Fixture fixtureB = contact.getFixtureB();
+
+                // Check if either fixture is the bullet
+                if (fixtureA.getBody().getUserData() != null || fixtureB.getBody().getUserData() != null) {
+                    // Mark the bullet as destroyed
+                    int id = (int) (fixtureA.getBody().getUserData() != null ? fixtureA.getBody().getUserData() : fixtureB.getBody().getUserData());
+                    Bullet bullet = BulletManager.getBulletById(id);
+                    bullet.setShouldDestroy();
+                }
+            }
+
+            @Override
+            public void endContact(Contact contact) {
+            }
+
+            @Override
+            public void preSolve(Contact contact, Manifold oldManifold) {
+            }
+
+            @Override
+            public void postSolve(Contact contact, ContactImpulse contactImpulse) {
+            }
+        });
+>>>>>>> Stashed changes
     }
 
     /**
@@ -218,6 +282,8 @@ public class PlayScreen implements Screen, InputProcessor {
 
         player.update(dt);
 
+        bulletManager.update(dt);
+
         gameCam.position.x = player.b2body.getPosition().x;
         gameCam.position.y = player.b2body.getPosition().y;
 
@@ -226,7 +292,16 @@ public class PlayScreen implements Screen, InputProcessor {
 
         // It is used to send the position of the player to the server
         if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState) {
+<<<<<<< Updated upstream
             MyGDXGame.client.sendTCP(gameCam.position.x + "," + gameCam.position.y + "," + player.playerAllFrames.indexOf(player.region) + "," + player.runningRight);
+=======
+            MyGDXGame.client.sendTCP(new PlayerData(
+                    gameCam.position.x,
+                    gameCam.position.y,
+                    player.getCurrentFrameIndex(),
+                    player.runningRight
+            ));
+>>>>>>> Stashed changes
 
             prevPosX = gameCam.position.x;
             prevPosY = gameCam.position.y;
@@ -260,6 +335,12 @@ public class PlayScreen implements Screen, InputProcessor {
             OtherPlayer otherPlayer = entry.getValue();
             otherPlayer.draw(game.batch);
         }
+
+        // Draw bullets
+        for (Bullet bullet : bulletManager.getBullets()) {
+            bullet.draw(game.batch);
+        }
+
         game.batch.end();
 
         // rendering debug table
@@ -348,9 +429,35 @@ public class PlayScreen implements Screen, InputProcessor {
         return false;
     }
 
+    /**
+     * Handles touch down event.
+     *
+     * @param screenX The x-coordinate of the touch position.
+     * @param screenY The y-coordinate of the touch position.
+     * @param pointer  The pointer for the event.
+     * @param button   The button pressed during the event.
+     * @return True if the input event was handled.
+     */
     @Override
-    public boolean touchDown(int i, int i1, int i2, int i3) {
-        return false;
+    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        // Convert screen coordinates to world coordinates
+        touchPoint.set(screenX, screenY, 0);
+        gameCam.unproject(touchPoint);
+
+        // Shoot a bullet towards the touched position
+        Bullet newBullet = bulletManager.obtainBullet(player.getX() + player.getWidth() / 2, player.getY() + player.getHeight() / 2);
+        Vector2 direction = new Vector2(touchPoint.x - (player.getX() + player.getWidth() / 2), touchPoint.y - (player.getY() + player.getHeight() / 2));
+        direction.nor(); // Normalize the direction vector
+        newBullet.body.setLinearVelocity(direction.x * bulletSpeed, direction.y * bulletSpeed);
+
+        MyGDXGame.client.sendTCP(new BulletData(
+                direction.x * bulletSpeed,
+                direction.y * bulletSpeed,
+                player.getX() + player.getWidth() / 2,
+                player.getY() + player.getHeight() / 2
+        ));
+
+        return true;
     }
 
     @Override

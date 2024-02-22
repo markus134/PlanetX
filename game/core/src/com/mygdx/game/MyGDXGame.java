@@ -1,11 +1,16 @@
 package com.mygdx.game;
 
+import Bullets.Bullet;
+import Bullets.BulletManager;
+import ObjectsToSend.BulletData;
+import ObjectsToSend.PlayerData;
 import Screens.MenuScreen;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.World;
+import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
@@ -14,7 +19,9 @@ import com.esotericsoftware.kryonet.Listener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The main class of the game, responsible for managing screens, rendering, and network communication.
@@ -28,9 +35,14 @@ public class MyGDXGame extends Game {
     public static Client client;
 
     private Object lastReceivedData;
+    private ArrayList<BulletData> lastReceivedBullets = new ArrayList<>();
     public static Map<Integer, OtherPlayer> playerDict = new HashMap<>();
     public static PlayScreen playScreen;
     private MenuScreen menu;
+    public static final short BULLET_CATEGORY = 0x0001;
+    public static final short PLAYER_CATEGORY = 0x0002;
+    public static final short OTHER_PLAYER_CATEGORY = 0x0004;
+    public static final short WORLD_CATEGORY = 0x0008;
 
     /**
      * Initializes the game, creates essential objects, and sets up the network client.
@@ -43,6 +55,12 @@ public class MyGDXGame extends Game {
         setScreen(menu);
 
         client = new Client();
+
+        Kryo kryo = client.getKryo();
+        kryo.register(PlayerData.class);
+        kryo.register(BulletData.class, 17);
+        kryo.register(HashMap.class);
+
         client.start();
         client.sendTCP("Start");
         try {
@@ -54,8 +72,13 @@ public class MyGDXGame extends Game {
             @Override
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
-                    System.out.println("received: " + object);
-                    lastReceivedData = object;
+                    if (object instanceof BulletData) {
+                        lastReceivedBullets.add((BulletData) object);
+                    } else {
+                        lastReceivedData = object;
+                    }
+
+
                 }
             }
         }));
@@ -69,52 +92,54 @@ public class MyGDXGame extends Game {
         super.render();
 
         if (lastReceivedData != null) {
-            String[] playersData = lastReceivedData.toString().split("/");
-            World world = playScreen.world;
-            ArrayList<Integer> allConnectionIDs = new ArrayList<>();
 
-            // Collect IDs from the latest received data
-            for (String playerData : playersData) {
-                String[] parts = playerData.split(":");
-                int id = Integer.parseInt(parts[0]);
-                allConnectionIDs.add(id);
+            // Made a special list for bullets as the packets were otherwise skipped (rendering was slower)
+            for (BulletData data : lastReceivedBullets) {
+                Bullet bullet = playScreen.bulletManager.obtainBullet(data.getX(), data.getY());
+                bullet.body.setLinearVelocity(data.getLinVelX(), data.getLinVelY());
             }
+            lastReceivedBullets.clear();
 
-            // Update existing players or create new ones
-            for (String playerData : playersData) {
-                String[] parts = playerData.split(":");
-                int id = Integer.parseInt(parts[0]);
+            if (lastReceivedData instanceof HashMap){
+                World world = playScreen.world;
+                Set keys = ((HashMap)lastReceivedData).keySet();
+                ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
 
-                if (id != client.getID()) {
-                    String[] coordinates = parts[1].split(",");
-                    float otherPlayerPosX = Float.parseFloat(coordinates[0]);
-                    float otherPlayerPosY = Float.parseFloat(coordinates[1]);
-                    int frameIndex = Integer.parseInt(coordinates[2]);
-                    boolean runningRight = Boolean.parseBoolean(coordinates[3]);
+                // Update existing players or create new ones
+                for (Integer id : allConnectionIDs) {
+                    if (id != client.getID()) {
+                        PlayerData playerData = (PlayerData) ((HashMap) lastReceivedData).get(id);
+                        float otherPlayerPosX = playerData.getX();
+                        float otherPlayerPosY = playerData.getY();
+                        int frameIndex = playerData.getFrame();
+                        boolean runningRight = playerData.isRunningRight();
 
-                    // If playerDict contains id, then update the data, otherwise add it to playerDict
-                    if (playerDict.containsKey(id)) {
-                        OtherPlayer otherPlayer = playerDict.get(id);
-                        otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
-                    } else {
-                        OtherPlayer otherPlayer = new OtherPlayer(world, playScreen, otherPlayerPosX, otherPlayerPosY);
-                        playerDict.put(id, otherPlayer);
-                        otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+                        // If playerDict contains id, then update the data, otherwise add it to playerDict
+                        if (playerDict.containsKey(id)) {
+                            OtherPlayer otherPlayer = playerDict.get(id);
+                            otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+                        } else {
+                            OtherPlayer otherPlayer = new OtherPlayer(world, playScreen, otherPlayerPosX, otherPlayerPosY);
+                            playerDict.put(id, otherPlayer);
+                            otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+                        }
                     }
                 }
-            }
 
-            // Remove disconnected players and destroy associated Box2D objects
-            playerDict.keySet().removeIf(id -> {
-                if (!allConnectionIDs.contains(id)) {
-                    // Player disconnected, destroy associated Box2D objects
-                    OtherPlayer otherPlayer = playerDict.get(id);
-                    world.destroyBody(otherPlayer.b2body);
-                    return true; // Remove the player from the map
-                }
-                return false;
-            });
+                // Remove disconnected players and destroy associated Box2D objects
+                playerDict.keySet().removeIf(id -> {
+                    if (!allConnectionIDs.contains(id)) {
+                        // Player disconnected, destroy associated Box2D objects
+                        OtherPlayer otherPlayer = playerDict.get(id);
+                        world.destroyBody(otherPlayer.b2body);
+                        return true; // Remove the player from the map
+                    }
+                    return false;
+                });
+            }
         }
+
+
     }
 
     /**
@@ -131,3 +156,5 @@ public class MyGDXGame extends Game {
         }
     }
 }
+
+
