@@ -29,7 +29,7 @@ public class OtherPlayer extends Sprite {
         this.world = world;
 
         initializeAllFrames();
-        definePlayer();
+        definePlayer(screen.startPosX, screen.startPosY);
 
         playerStand = new TextureRegion(getTexture(), 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
         playerAllFrames.add(playerStand);
@@ -70,24 +70,26 @@ public class OtherPlayer extends Sprite {
      * Updates the player's position and sets the appropriate animation frame.
      */
     public void update(float posX, float posY, int frame_index, boolean runningRight) {
-        b2body.setTransform(posX, posY, 0); // Set the box2d body at the right place
-        setPosition(posX - getWidth() / 2, posY - getHeight() / 2); // Set the texture pos at the right place
-        TextureRegion frame = playerAllFrames.get(frame_index); // The connection sends the index of correct frame
-        if (!runningRight && !frame.isFlipX()) {
-            frame.flip(true, false);
-        } else if (runningRight && frame.isFlipX()) {
-            frame.flip(true, false);
+        if (frame_index != -1) {
+            b2body.setTransform(posX, posY, 0); // Set the box2d body at the right place
+            setPosition(posX - getWidth() / 2, posY - getHeight() / 2); // Set the texture pos at the right place
+            TextureRegion frame = playerAllFrames.get(frame_index); // The connection sends the index of correct frame
+            if (!runningRight && !frame.isFlipX()) {
+                frame.flip(true, false);
+            } else if (runningRight && frame.isFlipX()) {
+                frame.flip(true, false);
+            }
+            setRegion(frame);
+            b2body.setAwake(true); // By default, it's not awake
         }
-        setRegion(frame);
-        b2body.setAwake(true); // By default, it's not awake
     }
 
     /**
      * Defines the player's Box2D body and fixture.
      */
-    public void definePlayer() {
+    public void definePlayer(float startX, float startY) {
         BodyDef bdef = new BodyDef();
-        bdef.position.set(PLAYER_WIDTH, PLAYER_HEIGHT);
+        bdef.position.set(startX / MyGDXGame.PPM, startY / MyGDXGame.PPM);
         bdef.type = BodyDef.BodyType.DynamicBody;
         b2body = world.createBody(bdef);
 

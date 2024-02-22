@@ -40,6 +40,7 @@ public class B2WorldCreator {
             fdef.shape = shape;
             fdef.filter.categoryBits = MyGDXGame.WORLD_CATEGORY;
             fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.PLAYER_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY;
+
             body.createFixture(fdef);
         }
     }

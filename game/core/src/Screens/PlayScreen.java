@@ -27,6 +27,7 @@ import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Manifold;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -37,17 +38,17 @@ import java.util.Map;
 
 public class PlayScreen implements Screen, InputProcessor {
     private MyGDXGame game;
-    public OrthographicCamera gameCam;
+    public OrthographicCamera gameCam = new OrthographicCamera();
     private Viewport gamePort;
     private TiledMap map;
-    private TmxMapLoader mapLoader;
+    private TmxMapLoader mapLoader = new TmxMapLoader();
     private OrthogonalTiledMapRenderer renderer;
     public World world;
     private Box2DDebugRenderer b2dr;
     public Player player;
-    private TextureAtlas atlas;
+    private TextureAtlas atlas = new TextureAtlas("player_spritesheet.atlas");
     private int keyPresses = 0;
-    private HashSet<Integer> keysPressed;
+    private HashSet<Integer> keysPressed = new HashSet<>();
     private float prevPosX = 0;
     private float prevPosY = 0;
     public float startPosX;
@@ -63,18 +64,14 @@ public class PlayScreen implements Screen, InputProcessor {
      * @param game The Game instance representing the main game.
      */
     public PlayScreen(MyGDXGame game) {
-        atlas = new TextureAtlas("player_spritesheet.atlas");
         this.game = game;
-        gameCam = new OrthographicCamera();
         gamePort = new StretchViewport(MyGDXGame.V_WIDTH / MyGDXGame.PPM, MyGDXGame.V_HEIGHT / MyGDXGame.PPM, gameCam);
-        keysPressed = new HashSet<>();
 
-        mapLoader = new TmxMapLoader();
         map = mapLoader.load("test_map.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1 / MyGDXGame.PPM);
         gameCam.position.set(gamePort.getWorldWidth() / 2, gamePort.getWorldHeight() / 2, 0);
 
-        world = new World(new Vector2(0, 0), true); // Set gravity as null as we have a top down game
+        world = new World(new Vector2(0, 0), true); // Set gravity as null as we have a top-down game
         b2dr = new Box2DDebugRenderer();
         new B2WorldCreator(world, map, this);
 
@@ -116,6 +113,12 @@ public class PlayScreen implements Screen, InputProcessor {
             public void postSolve(Contact contact, ContactImpulse contactImpulse) {
             }
         });
+        new B2WorldCreator(world, map, this);
+
+        player = new Player(world, this);
+
+        debug = new Debug(game.batch, player);
+
     }
 
     /**
@@ -202,6 +205,7 @@ public class PlayScreen implements Screen, InputProcessor {
 
             prevPosX = gameCam.position.x;
             prevPosY = gameCam.position.y;
+            player.prevState = player.currentState;
         }
     }
 
@@ -257,6 +261,8 @@ public class PlayScreen implements Screen, InputProcessor {
         // Clear the keys because for some reason the input processor bugs out when resizing the window
         keyPresses = 0;
         keysPressed.clear();
+
+        debug.stage.getViewport().update(width, height, true);
     }
 
     @Override

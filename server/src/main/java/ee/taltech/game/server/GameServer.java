@@ -69,7 +69,6 @@ public class GameServer {
                 System.out.println("Player disconnected: " + connection.getID());
                 playerInstanceCoordinates.remove(connection.getID());
             }
-
         });
     }
 
