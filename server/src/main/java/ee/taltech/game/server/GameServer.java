@@ -1,5 +1,8 @@
 package ee.taltech.game.server;
 
+import ObjectsToSend.PlayerData;
+import ObjectsToSend.RobotData;
+import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
@@ -20,6 +23,12 @@ public class GameServer {
      */
     public GameServer() {
         server = new Server();
+
+        Kryo kryo = server.getKryo();
+        kryo.register(RobotData.class, 15);
+        kryo.register(PlayerData.class);
+        kryo.register(HashMap.class);
+
         server.start();
         try {
             server.bind(8080, 8081);
@@ -39,14 +48,12 @@ public class GameServer {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     System.out.println("Server received: " + object);
 
-                    playerInstanceCoordinates.put(connection.getID(), object);
-
-                    server.sendToAllTCP(
-                            playerInstanceCoordinates.entrySet().stream()
-                                    .map(entry -> entry.getKey() + ":" + entry.getValue())
-                                    .collect(Collectors.joining("/"))
-                    );
-
+                    if (object instanceof RobotData){
+//                        server.sendToAllTCP(object);
+                    } else if (object instanceof PlayerData){
+                        playerInstanceCoordinates.put(connection.getID(), object);
+                        server.sendToAllTCP(playerInstanceCoordinates);
+                    }
                 }
             }
 
