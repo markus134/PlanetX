@@ -1,5 +1,8 @@
 package Screens;
 
+import ObjectsToSend.PlayerData;
+import ObjectsToSend.RobotData;
+import Opponents.Robot;
 import Scenes.Debug;
 import Sprites.OtherPlayer;
 import Sprites.Player;
@@ -35,6 +38,7 @@ public class PlayScreen implements Screen, InputProcessor {
     private Box2DDebugRenderer b2dr;
     public Player player;
     private TextureAtlas atlas = new TextureAtlas("player_spritesheet.atlas");
+    private TextureAtlas atlas2 = new TextureAtlas("Opponents/Robot.atlas");
     private int keyPresses = 0;
     private HashSet<Integer> keysPressed = new HashSet<>();
     private float prevPosX = 0;
@@ -42,6 +46,7 @@ public class PlayScreen implements Screen, InputProcessor {
     public float startPosX;
     public float startPosY;
     private Debug debug;
+    public Robot robot; // currently adds 1 robot to the game
 
     /**
      * Constructor for the PlayScreen.
@@ -62,6 +67,7 @@ public class PlayScreen implements Screen, InputProcessor {
         new B2WorldCreator(world, map, this);
 
         player = new Player(world, this);
+        robot = new Robot(world, this);
 
         debug = new Debug(game.batch, player);
     }
@@ -92,6 +98,10 @@ public class PlayScreen implements Screen, InputProcessor {
      */
     public TextureAtlas getAtlas() {
         return atlas;
+    }
+
+    public TextureAtlas getAtlas2() {
+        return atlas2;
     }
 
     /**
@@ -131,6 +141,7 @@ public class PlayScreen implements Screen, InputProcessor {
         world.step(1 / 60f, 6, 2);
 
         player.update(dt);
+        robot.update(dt);
 
         gameCam.position.x = player.b2body.getPosition().x;
         gameCam.position.y = player.b2body.getPosition().y;
@@ -140,11 +151,23 @@ public class PlayScreen implements Screen, InputProcessor {
 
         // It is used to send the position of the player to the server
         if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState) {
-            MyGDXGame.client.sendTCP(gameCam.position.x + "," + gameCam.position.y + "," + player.getCurrentFrameIndex() + "," + player.runningRight);
+            MyGDXGame.client.sendTCP(new PlayerData(
+                    gameCam.position.x,
+                    gameCam.position.y,
+                    player.getCurrentFrameIndex(),
+                    player.runningRight
+            ));
 
             prevPosX = gameCam.position.x;
             prevPosY = gameCam.position.y;
             player.prevState = player.currentState;
+
+            MyGDXGame.client.sendTCP(new RobotData(
+                    robot.b2body.getPosition().x,
+                    robot.b2body.getPosition().y,
+                    robot.getCurrentFrameIndex(),
+                    robot.runningRight
+            ));
         }
     }
 
@@ -169,6 +192,8 @@ public class PlayScreen implements Screen, InputProcessor {
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();
         player.draw(game.batch); // Draw the player after rendering the physics world
+
+        robot.draw(game.batch);
 
         // Draw the other players within the game
         for (Map.Entry<Integer, OtherPlayer> entry : MyGDXGame.playerDict.entrySet()) {

@@ -1,20 +1,21 @@
 package com.mygdx.game;
 
+import ObjectsToSend.PlayerData;
+import ObjectsToSend.RobotData;
 import Screens.MenuScreen;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.World;
+import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The main class of the game, responsible for managing screens, rendering, and network communication.
@@ -43,6 +44,12 @@ public class MyGDXGame extends Game {
         setScreen(menu);
 
         client = new Client();
+
+        Kryo kryo = client.getKryo();
+        kryo.register(RobotData.class, 15);
+        kryo.register(PlayerData.class);
+        kryo.register(HashMap.class);
+
         client.start();
         client.sendTCP("Start");
         try {
@@ -69,51 +76,51 @@ public class MyGDXGame extends Game {
         super.render();
 
         if (lastReceivedData != null) {
-            String[] playersData = lastReceivedData.toString().split("/");
-            World world = playScreen.world;
-            ArrayList<Integer> allConnectionIDs = new ArrayList<>();
+            if (lastReceivedData instanceof RobotData) {
+                float robotPosX = ((RobotData) lastReceivedData).getX();
+                float robotPosY = ((RobotData) lastReceivedData).getY();
+                int frameIndex = ((RobotData) lastReceivedData).getFrame();
+                boolean runningRight = ((RobotData) lastReceivedData).isRunningRight();
 
-            // Collect IDs from the latest received data
-            for (String playerData : playersData) {
-                String[] parts = playerData.split(":");
-                int id = Integer.parseInt(parts[0]);
-                allConnectionIDs.add(id);
-            }
+                playScreen.robot.updatePosition(robotPosX, robotPosY, frameIndex, runningRight);
 
-            // Update existing players or create new ones
-            for (String playerData : playersData) {
-                String[] parts = playerData.split(":");
-                int id = Integer.parseInt(parts[0]);
+            } else if (lastReceivedData instanceof HashMap){
+                World world = playScreen.world;
+                Set keys = ((HashMap)lastReceivedData).keySet();
+                ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
 
-                if (id != client.getID()) {
-                    String[] coordinates = parts[1].split(",");
-                    float otherPlayerPosX = Float.parseFloat(coordinates[0]);
-                    float otherPlayerPosY = Float.parseFloat(coordinates[1]);
-                    int frameIndex = Integer.parseInt(coordinates[2]);
-                    boolean runningRight = Boolean.parseBoolean(coordinates[3]);
+                // Update existing players or create new ones
+                for (Integer id : allConnectionIDs) {
+                    if (id != client.getID()) {
+                        PlayerData playerData = (PlayerData) ((HashMap) lastReceivedData).get(id);
+                        float otherPlayerPosX = playerData.getX();
+                        float otherPlayerPosY = playerData.getY();
+                        int frameIndex = playerData.getFrame();
+                        boolean runningRight = playerData.isRunningRight();
 
-                    // If playerDict contains id, then update the data, otherwise add it to playerDict
-                    if (playerDict.containsKey(id)) {
-                        OtherPlayer otherPlayer = playerDict.get(id);
-                        otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
-                    } else {
-                        OtherPlayer otherPlayer = new OtherPlayer(world, playScreen, otherPlayerPosX, otherPlayerPosY);
-                        playerDict.put(id, otherPlayer);
-                        otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+                        // If playerDict contains id, then update the data, otherwise add it to playerDict
+                        if (playerDict.containsKey(id)) {
+                            OtherPlayer otherPlayer = playerDict.get(id);
+                            otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+                        } else {
+                            OtherPlayer otherPlayer = new OtherPlayer(world, playScreen, otherPlayerPosX, otherPlayerPosY);
+                            playerDict.put(id, otherPlayer);
+                            otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+                        }
                     }
                 }
-            }
 
-            // Remove disconnected players and destroy associated Box2D objects
-            playerDict.keySet().removeIf(id -> {
-                if (!allConnectionIDs.contains(id)) {
-                    // Player disconnected, destroy associated Box2D objects
-                    OtherPlayer otherPlayer = playerDict.get(id);
-                    world.destroyBody(otherPlayer.b2body);
-                    return true; // Remove the player from the map
-                }
-                return false;
-            });
+                // Remove disconnected players and destroy associated Box2D objects
+                playerDict.keySet().removeIf(id -> {
+                    if (!allConnectionIDs.contains(id)) {
+                        // Player disconnected, destroy associated Box2D objects
+                        OtherPlayer otherPlayer = playerDict.get(id);
+                        world.destroyBody(otherPlayer.b2body);
+                        return true; // Remove the player from the map
+                    }
+                    return false;
+                });
+            }
         }
     }
 
