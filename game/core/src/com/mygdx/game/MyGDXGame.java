@@ -13,6 +13,7 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
+import com.esotericsoftware.kryo.util.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -48,6 +49,7 @@ public class MyGDXGame extends Game {
         Kryo kryo = client.getKryo();
         kryo.register(RobotData.class, 15);
         kryo.register(PlayerData.class);
+        kryo.register(Integer.class);
         kryo.register(HashMap.class);
 
         client.start();
@@ -61,8 +63,11 @@ public class MyGDXGame extends Game {
             @Override
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
-                    System.out.println("received: " + object);
-                    lastReceivedData = object;
+                    if (object instanceof RobotData){
+                        playScreen.robot.updatePosition((RobotData) object);
+                    } else {
+                        lastReceivedData = object;
+                    }
                 }
             }
         }));
@@ -76,23 +81,16 @@ public class MyGDXGame extends Game {
         super.render();
 
         if (lastReceivedData != null) {
-            if (lastReceivedData instanceof RobotData) {
-                float robotPosX = ((RobotData) lastReceivedData).getX();
-                float robotPosY = ((RobotData) lastReceivedData).getY();
-                int frameIndex = ((RobotData) lastReceivedData).getFrame();
-                boolean runningRight = ((RobotData) lastReceivedData).isRunningRight();
-
-                playScreen.robot.updatePosition(robotPosX, robotPosY, frameIndex, runningRight);
-
-            } else if (lastReceivedData instanceof HashMap){
+            if (lastReceivedData instanceof HashMap){
+                HashMap data = ((HashMap)lastReceivedData);
                 World world = playScreen.world;
-                Set keys = ((HashMap)lastReceivedData).keySet();
+                Set keys = data.keySet();
                 ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
 
                 // Update existing players or create new ones
                 for (Integer id : allConnectionIDs) {
                     if (id != client.getID()) {
-                        PlayerData playerData = (PlayerData) ((HashMap) lastReceivedData).get(id);
+                        PlayerData playerData = (PlayerData) data.get(id);
                         float otherPlayerPosX = playerData.getX();
                         float otherPlayerPosY = playerData.getY();
                         int frameIndex = playerData.getFrame();

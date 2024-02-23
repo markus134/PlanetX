@@ -27,6 +27,7 @@ public class GameServer {
         Kryo kryo = server.getKryo();
         kryo.register(RobotData.class, 15);
         kryo.register(PlayerData.class);
+        kryo.register(Integer.class);
         kryo.register(HashMap.class);
 
         server.start();
@@ -49,7 +50,7 @@ public class GameServer {
                     System.out.println("Server received: " + object);
 
                     if (object instanceof RobotData){
-//                        server.sendToAllTCP(object);
+                        server.sendToAllTCP(object);
                     } else if (object instanceof PlayerData){
                         playerInstanceCoordinates.put(connection.getID(), object);
                         server.sendToAllTCP(playerInstanceCoordinates);

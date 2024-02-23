@@ -22,6 +22,7 @@ public class OtherPlayer extends Sprite {
     public Body b2body;
     private TextureRegion playerStand;
     public ArrayList<TextureRegion> playerAllFrames = new ArrayList<>();
+    public TextureRegion region;
 
 
     public OtherPlayer(World world, PlayScreen screen, float posX, float posY) {
