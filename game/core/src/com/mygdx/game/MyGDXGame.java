@@ -1,9 +1,11 @@
 package com.mygdx.game;
 
+import ObjectsToSend.PlayerData;
+import ObjectsToSend.RobotData;
+import Opponents.Robot;
 import Bullets.Bullet;
 import Bullets.BulletManager;
 import ObjectsToSend.BulletData;
-import ObjectsToSend.PlayerData;
 import Screens.MenuScreen;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
@@ -17,11 +19,8 @@ import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
 
 /**
  * The main class of the game, responsible for managing screens, rendering, and network communication.
@@ -57,7 +56,9 @@ public class MyGDXGame extends Game {
         client = new Client();
 
         Kryo kryo = client.getKryo();
+        kryo.register(RobotData.class, 15);
         kryo.register(PlayerData.class);
+        kryo.register(Integer.class);
         kryo.register(BulletData.class, 17);
         kryo.register(HashMap.class);
 
@@ -74,11 +75,11 @@ public class MyGDXGame extends Game {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     if (object instanceof BulletData) {
                         lastReceivedBullets.add((BulletData) object);
+                    } else if (object instanceof RobotData) {
+                        Robot.data = (RobotData) object;
                     } else {
                         lastReceivedData = object;
                     }
-
-
                 }
             }
         }));
@@ -92,7 +93,6 @@ public class MyGDXGame extends Game {
         super.render();
 
         if (lastReceivedData != null) {
-
             // Made a special list for bullets as the packets were otherwise skipped (rendering was slower)
             for (BulletData data : lastReceivedBullets) {
                 Bullet bullet = playScreen.bulletManager.obtainBullet(data.getX(), data.getY());
@@ -101,6 +101,8 @@ public class MyGDXGame extends Game {
             lastReceivedBullets.clear();
 
             if (lastReceivedData instanceof HashMap){
+                Robot.playersInfo = ((HashMap)lastReceivedData);
+                HashMap data = ((HashMap)lastReceivedData);
                 World world = playScreen.world;
                 Set keys = ((HashMap)lastReceivedData).keySet();
                 ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
@@ -113,7 +115,7 @@ public class MyGDXGame extends Game {
                         float otherPlayerPosY = playerData.getY();
                         int frameIndex = playerData.getFrame();
                         boolean runningRight = playerData.isRunningRight();
-
+                        
                         // If playerDict contains id, then update the data, otherwise add it to playerDict
                         if (playerDict.containsKey(id)) {
                             OtherPlayer otherPlayer = playerDict.get(id);

@@ -1,10 +1,11 @@
 package Screens;
 
-
+import ObjectsToSend.PlayerData;
+import ObjectsToSend.RobotData;
+import Opponents.Robot;
 import Bullets.Bullet;
 import Bullets.BulletManager;
 import ObjectsToSend.BulletData;
-import ObjectsToSend.PlayerData;
 import Scenes.Debug;
 import Sprites.OtherPlayer;
 import Sprites.Player;
@@ -47,6 +48,7 @@ public class PlayScreen implements Screen, InputProcessor {
     private Box2DDebugRenderer b2dr;
     public Player player;
     private TextureAtlas atlas = new TextureAtlas("player_spritesheet.atlas");
+    private TextureAtlas atlas2 = new TextureAtlas("Opponents/Robot.atlas");
     private int keyPresses = 0;
     private HashSet<Integer> keysPressed = new HashSet<>();
     private float prevPosX = 0;
@@ -54,6 +56,7 @@ public class PlayScreen implements Screen, InputProcessor {
     public float startPosX;
     public float startPosY;
     private Debug debug;
+    public Robot robot; // currently adds 1 robot to the game
     private Vector3 touchPoint; // Added to store the touch point in world coordinates
     public BulletManager bulletManager;
     private float bulletSpeed = 5.0f; // Adjust the bullet speed as needed
@@ -76,6 +79,7 @@ public class PlayScreen implements Screen, InputProcessor {
         new B2WorldCreator(world, map, this);
 
         player = new Player(world, this);
+        robot = new Robot(world, this);
 
         debug = new Debug(game.batch, player);
 
@@ -148,6 +152,10 @@ public class PlayScreen implements Screen, InputProcessor {
         return atlas;
     }
 
+    public TextureAtlas getAtlas2() {
+        return atlas2;
+    }
+
     /**
      * Handles player input.
      */
@@ -185,6 +193,7 @@ public class PlayScreen implements Screen, InputProcessor {
         world.step(1 / 60f, 6, 2);
 
         player.update(dt);
+        robot.update(dt);
 
         bulletManager.update(dt);
 
@@ -206,6 +215,13 @@ public class PlayScreen implements Screen, InputProcessor {
             prevPosX = gameCam.position.x;
             prevPosY = gameCam.position.y;
             player.prevState = player.currentState;
+
+            MyGDXGame.client.sendTCP(new RobotData(
+                    robot.b2body.getPosition().x,
+                    robot.b2body.getPosition().y,
+                    robot.getCurrentFrameIndex(),
+                    robot.runningRight
+            ));
         }
     }
 
@@ -225,11 +241,13 @@ public class PlayScreen implements Screen, InputProcessor {
         renderer.render();
 
         // Uncomment the following line if you want to see box2d lines
-        // b2dr.render(world, gameCam.combined);
+//         b2dr.render(world, gameCam.combined);
 
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();
         player.draw(game.batch); // Draw the player after rendering the physics world
+
+        robot.draw(game.batch);
 
         // Draw the other players within the game
         for (Map.Entry<Integer, OtherPlayer> entry : MyGDXGame.playerDict.entrySet()) {
