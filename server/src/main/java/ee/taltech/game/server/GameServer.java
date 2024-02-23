@@ -12,7 +12,6 @@ import com.esotericsoftware.kryonet.Server;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class GameServer {
 
@@ -44,21 +43,22 @@ public class GameServer {
              * Handles received messages from clients. Updates player coordinates and broadcasts the updated state to all clients.
              *
              * @param connection The connection object representing the client connection.
-             * @param object The received object from the client.
+             * @param object     The received object from the client.
              */
             public void received(Connection connection, Object object) {
 
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     System.out.println("Server received: " + object);
-                    if (object instanceof PlayerData){
+                    if (object instanceof PlayerData) {
                         playerInstanceCoordinates.put(connection.getID(), object);
                         server.sendToAllTCP(playerInstanceCoordinates);
                     }
                     if (object instanceof BulletData) {
                         server.sendToAllTCP(object);
                     }
-                    if (object instanceof RobotData){
+                    if (object instanceof RobotData) {
                         server.sendToAllTCP(object);
+                    }
                 }
             }
 
