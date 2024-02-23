@@ -64,7 +64,7 @@ public class MyGDXGame extends Game {
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     if (object instanceof RobotData){
-                        playScreen.robot.updatePosition((RobotData) object);
+                        Robot.data = (RobotData) object;
                     } else {
                         lastReceivedData = object;
                     }

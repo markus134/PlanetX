@@ -5,6 +5,7 @@ import ObjectsToSend.RobotData;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
 import Sprites.Player;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -26,7 +27,8 @@ public class Robot extends Sprite {
     private static final float LINEAR_DAMPING = 4f;
     private static final float robot_HEIGHT = 64 / MyGDXGame.PPM;
     private static final float robot_WIDTH = 64 / MyGDXGame.PPM;
-    private static final float VELOCITY_THRESHOLD = 0.8f;
+    private static final float VELOCITY_THRESHOLD = 0.5f;
+    public static RobotData data;
 
     // Enums for robot state and direction
     public enum State {
@@ -48,7 +50,6 @@ public class Robot extends Sprite {
     public runDirection prevRunDirection;
     public World world;
     public Body b2body;
-    private TextureRegion robotStand;
     private Animation<TextureRegion> robotRunUpper;
     private Animation<TextureRegion> robotRun;
     private Animation<TextureRegion> robotRunLower;
@@ -71,10 +72,7 @@ public class Robot extends Sprite {
         runningRight = true;
 
         initializeAnimations();
-        definerobot(screen.startPosX, screen.startPosY);
-
-        robotStand = new TextureRegion(getTexture(), 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
-        robotAllFrames.add(robotStand);
+        defineRobot(screen.startPosX, screen.startPosY);
 
         // Put all frames into a hashmap, so we wouldn't have to search the whole list everytime we want to get the current frame's index
         for (int i = 0; i < robotAllFrames.size(); i++) {
@@ -82,7 +80,6 @@ public class Robot extends Sprite {
         }
 
         setBounds(0, 0, robot_WIDTH, robot_HEIGHT);
-        setRegion(robotStand);
     }
 
     /**
@@ -92,8 +89,8 @@ public class Robot extends Sprite {
         robotRunUpper = createAnimation(0, 3, 1);
         robotRunLower = createAnimation(0, 3, 2);
         robotRun = createAnimation(0, 3, 0);
-        robotRunDown = createAnimation(0, 3, 4);
-        robotRunUp = createAnimation(0, 3, 5);
+        robotRunDown = createAnimation(0, 3, 3);
+        robotRunUp = createAnimation(0, 3, 4);
     }
 
     public int getCurrentFrameIndex() {
@@ -124,58 +121,85 @@ public class Robot extends Sprite {
      * @param delta The time elapsed since the last frame.
      */
     public void update(float delta) {
+        updatePosition();
         setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
         region = getFrame(delta);
         setRegion(region);
+        b2body.setAwake(true);
     }
 
-    public void updatePosition(RobotData data) {
-
-//        float posX = data.getX();
-//        float posY = data.getY();
-        int roboFrame = data.getFrame();
-        boolean runningRight = data.isRunningRight();
-
-        if (roboFrame != -1) {
-
-            float distance = Float.MAX_VALUE;
-            float closestX = 0;
-            float closestY = 0;
-            for (Object playerInfo : playersInfo.values()) {
-                PlayerData info = (PlayerData) playerInfo;
-                float playerX = info.getX();
-                float playerY = info.getY();
-                float actual_distance = (float) (Math.sqrt(Math.pow(playerX, 2) + Math.pow(playerY, 2)));
-                if (actual_distance < distance) {
-                    distance = actual_distance;
-                    closestX = playerX;
-                    closestY = playerY;
-                }
+    /**
+     * Seeks for the closest enemy and moves the body of the robot in that direction.
+     */
+    private void updatePosition(){
+        float distance = Float.MAX_VALUE;
+        float closestX = 0;
+        float closestY = 0;
+        for (Object playerInfo : playersInfo.values()) {
+            PlayerData info = (PlayerData) playerInfo;
+            float playerX = info.getX();
+            float playerY = info.getY();
+            float actual_distance = (float) (Math.sqrt(Math.pow(playerX, 2) + Math.pow(playerY, 2)));
+            if (actual_distance < distance) {
+                distance = actual_distance;
+                closestX = playerX;
+                closestY = playerY;
             }
-
-            if (closestX> this.b2body.getPosition().x){
-                this.b2body.applyLinearImpulse(new Vector2(0.1f, 0), this.b2body.getWorldCenter(), true);
-            } else{
-                this.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), this.b2body.getWorldCenter(), true);
-            }
-            if (closestY > this.b2body.getPosition().y) {
-                this.b2body.applyLinearImpulse(new Vector2(0, 0.1f), this.b2body.getWorldCenter(), true);
-            } else {
-                this.b2body.applyLinearImpulse(new Vector2(0, -0.1f), this.b2body.getWorldCenter(), true);
-            }
-//            b2body.setTransform(posX, posY, 0); // Set the box2d body at the right place
-//            setPosition(posX - getWidth() / 2, posY - getHeight() / 2); // Set the texture pos at the right place
-            TextureRegion frame = robotAllFrames.get(roboFrame); // The connection sends the index of correct frame
-            if (!runningRight && !frame.isFlipX()) {
-                frame.flip(true, false);
-            } else if (runningRight && frame.isFlipX()) {
-                frame.flip(true, false);
-            }
-            setRegion(frame);
-            b2body.setAwake(true); // By default, it's not awake
         }
-    }
 
+        float robotX = this.b2body.getPosition().x;
+        float robotY = this.b2body.getPosition().y;
+
+        if (closestX> robotX){
+            this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
+        } else{
+            this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
+        }
+        if (closestY > robotY) {
+            this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
+        } else {
+            this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
+        }
+
+        // more advanced but still not really a pathfinding algorithm
+
+//        System.out.println(currentDirection);
+//        if (Math.abs(closestX - robotX) > border){
+//            if (closestX > robotX) {
+//                if (Math.abs(closestY - robotY) < border) {
+//                    this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
+//                    return;
+//                } else {
+//                    this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
+//                    if (closestY > robotY) {
+//                        this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
+//                    } else {
+//                        this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
+//                    }
+//                    return;
+//                }
+//            } else {
+//                if (Math.abs(closestY - robotY) < border) {
+//                    this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
+//                    return;
+//                } else {
+//                    this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
+//                    if (closestY > robotY) {
+//                        this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
+//                    } else {
+//                        this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
+//                    }
+//                    return;
+//                }
+//            }
+//        } else {
+//            if (closestY > robotY) {
+//                this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
+//            } else {
+//                this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
+//            }
+//        }
+    }
     /**
      * Retrieves the current animation frame based on the robot's state and direction.
      *
@@ -183,16 +207,9 @@ public class Robot extends Sprite {
      * @return The current animation frame.
      */
     public TextureRegion getFrame(float dt) {
-        currentState = getState();
-
-        // If we are standing, then there is no point in continuing and we can return robotStand
-        if (currentState == State.STANDING) {
-            return robotStand;
-        }
-
         currentDirection = getRunDirection();
 
-        TextureRegion region;
+        TextureRegion region = null;
 
         // We will only check the right side directions. If it's left, then we can flip the region
         // The UPPER and LOWER mean upper right and lower right respectively (maybe change the names)
@@ -212,9 +229,6 @@ public class Robot extends Sprite {
             case DOWN:
                 region = robotRunDown.getKeyFrame(stateTimer, true);
                 break;
-            default:
-                region = robotStand;
-                break;
         }
         // Start the animation from the start if currentState or currentDirection have changed
         stateTimer = (currentState == prevState && currentDirection == prevRunDirection) ? stateTimer + dt : 0;
@@ -233,24 +247,7 @@ public class Robot extends Sprite {
 
         return region;
     }
-
-    /**
-     * Retrieves the current state of the robot (standing or running) based on linear velocity.
-     *
-     * @return The current state of the robot.
-     */
-    private State getState() {
-        float velocityX = b2body.getLinearVelocity().x;
-        float velocityY = b2body.getLinearVelocity().y;
-        float velocityThreshold = VELOCITY_THRESHOLD; // Added a velocity threshold as we want the standing texture to be rendered right away not when velocity reaches zero
-
-        if (Math.abs(velocityX) < velocityThreshold && Math.abs(velocityY) < velocityThreshold) {
-            return State.STANDING;
-        }
-
-        return State.RUNNING;
-    }
-
+    
     /**
      * Retrieves the current running direction of the robot based on linear velocity.
      *
@@ -260,9 +257,9 @@ public class Robot extends Sprite {
         float velocityX = Math.abs(b2body.getLinearVelocity().x); // We only care for positive x here so for example if running direction is upper left, then we want to return upper right
         float velocityY = b2body.getLinearVelocity().y;
 
-        if (velocityX > 0) {
-            if (velocityY > 0) return runDirection.UPPER;
-            else if (velocityY < 0) return runDirection.LOWER;
+        if (velocityX > VELOCITY_THRESHOLD) {
+            if (velocityY > VELOCITY_THRESHOLD) return runDirection.UPPER;
+            else if (velocityY < -VELOCITY_THRESHOLD) return runDirection.LOWER;
             else return runDirection.RIGHT;
         } else {
             if (velocityY > 0) return runDirection.UP;
@@ -274,7 +271,7 @@ public class Robot extends Sprite {
     /**
      * Defines the robot's Box2D body and fixture.
      */
-    public void definerobot(float startX, float startY) {
+    public void defineRobot(float startX, float startY) {
         BodyDef bdef = new BodyDef();
         bdef.position.set(startX / MyGDXGame.PPM, startY / MyGDXGame.PPM);
         bdef.type = BodyDef.BodyType.DynamicBody;
