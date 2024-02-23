@@ -1,16 +1,22 @@
 package Opponents;
 
+import ObjectsToSend.PlayerData;
 import ObjectsToSend.RobotData;
 import Screens.PlayScreen;
+import Sprites.OtherPlayer;
+import Sprites.Player;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Robot extends Sprite {
     private static final int FRAME_WIDTH = 48;
@@ -53,6 +59,7 @@ public class Robot extends Sprite {
     public boolean runningRight;
     private float stateTimer;
     public TextureRegion region;
+    public static HashMap playersInfo = new HashMap<>();
 
 
     public Robot(World world, PlayScreen screen) {
@@ -123,13 +130,41 @@ public class Robot extends Sprite {
     }
 
     public void updatePosition(RobotData data) {
-        float posX = data.getX();
-        float posY = data.getY();
+
+//        float posX = data.getX();
+//        float posY = data.getY();
         int roboFrame = data.getFrame();
         boolean runningRight = data.isRunningRight();
+
         if (roboFrame != -1) {
-            b2body.setTransform(posX, posY, 0); // Set the box2d body at the right place
-            setPosition(posX - getWidth() / 2, posY - getHeight() / 2); // Set the texture pos at the right place
+
+            float distance = Float.MAX_VALUE;
+            float closestX = 0;
+            float closestY = 0;
+            for (Object playerInfo : playersInfo.values()) {
+                PlayerData info = (PlayerData) playerInfo;
+                float playerX = info.getX();
+                float playerY = info.getY();
+                float actual_distance = (float) (Math.sqrt(Math.pow(playerX, 2) + Math.pow(playerY, 2)));
+                if (actual_distance < distance) {
+                    distance = actual_distance;
+                    closestX = playerX;
+                    closestY = playerY;
+                }
+            }
+
+            if (closestX> this.b2body.getPosition().x){
+                this.b2body.applyLinearImpulse(new Vector2(0.1f, 0), this.b2body.getWorldCenter(), true);
+            } else{
+                this.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), this.b2body.getWorldCenter(), true);
+            }
+            if (closestY > this.b2body.getPosition().y) {
+                this.b2body.applyLinearImpulse(new Vector2(0, 0.1f), this.b2body.getWorldCenter(), true);
+            } else {
+                this.b2body.applyLinearImpulse(new Vector2(0, -0.1f), this.b2body.getWorldCenter(), true);
+            }
+//            b2body.setTransform(posX, posY, 0); // Set the box2d body at the right place
+//            setPosition(posX - getWidth() / 2, posY - getHeight() / 2); // Set the texture pos at the right place
             TextureRegion frame = robotAllFrames.get(roboFrame); // The connection sends the index of correct frame
             if (!runningRight && !frame.isFlipX()) {
                 frame.flip(true, false);

@@ -2,6 +2,7 @@ package com.mygdx.game;
 
 import ObjectsToSend.PlayerData;
 import ObjectsToSend.RobotData;
+import Opponents.Robot;
 import Screens.MenuScreen;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
@@ -13,7 +14,6 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
-import com.esotericsoftware.kryo.util.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -82,6 +82,7 @@ public class MyGDXGame extends Game {
 
         if (lastReceivedData != null) {
             if (lastReceivedData instanceof HashMap){
+                Robot.playersInfo = ((HashMap)lastReceivedData);
                 HashMap data = ((HashMap)lastReceivedData);
                 World world = playScreen.world;
                 Set keys = data.keySet();

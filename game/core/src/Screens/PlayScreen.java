@@ -187,7 +187,7 @@ public class PlayScreen implements Screen, InputProcessor {
         renderer.render();
 
         // Uncomment the following line if you want to see box2d lines
-        // b2dr.render(world, gameCam.combined);
+//         b2dr.render(world, gameCam.combined);
 
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();
