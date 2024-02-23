@@ -216,6 +216,7 @@ public class Player extends Sprite {
         }
     }
 
+
     /**
      * Defines the player's Box2D body and fixture.
      */
@@ -230,6 +231,9 @@ public class Player extends Sprite {
         shape.setRadius(PLAYER_RADIUS);
 
         fdef.shape = shape;
+        fdef.filter.categoryBits = MyGDXGame.PLAYER_CATEGORY;
+        fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.WORLD_CATEGORY;
+
         b2body.createFixture(fdef);
 
         // Set linear damping to simulate friction

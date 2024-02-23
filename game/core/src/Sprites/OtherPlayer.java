@@ -14,7 +14,7 @@ public class OtherPlayer extends Sprite {
     private static final int FRAME_WIDTH = 32;
     private static final int FRAME_HEIGHT = 32;
     private static final float ANIMATION_SPEED = 0.1f;
-    private static final float PLAYER_RADIUS = 8 / MyGDXGame.PPM;
+    private static final float PLAYER_RADIUS = 16 / MyGDXGame.PPM;
     private static final float LINEAR_DAMPING = 4f;
     private static final float PLAYER_HEIGHT = 64 / MyGDXGame.PPM;
     private static final float PLAYER_WIDTH = 64 / MyGDXGame.PPM;
@@ -98,6 +98,8 @@ public class OtherPlayer extends Sprite {
         shape.setRadius(PLAYER_RADIUS);
 
         fdef.shape = shape;
+        fdef.filter.categoryBits = MyGDXGame.OTHER_PLAYER_CATEGORY;  // Use a unique category for the player
+        fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.WORLD_CATEGORY | MyGDXGame.PLAYER_CATEGORY;
         b2body.createFixture(fdef);
 
         // Set linear damping to simulate friction

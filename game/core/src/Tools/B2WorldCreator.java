@@ -13,6 +13,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.game.MyGDXGame;
 
 public class B2WorldCreator {
+
     public B2WorldCreator(World world, TiledMap map, PlayScreen playScreen) {
         // Get the coordinates of the start position point
         for (MapObject object : map.getLayers().get(4).getObjects().getByType(RectangleMapObject.class)) {
@@ -37,6 +38,9 @@ public class B2WorldCreator {
 
             shape.setAsBox(rectangle.getWidth() / 2 / MyGDXGame.PPM, rectangle.getHeight() / 2 / MyGDXGame.PPM);
             fdef.shape = shape;
+            fdef.filter.categoryBits = MyGDXGame.WORLD_CATEGORY;
+            fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.PLAYER_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY;
+
             body.createFixture(fdef);
         }
     }
