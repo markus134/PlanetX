@@ -123,13 +123,17 @@ public class Robot extends Sprite {
     }
 
     public void updatePosition(RobotData data) {
-        if (data.getFrame() != -1) {
-            b2body.setTransform(data.getX(), data.getY(), 0); // Set the box2d body at the right place
-            setPosition(data.getX() - getWidth() / 2, data.getY() - getHeight() / 2); // Set the texture pos at the right place
-            TextureRegion frame = robotAllFrames.get(data.getFrame()); // The connection sends the index of correct frame
-            if (!data.isRunningRight() && !frame.isFlipX()) {
+        float posX = data.getX();
+        float posY = data.getY();
+        int roboFrame = data.getFrame();
+        boolean runningRight = data.isRunningRight();
+        if (roboFrame != -1) {
+            b2body.setTransform(posX, posY, 0); // Set the box2d body at the right place
+            setPosition(posX - getWidth() / 2, posY - getHeight() / 2); // Set the texture pos at the right place
+            TextureRegion frame = robotAllFrames.get(roboFrame); // The connection sends the index of correct frame
+            if (!runningRight && !frame.isFlipX()) {
                 frame.flip(true, false);
-            } else if (data.isRunningRight() && frame.isFlipX()) {
+            } else if (runningRight && frame.isFlipX()) {
                 frame.flip(true, false);
             }
             setRegion(frame);
