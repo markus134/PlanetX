@@ -17,3 +17,5 @@ To get started, follow these steps:
 
 **Note:** Currently it doesn't matter which mode you pick at the menu, they will both be multiplayer.
 
+You can also refer to the video here: https://gitlab.cs.taltech.ee/ppavli/iti0301-2024-meeskond-suva/-/wikis/1.-sprindi-video
+

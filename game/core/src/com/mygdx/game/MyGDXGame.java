@@ -3,6 +3,9 @@ package com.mygdx.game;
 import ObjectsToSend.PlayerData;
 import ObjectsToSend.RobotData;
 import Opponents.Robot;
+import Bullets.Bullet;
+import Bullets.BulletManager;
+import ObjectsToSend.BulletData;
 import Screens.MenuScreen;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
@@ -18,6 +21,7 @@ import com.esotericsoftware.kryonet.Listener;
 import java.io.IOException;
 import java.util.*;
 
+
 /**
  * The main class of the game, responsible for managing screens, rendering, and network communication.
  */
@@ -30,9 +34,14 @@ public class MyGDXGame extends Game {
     public static Client client;
 
     private Object lastReceivedData;
+    private ArrayList<BulletData> lastReceivedBullets = new ArrayList<>();
     public static Map<Integer, OtherPlayer> playerDict = new HashMap<>();
     public static PlayScreen playScreen;
     private MenuScreen menu;
+    public static final short BULLET_CATEGORY = 0x0001;
+    public static final short PLAYER_CATEGORY = 0x0002;
+    public static final short OTHER_PLAYER_CATEGORY = 0x0004;
+    public static final short WORLD_CATEGORY = 0x0008;
 
     /**
      * Initializes the game, creates essential objects, and sets up the network client.
@@ -50,6 +59,7 @@ public class MyGDXGame extends Game {
         kryo.register(RobotData.class, 15);
         kryo.register(PlayerData.class);
         kryo.register(Integer.class);
+        kryo.register(BulletData.class, 17);
         kryo.register(HashMap.class);
 
         client.start();
@@ -63,7 +73,9 @@ public class MyGDXGame extends Game {
             @Override
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
-                    if (object instanceof RobotData){
+                    if (object instanceof BulletData) {
+                        lastReceivedBullets.add((BulletData) object);
+                    } else if (object instanceof RobotData) {
                         Robot.data = (RobotData) object;
                     } else {
                         lastReceivedData = object;
@@ -81,22 +93,29 @@ public class MyGDXGame extends Game {
         super.render();
 
         if (lastReceivedData != null) {
+            // Made a special list for bullets as the packets were otherwise skipped (rendering was slower)
+            for (BulletData data : lastReceivedBullets) {
+                Bullet bullet = playScreen.bulletManager.obtainBullet(data.getX(), data.getY());
+                bullet.body.setLinearVelocity(data.getLinVelX(), data.getLinVelY());
+            }
+            lastReceivedBullets.clear();
+
             if (lastReceivedData instanceof HashMap){
                 Robot.playersInfo = ((HashMap)lastReceivedData);
                 HashMap data = ((HashMap)lastReceivedData);
                 World world = playScreen.world;
-                Set keys = data.keySet();
+                Set keys = ((HashMap)lastReceivedData).keySet();
                 ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
 
                 // Update existing players or create new ones
                 for (Integer id : allConnectionIDs) {
                     if (id != client.getID()) {
-                        PlayerData playerData = (PlayerData) data.get(id);
+                        PlayerData playerData = (PlayerData) ((HashMap) lastReceivedData).get(id);
                         float otherPlayerPosX = playerData.getX();
                         float otherPlayerPosY = playerData.getY();
                         int frameIndex = playerData.getFrame();
                         boolean runningRight = playerData.isRunningRight();
-
+                        
                         // If playerDict contains id, then update the data, otherwise add it to playerDict
                         if (playerDict.containsKey(id)) {
                             OtherPlayer otherPlayer = playerDict.get(id);
@@ -121,6 +140,8 @@ public class MyGDXGame extends Game {
                 });
             }
         }
+
+
     }
 
     /**
@@ -137,3 +158,5 @@ public class MyGDXGame extends Game {
         }
     }
 }
+
+
