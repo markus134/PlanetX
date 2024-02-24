@@ -2,6 +2,10 @@ package Screens;
 
 import Bullets.Bullet;
 import Bullets.BulletManager;
+import ObjectsToSend.BulletData;
+import ObjectsToSend.PlayerData;
+import ObjectsToSend.RobotData;
+import ObjectsToSend.RobotDataMap;
 import InputHandlers.PlayScreenInputHandler;
 import ObjectsToSend.PlayerData;
 import ObjectsToSend.RobotData;
@@ -19,6 +23,8 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
@@ -30,7 +36,9 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 
+import java.util.*;
 import java.util.Map;
+
 
 public class PlayScreen implements Screen {
     private MyGDXGame game;
@@ -49,9 +57,11 @@ public class PlayScreen implements Screen {
     public float startPosX;
     public float startPosY;
     private Debug debug;
-    public Robot robot; // currently adds 1 robot to the game
     public BulletManager bulletManager;
-    PlayScreenInputHandler handler;
+    public static List<String> robotIds = new ArrayList<>();
+    public static HashMap<String, Robot> robots = new HashMap<>();
+    public static RobotDataMap robotDataMap = new RobotDataMap();
+    private PlayScreenInputHandler handler;
 
     /**
      * Constructor for the PlayScreen.
@@ -71,14 +81,14 @@ public class PlayScreen implements Screen {
         new B2WorldCreator(world, map, this);
 
         player = new Player(world, this);
-        robot = new Robot(world, this);
 
         debug = new Debug(game.batch, player);
 
         // Initialize BulletManager
         bulletManager = new BulletManager(world);
 
-        handler = new PlayScreenInputHandler(player, gameCam, bulletManager);
+
+        handler = new PlayScreenInputHandler(this);
 
         world.setContactListener(new ContactListener() {
             @Override
@@ -109,7 +119,7 @@ public class PlayScreen implements Screen {
         });
     }
 
-    
+
     /**
      * Shows the PlayScreen and sets the input processor.
      */
@@ -127,9 +137,15 @@ public class PlayScreen implements Screen {
         return atlas;
     }
 
+    /**
+     * Gets the texture atlas used in the game.
+     *
+     * @return The texture atlas.
+     */
     public TextureAtlas getAtlas2() {
         return atlas2;
     }
+
 
 
     /**
@@ -141,9 +157,29 @@ public class PlayScreen implements Screen {
         world.step(1 / 60f, 6, 2);
 
         player.update(dt);
-        robot.update(dt);
+
+        // updating robots and adding info to the robotDataMap, which is sent to the server
+        for (Map.Entry<String, Robot> entry : robots.entrySet()) {
+            Robot robot = entry.getValue();
+            robotDataMap.put(entry.getKey(),
+                    new RobotData(robot.getX(), robot.getY()));
+            robot.update(dt);
+        }
+        MyGDXGame.client.sendTCP(robotDataMap);
 
         bulletManager.update(dt);
+
+        // robotDataMap is constantly being updated by all client instances
+        // this block of code makes new instances of the robot class if it is a robot with a new ID
+        HashMap<String, RobotData> map = robotDataMap.getMap();
+        for (Map.Entry<String, RobotData> entry: map.entrySet()){
+            String key = entry.getKey();
+            if (!robotIds.contains(key)) {
+                Robot robot = new Robot(world, this, entry.getValue().getX(), entry.getValue().getY());
+                robots.put(key, robot);
+                robotIds.add(key);
+            }
+        }
 
         gameCam.position.x = player.b2body.getPosition().x;
         gameCam.position.y = player.b2body.getPosition().y;
@@ -152,7 +188,7 @@ public class PlayScreen implements Screen {
         renderer.setView(gameCam);
 
         // It is used to send the position of the player to the server
-        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState) {
+        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState)  {
             MyGDXGame.client.sendTCP(new PlayerData(
                     gameCam.position.x,
                     gameCam.position.y,
@@ -160,18 +196,12 @@ public class PlayScreen implements Screen {
                     player.runningRight
             ));
 
-            MyGDXGame.client.sendTCP(new RobotData(
-                    robot.b2body.getPosition().x,
-                    robot.b2body.getPosition().y,
-                    robot.getCurrentFrameIndex(),
-                    robot.runningRight
-            ));
-
             prevPosX = gameCam.position.x;
             prevPosY = gameCam.position.y;
             player.prevState = player.currentState;
         }
     }
+
 
     /**
      * Renders the game.
@@ -189,13 +219,17 @@ public class PlayScreen implements Screen {
         renderer.render();
 
         // Uncomment the following line if you want to see box2d lines
-        // b2dr.render(world, gameCam.combined);
+        b2dr.render(world, gameCam.combined);
 
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();
         player.draw(game.batch); // Draw the player after rendering the physics world
 
-        robot.draw(game.batch);
+        // draws all robots
+        for (Map.Entry<String, Robot> entry : robots.entrySet()) {
+            Robot robot = entry.getValue();
+            robot.draw(game.batch);
+        }
 
         // Draw the other players within the game
         for (Map.Entry<Integer, OtherPlayer> entry : MyGDXGame.playerDict.entrySet()) {
@@ -256,5 +290,6 @@ public class PlayScreen implements Screen {
         world.dispose();
         b2dr.dispose();
         atlas.dispose();
+        atlas2.dispose();
     }
 }

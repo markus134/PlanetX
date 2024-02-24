@@ -1,13 +1,14 @@
 package ee.taltech.game.server;
 
-import ObjectsToSend.RobotData;
-import ee.taltech.game.server.ObjectsToSend.BulletData;
-import ee.taltech.game.server.ObjectsToSend.PlayerData;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
+import ee.taltech.game.server.ObjectsToSend.BulletData;
+import ee.taltech.game.server.ObjectsToSend.PlayerData;
+import ee.taltech.game.server.ObjectsToSend.RobotData;
+import ee.taltech.game.server.ObjectsToSend.RobotDataMap;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,19 +18,23 @@ public class GameServer {
 
     private Server server;
     private Map<Integer, Object> playerInstanceCoordinates = new HashMap<>();
+    private RobotDataMap robotDataMap = new RobotDataMap();
 
     /**
      * Constructor for GameServer. Initializes the KryoNet server and binds it to the specified ports.
      */
     public GameServer() {
-        server = new Server();
+        server = new Server(1000000, 1000000);
 
+        //registering classes
         Kryo kryo = server.getKryo();
         kryo.register(RobotData.class, 15);
         kryo.register(PlayerData.class);
         kryo.register(Integer.class);
         kryo.register(BulletData.class, 17);
         kryo.register(HashMap.class);
+        kryo.register(RobotDataMap.class);
+        kryo.register(String.class);
 
         server.start();
         try {
@@ -50,14 +55,22 @@ public class GameServer {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     System.out.println("Server received: " + object);
                     if (object instanceof PlayerData) {
+                        // updates player coordinates
                         playerInstanceCoordinates.put(connection.getID(), object);
+                        System.out.println("HERE");
                         server.sendToAllTCP(playerInstanceCoordinates);
                     }
                     if (object instanceof BulletData) {
+                        // update bullet data
                         server.sendToAllTCP(object);
                     }
-                    if (object instanceof RobotData) {
-                        server.sendToAllTCP(object);
+                    if (object instanceof RobotDataMap) {
+                        // update robot data
+                        HashMap<String, RobotData> map = ((RobotDataMap) object).getMap();
+                        for (Map.Entry<String, RobotData> entry : map.entrySet()) {
+                            robotDataMap.put(entry.getKey(), entry.getValue());
+                        }
+                        server.sendToAllTCP(robotDataMap);
                     }
                 }
             }
@@ -71,6 +84,12 @@ public class GameServer {
             public void disconnected(Connection connection) {
                 System.out.println("Player disconnected: " + connection.getID());
                 playerInstanceCoordinates.remove(connection.getID());
+
+                // if everyone disconnects, every robot is destroyed
+                if (playerInstanceCoordinates.isEmpty()) {
+                    robotDataMap.getMap().clear();
+                    server.sendToAllTCP(robotDataMap);
+                }
             }
         });
     }

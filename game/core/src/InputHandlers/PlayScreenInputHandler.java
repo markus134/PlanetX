@@ -3,33 +3,38 @@ package InputHandlers;
 import Bullets.Bullet;
 import Bullets.BulletManager;
 import ObjectsToSend.BulletData;
+import ObjectsToSend.RobotData;
+import Opponents.Robot;
+import Screens.PlayScreen;
 import Sprites.Player;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.game.MyGDXGame;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
+
+import static Screens.PlayScreen.robotDataMap;
+import static Screens.PlayScreen.robotIds;
+import static Screens.PlayScreen.robots;
 
 public class PlayScreenInputHandler implements InputProcessor {
     public Set<Integer> keysPressed = new HashSet<>();
     public int keyPresses = 0;
-    private Player player;
-    private OrthographicCamera gameCam;
-    private BulletManager bulletManager;
+    private PlayScreen playScreen;
     private Vector3 touchPoint; // Added to store the touch point in world coordinates
     private float bulletSpeed = 5.0f; // Adjust the bullet speed as needed
     private static final float PLAYER_RADIUS = 16 / MyGDXGame.PPM;
     private static final float BULLET_OFFSET = 8 / MyGDXGame.PPM;
 
 
-    public PlayScreenInputHandler(Player player, OrthographicCamera gameCam, BulletManager bulletManager) {
-        this.player = player;
-        this.gameCam = gameCam;
-        this.bulletManager = bulletManager;
+    public PlayScreenInputHandler(PlayScreen playScreen) {
+        this.playScreen = playScreen;
         touchPoint = new Vector3();
     }
     /**
@@ -40,24 +45,36 @@ public class PlayScreenInputHandler implements InputProcessor {
             for (Integer keypress : keysPressed) {
                 switch (keypress) {
                     case Input.Keys.W:
-                        player.move(0, 0.1f);
+                        playScreen.player.move(0, 0.1f);
                         break;
                     case Input.Keys.S:
-                        player.move(0, -0.1f);
+                        playScreen.player.move(0, -0.1f);
                         break;
                     case Input.Keys.D:
-                        player.move(0.1f, 0);
+                        playScreen.player.move(0.1f, 0);
                         break;
                     case Input.Keys.A:
-                        player.move(-0.1f, 0);
+                        playScreen.player.move(-0.1f, 0);
                         break;
                     case Input.Keys.B:
-                        buttonClick();
+                        generateRobot();
                         break;
                 }
 
             }
         }
+    }
+
+    /**
+     * Generates robots when the button is clicked.
+     */
+    private void generateRobot() {
+        Robot robot = new Robot(playScreen.world, playScreen);
+        String uniqueID = UUID.randomUUID().toString();
+
+        robotIds.add(uniqueID);
+        robots.put(uniqueID, robot);
+        robotDataMap.put(uniqueID, new RobotData(robot.getX(), robot.getY()));
     }
 
     /**
@@ -95,13 +112,13 @@ public class PlayScreenInputHandler implements InputProcessor {
 
         // Reset horizontal velocity when D or A key is released
         if (keycode == Input.Keys.D || keycode == Input.Keys.A) {
-            player.b2body.setLinearVelocity(0, player.b2body.getLinearVelocity().y);
+            playScreen.player.b2body.setLinearVelocity(0, playScreen.player.b2body.getLinearVelocity().y);
             keyPresses--;
         }
 
         // Reset vertical velocity when W or S key is released
         if (keycode == Input.Keys.W || keycode == Input.Keys.S) {
-            player.b2body.setLinearVelocity(player.b2body.getLinearVelocity().x, 0);
+            playScreen.player.b2body.setLinearVelocity(playScreen.player.b2body.getLinearVelocity().x, 0);
             keyPresses--;
         }
 
@@ -130,10 +147,10 @@ public class PlayScreenInputHandler implements InputProcessor {
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         // Convert screen coordinates to world coordinates
         touchPoint.set(screenX, screenY, 0);
-        gameCam.unproject(touchPoint);
+        playScreen.gameCam.unproject(touchPoint);
 
-        float x = player.getX() + player.getWidth() / 2;
-        float y = player.getY() + player.getHeight() / 2;
+        float x = playScreen.player.getX() + playScreen.player.getWidth() / 2;
+        float y = playScreen.player.getY() + playScreen.player.getHeight() / 2;
 
         Vector2 direction = new Vector2(touchPoint.x - x, touchPoint.y - y);
         direction.nor(); // Normalize the direction vector
@@ -145,7 +162,7 @@ public class PlayScreenInputHandler implements InputProcessor {
         float velocityY = direction.y * bulletSpeed;
 
         // Shoot a bullet towards the touched position
-        Bullet newBullet = bulletManager.obtainBullet(x, y);
+        Bullet newBullet = playScreen.bulletManager.obtainBullet(x, y);
         newBullet.body.setLinearVelocity(velocityX, velocityY);
 
         MyGDXGame.client.sendTCP(new BulletData(
