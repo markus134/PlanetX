@@ -1,19 +1,16 @@
 package Screens;
 
+import Bullets.Bullet;
+import Bullets.BulletManager;
 import InputHandlers.PlayScreenInputHandler;
 import ObjectsToSend.PlayerData;
 import ObjectsToSend.RobotData;
 import Opponents.Robot;
-import Bullets.Bullet;
-import Bullets.BulletManager;
-import ObjectsToSend.BulletData;
 import Scenes.Debug;
 import Sprites.OtherPlayer;
 import Sprites.Player;
 import Tools.B2WorldCreator;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -22,7 +19,6 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
@@ -34,7 +30,6 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 
-import java.util.HashSet;
 import java.util.Map;
 
 public class PlayScreen implements Screen {
@@ -114,9 +109,7 @@ public class PlayScreen implements Screen {
         });
     }
 
-
-
-
+    
     /**
      * Shows the PlayScreen and sets the input processor.
      */
