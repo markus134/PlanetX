@@ -309,12 +309,4 @@ public class Robot extends Sprite {
     public float getY() {
         return this.b2body.getPosition().y;
     }
-
-    public int getCurrentFrameIndex() {
-        return frameIndexMap.getOrDefault(region, -1);
-    }
-
-    public boolean isRunningRight() {
-        return runningRight;
-    }
 }

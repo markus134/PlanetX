@@ -121,7 +121,7 @@ public class PlayScreen implements Screen, InputProcessor {
     }
 
     /**
-     * Handles the logic for button clicks.
+     * Generates robots when the button is clicked.
      */
     private void generateRobot() {
         Robot robot = new Robot(world, this);
@@ -150,6 +150,11 @@ public class PlayScreen implements Screen, InputProcessor {
         return atlas;
     }
 
+    /**
+     * Gets the texture atlas used in the game.
+     *
+     * @return The texture atlas.
+     */
     public TextureAtlas getAtlas2() {
         return atlas2;
     }
@@ -174,7 +179,7 @@ public class PlayScreen implements Screen, InputProcessor {
                         player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
                         break;
                     case Input.Keys.B:
-                        // this will later be used to regenerate the map
+                        // generates a robot.
                         generateRobot();
                         break;
                 }
@@ -192,6 +197,7 @@ public class PlayScreen implements Screen, InputProcessor {
 
         player.update(dt);
 
+        // updating robots and adding info to the robotDataMap, which is sent to the server
         for (Map.Entry<String, Robot> entry : robots.entrySet()) {
             Robot robot = entry.getValue();
             robotDataMap.put(entry.getKey(),
@@ -202,6 +208,8 @@ public class PlayScreen implements Screen, InputProcessor {
 
         bulletManager.update(dt);
 
+        // robotDataMap is constantly being updated by all client instances
+        // this block of code makes new instances of the robot class if it is a robot with a new ID
         HashMap<String, RobotData> map = robotDataMap.getMap();
         for (Map.Entry<String, RobotData> entry: map.entrySet()){
             String key = entry.getKey();
@@ -255,6 +263,7 @@ public class PlayScreen implements Screen, InputProcessor {
         game.batch.begin();
         player.draw(game.batch); // Draw the player after rendering the physics world
 
+        // draws all robots
         for (Map.Entry<String, Robot> entry : robots.entrySet()) {
             Robot robot = entry.getValue();
             robot.draw(game.batch);

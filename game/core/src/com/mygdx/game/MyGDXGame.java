@@ -33,7 +33,6 @@ public class MyGDXGame extends Game {
     private Object lastReceivedData;
     private ArrayList<BulletData> lastReceivedBullets = new ArrayList<>();
     public static Map<Integer, OtherPlayer> playerDict = new HashMap<>();
-    private List<String> robotIDs = new ArrayList<>();
     public static PlayScreen playScreen;
     private MenuScreen menu;
     public static final short BULLET_CATEGORY = 0x0001;
@@ -53,6 +52,7 @@ public class MyGDXGame extends Game {
 
         client = new Client();
 
+        // registering classes
         Kryo kryo = client.getKryo();
         kryo.register(RobotData.class, 15);
         kryo.register(PlayerData.class);
@@ -74,8 +74,10 @@ public class MyGDXGame extends Game {
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     if (object instanceof BulletData) {
+                        // updating bullet data
                         lastReceivedBullets.add((BulletData) object);
                     } else if (object instanceof RobotDataMap){
+                        // updating info about robots
                         PlayScreen.robotDataMap = (RobotDataMap) object;
                     } else {
                         lastReceivedData = object;
@@ -102,13 +104,7 @@ public class MyGDXGame extends Game {
             lastReceivedBullets.clear();
 
             if (lastReceivedData instanceof HashMap){
-//                for (Object obj : ((HashMap<?, ?>) lastReceivedData).values()) {
-//                    if (obj instanceof RobotData) {
-//                        PlayScreen.robots = (HashMap<String, RobotData>) lastReceivedData;
-//                    } else {
-//
-//                    }
-//                }
+                // updating info about players for the robots to move in the right direction
                 Robot.playersInfo = ((HashMap)lastReceivedData);
                 World world = playScreen.world;
                 Set keys = ((HashMap)lastReceivedData).keySet();
@@ -157,7 +153,6 @@ public class MyGDXGame extends Game {
     @Override
     public void dispose() {
         client.close();
-
         try {
             client.dispose();
         } catch (IOException e) {

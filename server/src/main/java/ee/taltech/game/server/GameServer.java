@@ -26,6 +26,7 @@ public class GameServer {
     public GameServer() {
         server = new Server();
 
+        //registering classes
         Kryo kryo = server.getKryo();
         kryo.register(RobotData.class, 15);
         kryo.register(PlayerData.class);
@@ -54,18 +55,20 @@ public class GameServer {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     System.out.println("Server received: " + object);
                     if (object instanceof PlayerData) {
+                        // updates player coordinates
                         playerInstanceCoordinates.put(connection.getID(), object);
                         server.sendToAllTCP(playerInstanceCoordinates);
                     }
                     if (object instanceof BulletData) {
+                        // update bullet data
                         server.sendToAllTCP(object);
                     }
                     if (object instanceof RobotDataMap) {
+                        // update robot data
                         HashMap<String, RobotData> map = ((RobotDataMap) object).getMap();
                         for (Map.Entry<String, RobotData> entry : map.entrySet()) {
                             robotDataMap.put(entry.getKey(), entry.getValue());
                         }
-                        System.out.println(robotDataMap.getMap().size());
                         server.sendToAllTCP(robotDataMap);
                     }
                 }
@@ -80,6 +83,8 @@ public class GameServer {
             public void disconnected(Connection connection) {
                 System.out.println("Player disconnected: " + connection.getID());
                 playerInstanceCoordinates.remove(connection.getID());
+
+                // if everyone disconnects, every robot is destroyed
                 if (playerInstanceCoordinates.isEmpty()) {
                     robotDataMap.getMap().clear();
                     server.sendToAllTCP(robotDataMap);
