@@ -1,11 +1,12 @@
 package Screens;
 
-import ObjectsToSend.PlayerData;
-import ObjectsToSend.RobotData;
-import Opponents.Robot;
 import Bullets.Bullet;
 import Bullets.BulletManager;
 import ObjectsToSend.BulletData;
+import ObjectsToSend.PlayerData;
+import ObjectsToSend.RobotData;
+import ObjectsToSend.RobotDataMap;
+import Opponents.Robot;
 import Scenes.Debug;
 import Sprites.OtherPlayer;
 import Sprites.Player;
@@ -22,20 +23,12 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.ContactImpulse;
-import com.badlogic.gdx.physics.box2d.ContactListener;
-import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.physics.box2d.Manifold;
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 public class PlayScreen implements Screen, InputProcessor {
     private MyGDXGame game;
@@ -56,10 +49,12 @@ public class PlayScreen implements Screen, InputProcessor {
     public float startPosX;
     public float startPosY;
     private Debug debug;
-    public Robot robot; // currently adds 1 robot to the game
     private Vector3 touchPoint; // Added to store the touch point in world coordinates
     public BulletManager bulletManager;
     private float bulletSpeed = 5.0f; // Adjust the bullet speed as needed
+    public static List<String> robotIds = new ArrayList<>();
+    public static HashMap<String, Robot> robots = new HashMap<>();
+    public static RobotDataMap robotDataMap = new RobotDataMap();
 
     /**
      * Constructor for the PlayScreen.
@@ -79,7 +74,6 @@ public class PlayScreen implements Screen, InputProcessor {
         new B2WorldCreator(world, map, this);
 
         player = new Player(world, this);
-        robot = new Robot(world, this);
 
         debug = new Debug(game.batch, player);
 
@@ -88,6 +82,7 @@ public class PlayScreen implements Screen, InputProcessor {
         // Initialize BulletManager
         bulletManager = new BulletManager(world);
 
+//        MyGDXGame.client.sendTCP("AskAboutRobots");
 
         // Inside the constructor
         world.setContactListener(new ContactListener() {
@@ -128,10 +123,13 @@ public class PlayScreen implements Screen, InputProcessor {
     /**
      * Handles the logic for button clicks.
      */
-    private void buttonClick() {
-        System.out.println("Button Clicked!");
-        // Add your button click logic here
-        // This will later be used to regenerate the map without closing and reopening the program
+    private void generateRobot() {
+        Robot robot = new Robot(world, this);
+        String uniqueID = UUID.randomUUID().toString();
+
+        robotIds.add(uniqueID);
+        robots.put(uniqueID, robot);
+        robotDataMap.put(uniqueID, new RobotData(robot.getX(), robot.getY()));
     }
 
 
@@ -177,7 +175,7 @@ public class PlayScreen implements Screen, InputProcessor {
                         break;
                     case Input.Keys.B:
                         // this will later be used to regenerate the map
-                        buttonClick();
+                        generateRobot();
                         break;
                 }
             }
@@ -193,9 +191,26 @@ public class PlayScreen implements Screen, InputProcessor {
         world.step(1 / 60f, 6, 2);
 
         player.update(dt);
-        robot.update(dt);
+
+        for (Map.Entry<String, Robot> entry : robots.entrySet()) {
+            Robot robot = entry.getValue();
+            robotDataMap.put(entry.getKey(),
+                    new RobotData(robot.getX(), robot.getY()));
+            robot.update(dt);
+        }
+        MyGDXGame.client.sendTCP(robotDataMap);
 
         bulletManager.update(dt);
+
+        HashMap<String, RobotData> map = robotDataMap.getMap();
+        for (Map.Entry<String, RobotData> entry: map.entrySet()){
+            String key = entry.getKey();
+            if (!robotIds.contains(key)) {
+                Robot robot = new Robot(world, this, entry.getValue().getX(), entry.getValue().getY());
+                robots.put(key, robot);
+                robotIds.add(key);
+            }
+        }
 
         gameCam.position.x = player.b2body.getPosition().x;
         gameCam.position.y = player.b2body.getPosition().y;
@@ -215,13 +230,6 @@ public class PlayScreen implements Screen, InputProcessor {
             prevPosX = gameCam.position.x;
             prevPosY = gameCam.position.y;
             player.prevState = player.currentState;
-
-            MyGDXGame.client.sendTCP(new RobotData(
-                    robot.b2body.getPosition().x,
-                    robot.b2body.getPosition().y,
-                    robot.getCurrentFrameIndex(),
-                    robot.runningRight
-            ));
         }
     }
 
@@ -247,7 +255,10 @@ public class PlayScreen implements Screen, InputProcessor {
         game.batch.begin();
         player.draw(game.batch); // Draw the player after rendering the physics world
 
-        robot.draw(game.batch);
+        for (Map.Entry<String, Robot> entry : robots.entrySet()) {
+            Robot robot = entry.getValue();
+            robot.draw(game.batch);
+        }
 
         // Draw the other players within the game
         for (Map.Entry<Integer, OtherPlayer> entry : MyGDXGame.playerDict.entrySet()) {
@@ -412,5 +423,6 @@ public class PlayScreen implements Screen, InputProcessor {
         world.dispose();
         b2dr.dispose();
         atlas.dispose();
+        atlas2.dispose();
     }
 }

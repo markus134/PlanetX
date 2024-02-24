@@ -1,11 +1,7 @@
 package Opponents;
 
 import ObjectsToSend.PlayerData;
-import ObjectsToSend.RobotData;
 import Screens.PlayScreen;
-import Sprites.OtherPlayer;
-import Sprites.Player;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -16,8 +12,6 @@ import com.mygdx.game.MyGDXGame;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class Robot extends Sprite {
     private static final int FRAME_WIDTH = 48;
@@ -28,11 +22,9 @@ public class Robot extends Sprite {
     private static final float robot_HEIGHT = 64 / MyGDXGame.PPM;
     private static final float robot_WIDTH = 64 / MyGDXGame.PPM;
     private static final float VELOCITY_THRESHOLD = 0.5f;
-    public static RobotData data;
 
     // Enums for robot state and direction
     public enum State {
-        RUNNING,
         STANDING
     }
 
@@ -82,6 +74,28 @@ public class Robot extends Sprite {
         setBounds(0, 0, robot_WIDTH, robot_HEIGHT);
     }
 
+    public Robot(World world, PlayScreen screen, float posX, float posY) {
+        super(screen.getAtlas2().findRegion("Robot"));
+        this.world = world;
+        currentState = State.STANDING;
+        currentDirection = runDirection.RIGHT;
+        stateTimer = 0;
+        runningRight = true;
+
+        initializeAnimations();
+        defineRobot(screen.startPosX + posX, screen.startPosY + posY);
+        region = robotRunUp.getKeyFrame(0, true);
+        setRegion(region);
+        b2body.setAwake(true);
+
+        // Put all frames into a hashmap, so we wouldn't have to search the whole list everytime we want to get the current frame's index
+        for (int i = 0; i < robotAllFrames.size(); i++) {
+            frameIndexMap.put(robotAllFrames.get(i), i);
+        }
+
+        setBounds(0, 0, robot_WIDTH, robot_HEIGHT);
+    }
+
     /**
      * Initializes robot animations using sprite sheet regions.
      */
@@ -93,9 +107,6 @@ public class Robot extends Sprite {
         robotRunUp = createAnimation(0, 3, 4);
     }
 
-    public int getCurrentFrameIndex() {
-        return frameIndexMap.getOrDefault(region, -1);
-    }
 
     /**
      * Creates an animation from specified sprite sheet region parameters.
@@ -131,7 +142,7 @@ public class Robot extends Sprite {
     /**
      * Seeks for the closest enemy and moves the body of the robot in that direction.
      */
-    private void updatePosition(){
+    private void updatePosition() {
         float distance = Float.MAX_VALUE;
         float closestX = 0;
         float closestY = 0;
@@ -150,9 +161,9 @@ public class Robot extends Sprite {
         float robotX = this.b2body.getPosition().x;
         float robotY = this.b2body.getPosition().y;
 
-        if (closestX> robotX){
+        if (closestX > robotX) {
             this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
-        } else{
+        } else {
             this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
         }
         if (closestY > robotY) {
@@ -200,6 +211,7 @@ public class Robot extends Sprite {
 //            }
 //        }
     }
+
     /**
      * Retrieves the current animation frame based on the robot's state and direction.
      *
@@ -247,7 +259,7 @@ public class Robot extends Sprite {
 
         return region;
     }
-    
+
     /**
      * Retrieves the current running direction of the robot based on linear velocity.
      *
@@ -286,5 +298,23 @@ public class Robot extends Sprite {
 
         // Set linear damping to simulate friction
         b2body.setLinearDamping(LINEAR_DAMPING);
+    }
+
+    @Override
+    public float getX() {
+        return this.b2body.getPosition().x;
+    }
+
+    @Override
+    public float getY() {
+        return this.b2body.getPosition().y;
+    }
+
+    public int getCurrentFrameIndex() {
+        return frameIndexMap.getOrDefault(region, -1);
+    }
+
+    public boolean isRunningRight() {
+        return runningRight;
     }
 }
