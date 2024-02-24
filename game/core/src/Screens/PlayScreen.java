@@ -1,18 +1,16 @@
 package Screens;
 
+import Bullets.Bullet;
+import Bullets.BulletManager;
+import InputHandlers.PlayScreenInputHandler;
 import ObjectsToSend.PlayerData;
 import ObjectsToSend.RobotData;
 import Opponents.Robot;
-import Bullets.Bullet;
-import Bullets.BulletManager;
-import ObjectsToSend.BulletData;
 import Scenes.Debug;
 import Sprites.OtherPlayer;
 import Sprites.Player;
 import Tools.B2WorldCreator;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -21,23 +19,20 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Manifold;
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 
-import java.util.HashSet;
 import java.util.Map;
 
-public class PlayScreen implements Screen, InputProcessor {
+public class PlayScreen implements Screen {
     private MyGDXGame game;
     public OrthographicCamera gameCam = new OrthographicCamera();
     private Viewport gamePort;
@@ -49,17 +44,14 @@ public class PlayScreen implements Screen, InputProcessor {
     public Player player;
     private TextureAtlas atlas = new TextureAtlas("player_spritesheet.atlas");
     private TextureAtlas atlas2 = new TextureAtlas("Opponents/Robot.atlas");
-    private int keyPresses = 0;
-    private HashSet<Integer> keysPressed = new HashSet<>();
     private float prevPosX = 0;
     private float prevPosY = 0;
     public float startPosX;
     public float startPosY;
     private Debug debug;
     public Robot robot; // currently adds 1 robot to the game
-    private Vector3 touchPoint; // Added to store the touch point in world coordinates
     public BulletManager bulletManager;
-    private float bulletSpeed = 5.0f; // Adjust the bullet speed as needed
+    PlayScreenInputHandler handler;
 
     /**
      * Constructor for the PlayScreen.
@@ -83,13 +75,11 @@ public class PlayScreen implements Screen, InputProcessor {
 
         debug = new Debug(game.batch, player);
 
-        touchPoint = new Vector3();
-
         // Initialize BulletManager
         bulletManager = new BulletManager(world);
 
+        handler = new PlayScreenInputHandler(player, gameCam, bulletManager);
 
-        // Inside the constructor
         world.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
@@ -117,30 +107,15 @@ public class PlayScreen implements Screen, InputProcessor {
             public void postSolve(Contact contact, ContactImpulse contactImpulse) {
             }
         });
-        new B2WorldCreator(world, map, this);
-
-        player = new Player(world, this);
-
-        debug = new Debug(game.batch, player);
-
     }
 
-    /**
-     * Handles the logic for button clicks.
-     */
-    private void buttonClick() {
-        System.out.println("Button Clicked!");
-        // Add your button click logic here
-        // This will later be used to regenerate the map without closing and reopening the program
-    }
-
-
+    
     /**
      * Shows the PlayScreen and sets the input processor.
      */
     @Override
     public void show() {
-        Gdx.input.setInputProcessor(this);
+        Gdx.input.setInputProcessor(handler);
     }
 
     /**
@@ -156,33 +131,6 @@ public class PlayScreen implements Screen, InputProcessor {
         return atlas2;
     }
 
-    /**
-     * Handles player input.
-     */
-    private void handleInput() {
-        if (keyPresses > 0) {
-            for (Integer keypress : keysPressed) {
-                switch (keypress) {
-                    case Input.Keys.W:
-                        player.b2body.applyLinearImpulse(new Vector2(0, 0.1f), player.b2body.getWorldCenter(), true);
-                        break;
-                    case Input.Keys.S:
-                        player.b2body.applyLinearImpulse(new Vector2(0, -0.1f), player.b2body.getWorldCenter(), true);
-                        break;
-                    case Input.Keys.D:
-                        player.b2body.applyLinearImpulse(new Vector2(0.1f, 0), player.b2body.getWorldCenter(), true);
-                        break;
-                    case Input.Keys.A:
-                        player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
-                        break;
-                    case Input.Keys.B:
-                        // this will later be used to regenerate the map
-                        buttonClick();
-                        break;
-                }
-            }
-        }
-    }
 
     /**
      * Updates the game logic.
@@ -212,16 +160,16 @@ public class PlayScreen implements Screen, InputProcessor {
                     player.runningRight
             ));
 
-            prevPosX = gameCam.position.x;
-            prevPosY = gameCam.position.y;
-            player.prevState = player.currentState;
-
             MyGDXGame.client.sendTCP(new RobotData(
                     robot.b2body.getPosition().x,
                     robot.b2body.getPosition().y,
                     robot.getCurrentFrameIndex(),
                     robot.runningRight
             ));
+
+            prevPosX = gameCam.position.x;
+            prevPosY = gameCam.position.y;
+            player.prevState = player.currentState;
         }
     }
 
@@ -232,7 +180,7 @@ public class PlayScreen implements Screen, InputProcessor {
      */
     @Override
     public void render(float delta) {
-        handleInput();
+        handler.handleInput();
         update(delta);
 
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -241,7 +189,7 @@ public class PlayScreen implements Screen, InputProcessor {
         renderer.render();
 
         // Uncomment the following line if you want to see box2d lines
-//         b2dr.render(world, gameCam.combined);
+        // b2dr.render(world, gameCam.combined);
 
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();
@@ -277,8 +225,8 @@ public class PlayScreen implements Screen, InputProcessor {
         gamePort.update(width, height);
 
         // Clear the keys because for some reason the input processor bugs out when resizing the window
-        keyPresses = 0;
-        keysPressed.clear();
+        handler.keyPresses = 0;
+        handler.keysPressed.clear();
 
         debug.stage.getViewport().update(width, height, true);
     }
@@ -296,110 +244,6 @@ public class PlayScreen implements Screen, InputProcessor {
     @Override
     public void hide() {
 
-    }
-
-    /**
-     * Handles the key down event.
-     *
-     * @param keycode The keycode of the pressed key.
-     * @return True to indicate that the input event was handled.
-     */
-    @Override
-    public boolean keyDown(int keycode) {
-        keysPressed.add(keycode);
-        keyPresses++;
-
-        return true; // Return true to indicate that the input event was handled
-    }
-
-    /**
-     * Handles the key up event.
-     *
-     * @param keycode The keycode of the released key.
-     * @return True to indicate that the input event was handled.
-     */
-    @Override
-    public boolean keyUp(int keycode) {
-        keysPressed.remove(keycode);
-
-        // Reset horizontal velocity when D or A key is released
-        if (keycode == Input.Keys.D || keycode == Input.Keys.A) {
-            player.b2body.setLinearVelocity(0, player.b2body.getLinearVelocity().y);
-            keyPresses--;
-        }
-
-        // Reset vertical velocity when W or S key is released
-        if (keycode == Input.Keys.W || keycode == Input.Keys.S) {
-            player.b2body.setLinearVelocity(player.b2body.getLinearVelocity().x, 0);
-            keyPresses--;
-        }
-
-        // When resizing and clearing the keyPresses and keyPressed hashset, it for some reason sometimes bugs out and decrements from 0 to get -1
-        // This is to make sure it doesn't get lower than 0
-        if (keyPresses < 0) keyPresses = 0;
-
-        return true;
-    }
-
-    @Override
-    public boolean keyTyped(char c) {
-        return false;
-    }
-
-    /**
-     * Handles touch down event.
-     *
-     * @param screenX The x-coordinate of the touch position.
-     * @param screenY The y-coordinate of the touch position.
-     * @param pointer The pointer for the event.
-     * @param button  The button pressed during the event.
-     * @return True if the input event was handled.
-     */
-    @Override
-    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        // Convert screen coordinates to world coordinates
-        touchPoint.set(screenX, screenY, 0);
-        gameCam.unproject(touchPoint);
-
-        // Shoot a bullet towards the touched position
-        Bullet newBullet = bulletManager.obtainBullet(player.getX() + player.getWidth() / 2, player.getY() + player.getHeight() / 2);
-        Vector2 direction = new Vector2(touchPoint.x - (player.getX() + player.getWidth() / 2), touchPoint.y - (player.getY() + player.getHeight() / 2));
-        direction.nor(); // Normalize the direction vector
-        newBullet.body.setLinearVelocity(direction.x * bulletSpeed, direction.y * bulletSpeed);
-
-        MyGDXGame.client.sendTCP(new BulletData(
-                direction.x * bulletSpeed,
-                direction.y * bulletSpeed,
-                player.getX() + player.getWidth() / 2,
-                player.getY() + player.getHeight() / 2
-        ));
-
-        return true;
-    }
-
-    @Override
-    public boolean touchUp(int i, int i1, int i2, int i3) {
-        return false;
-    }
-
-    @Override
-    public boolean touchCancelled(int i, int i1, int i2, int i3) {
-        return false;
-    }
-
-    @Override
-    public boolean touchDragged(int i, int i1, int i2) {
-        return false;
-    }
-
-    @Override
-    public boolean mouseMoved(int i, int i1) {
-        return false;
-    }
-
-    @Override
-    public boolean scrolled(float v, float v1) {
-        return false;
     }
 
     /**

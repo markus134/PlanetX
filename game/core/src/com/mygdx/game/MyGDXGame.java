@@ -42,6 +42,7 @@ public class MyGDXGame extends Game {
     public static final short PLAYER_CATEGORY = 0x0002;
     public static final short OTHER_PLAYER_CATEGORY = 0x0004;
     public static final short WORLD_CATEGORY = 0x0008;
+    public static final short OPPONENT_CATEGORY = 0x0010;
 
     /**
      * Initializes the game, creates essential objects, and sets up the network client.
