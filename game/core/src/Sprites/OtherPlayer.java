@@ -99,7 +99,7 @@ public class OtherPlayer extends Sprite {
 
         fdef.shape = shape;
         fdef.filter.categoryBits = MyGDXGame.OTHER_PLAYER_CATEGORY;  // Use a unique category for the player
-        fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.WORLD_CATEGORY | MyGDXGame.PLAYER_CATEGORY;
+        fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.WORLD_CATEGORY | MyGDXGame.PLAYER_CATEGORY | MyGDXGame.OPPONENT_CATEGORY | MyGDXGame.BULLET_CATEGORY;
         b2body.createFixture(fdef);
 
         // Set linear damping to simulate friction

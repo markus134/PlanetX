@@ -24,7 +24,7 @@ public class GameServer {
      * Constructor for GameServer. Initializes the KryoNet server and binds it to the specified ports.
      */
     public GameServer() {
-        server = new Server();
+        server = new Server(1000000, 1000000);
 
         //registering classes
         Kryo kryo = server.getKryo();
@@ -57,6 +57,7 @@ public class GameServer {
                     if (object instanceof PlayerData) {
                         // updates player coordinates
                         playerInstanceCoordinates.put(connection.getID(), object);
+                        System.out.println("HERE");
                         server.sendToAllTCP(playerInstanceCoordinates);
                     }
                     if (object instanceof BulletData) {
