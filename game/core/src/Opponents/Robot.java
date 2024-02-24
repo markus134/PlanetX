@@ -282,6 +282,8 @@ public class Robot extends Sprite {
         shape.setRadius(robot_RADIUS);
 
         fdef.shape = shape;
+        fdef.filter.categoryBits = MyGDXGame.OPPONENT_CATEGORY;
+        fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.WORLD_CATEGORY | MyGDXGame.PLAYER_CATEGORY;
         b2body.createFixture(fdef);
 
         // Set linear damping to simulate friction

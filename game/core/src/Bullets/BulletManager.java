@@ -48,6 +48,7 @@ public class BulletManager {
         for (Bullet bullet : bulletsToRemove) {
             bullets.remove(bullet);
             bullet.destroy();
+            bullet.dispose();
         }
         bulletsToRemove.clear();
     }

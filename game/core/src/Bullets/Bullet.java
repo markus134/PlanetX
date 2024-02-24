@@ -39,7 +39,7 @@ public class Bullet extends Sprite {
         fixtureDef.restitution = 0.5f;
 
         fixtureDef.filter.categoryBits = MyGDXGame.BULLET_CATEGORY;
-        fixtureDef.filter.maskBits = MyGDXGame.WORLD_CATEGORY;
+        fixtureDef.filter.maskBits = MyGDXGame.WORLD_CATEGORY | MyGDXGame.OPPONENT_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.PLAYER_CATEGORY;
 
         body.createFixture(fixtureDef);
 
@@ -66,5 +66,8 @@ public class Bullet extends Sprite {
 
     public void setId(int id) {
         body.setUserData(id);
+    }
+    public void dispose() {
+        texture.dispose();
     }
 }

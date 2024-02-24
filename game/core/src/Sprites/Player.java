@@ -4,6 +4,7 @@ import Screens.PlayScreen;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
@@ -15,7 +16,7 @@ public class Player extends Sprite {
     private static final int FRAME_WIDTH = 32;
     private static final int FRAME_HEIGHT = 32;
     private static final float ANIMATION_SPEED = 0.1f;
-    private static final float PLAYER_RADIUS = 8 / MyGDXGame.PPM;
+    private static final float PLAYER_RADIUS = 16 / MyGDXGame.PPM;
     private static final float LINEAR_DAMPING = 4f;
     private static final float PLAYER_HEIGHT = 64 / MyGDXGame.PPM;
     private static final float PLAYER_WIDTH = 64 / MyGDXGame.PPM;
@@ -77,6 +78,15 @@ public class Player extends Sprite {
         setRegion(playerStand);
     }
 
+    /**
+     * Apply linear force to player.
+     *
+     * @param xForce
+     * @param yForce
+     */
+    public void move(float xForce, float yForce) {
+        b2body.applyLinearImpulse(new Vector2(xForce, yForce), b2body.getWorldCenter(), true);
+    }
     /**
      * Initializes player animations using sprite sheet regions.
      */
@@ -232,7 +242,7 @@ public class Player extends Sprite {
 
         fdef.shape = shape;
         fdef.filter.categoryBits = MyGDXGame.PLAYER_CATEGORY;
-        fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.WORLD_CATEGORY;
+        fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.WORLD_CATEGORY | MyGDXGame.OPPONENT_CATEGORY;
 
         b2body.createFixture(fdef);
 
