@@ -1,5 +1,4 @@
-package ee.taltech.game.server.ObjectsToSend;
-
+package serializableObjects;
 
 import java.io.Serializable;
 

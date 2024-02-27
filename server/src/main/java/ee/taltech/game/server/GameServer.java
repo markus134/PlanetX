@@ -5,10 +5,11 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-import ee.taltech.game.server.ObjectsToSend.BulletData;
-import ee.taltech.game.server.ObjectsToSend.PlayerData;
-import ee.taltech.game.server.ObjectsToSend.RobotData;
-import ee.taltech.game.server.ObjectsToSend.RobotDataMap;
+import serializableObjects.BulletData;
+import serializableObjects.PlayerData;
+import serializableObjects.RobotData;
+import serializableObjects.RobotDataMap;
+
 
 import java.io.IOException;
 import java.util.HashMap;

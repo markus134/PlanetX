@@ -1,19 +1,15 @@
 package InputHandlers;
 
 import Bullets.Bullet;
-import Bullets.BulletManager;
-import ObjectsToSend.BulletData;
-import ObjectsToSend.RobotData;
 import Opponents.Robot;
 import Screens.PlayScreen;
-import Sprites.Player;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.game.MyGDXGame;
+import serializableObjects.BulletData;
+import serializableObjects.RobotData;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,6 +27,7 @@ public class PlayScreenInputHandler implements InputProcessor {
     private float bulletSpeed = 5.0f; // Adjust the bullet speed as needed
     private static final float PLAYER_RADIUS = 16 / MyGDXGame.PPM;
     private static final float BULLET_OFFSET = 8 / MyGDXGame.PPM;
+    private boolean isFirstClick = true;
 
 
     public PlayScreenInputHandler(PlayScreen playScreen) {
@@ -57,7 +54,10 @@ public class PlayScreenInputHandler implements InputProcessor {
                         playScreen.player.move(-0.1f, 0);
                         break;
                     case Input.Keys.B:
-                        generateRobot();
+                        if (isFirstClick) {
+                            generateRobot();
+                            isFirstClick = false;
+                        }
                         break;
                 }
 
@@ -110,6 +110,9 @@ public class PlayScreenInputHandler implements InputProcessor {
     public boolean keyUp(int keycode) {
         keysPressed.remove(keycode);
 
+        if (keycode == Input.Keys.B) {
+            isFirstClick = true;
+        }
         // Reset horizontal velocity when D or A key is released
         if (keycode == Input.Keys.D || keycode == Input.Keys.A) {
             playScreen.player.b2body.setLinearVelocity(0, playScreen.player.b2body.getLinearVelocity().y);
