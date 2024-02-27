@@ -9,32 +9,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="203d3818-29a7-4227-955f-cc680d3f5619" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/artifacts/SerializableObjects_jar.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/SerializableObjects.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/META-INF/MANIFEST.MF" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../game/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/InputHandlers/PlayScreenInputHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/InputHandlers/PlayScreenInputHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/ObjectsToSend/BulletData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/serializableObjects/BulletData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/ObjectsToSend/PlayerData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/serializableObjects/PlayerData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/ObjectsToSend/RobotData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/serializableObjects/RobotData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/ObjectsToSend/RobotDataMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/serializableObjects/RobotDataMap.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/Opponents/Robot.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Opponents/Robot.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/Screens/PlayScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Screens/PlayScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/Tools/B2WorldCreator.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Tools/B2WorldCreator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/com/mygdx/game/MyGDXGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/com/mygdx/game/MyGDXGame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../server/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/src/main/java/ee/taltech/game/server/GameServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../server/src/main/java/ee/taltech/game/server/GameServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/src/main/java/ee/taltech/game/server/ObjectsToSend/BulletData.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/src/main/java/ee/taltech/game/server/ObjectsToSend/PlayerData.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/src/main/java/ee/taltech/game/server/ObjectsToSend/RobotData.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/src/main/java/ee/taltech/game/server/ObjectsToSend/RobotDataMap.java" beforeDir="false" />
-    </list>
+    <list default="true" id="203d3818-29a7-4227-955f-cc680d3f5619" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -63,7 +38,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "refactor__code",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/home/markus/kursused/game/iti0301-2024-meeskond-suva/SerializableObjects/src/serializableObjects",
     "project.structure.last.edited": "Artifacts",
