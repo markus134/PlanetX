@@ -1,4 +1,4 @@
-package ObjectsToSend;
+package serializableObjects;
 
 import java.util.HashMap;
 

@@ -1,9 +1,9 @@
 package wfc;
 
+import com.badlogic.gdx.graphics.Texture;
+
 import java.util.HashMap;
 import java.util.Set;
-
-import com.badlogic.gdx.graphics.Texture;
 
 /**
  * Create Tile objects from (file) input.

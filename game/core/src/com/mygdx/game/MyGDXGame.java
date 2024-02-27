@@ -1,8 +1,7 @@
 package com.mygdx.game;
 
-import ObjectsToSend.*;
-import Opponents.Robot;
 import Bullets.Bullet;
+import Opponents.Robot;
 import Screens.MenuScreen;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
@@ -14,9 +13,16 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
+import serializableObjects.BulletData;
+import serializableObjects.PlayerData;
+import serializableObjects.RobotData;
+import serializableObjects.RobotDataMap;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 
 /**

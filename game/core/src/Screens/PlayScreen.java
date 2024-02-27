@@ -2,13 +2,7 @@ package Screens;
 
 import Bullets.Bullet;
 import Bullets.BulletManager;
-import ObjectsToSend.BulletData;
-import ObjectsToSend.PlayerData;
-import ObjectsToSend.RobotData;
-import ObjectsToSend.RobotDataMap;
 import InputHandlers.PlayScreenInputHandler;
-import ObjectsToSend.PlayerData;
-import ObjectsToSend.RobotData;
 import Opponents.Robot;
 import Scenes.Debug;
 import Sprites.OtherPlayer;
@@ -23,20 +17,18 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.ContactImpulse;
-import com.badlogic.gdx.physics.box2d.ContactListener;
-import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
+import serializableObjects.PlayerData;
+import serializableObjects.RobotData;
+import serializableObjects.RobotDataMap;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -87,36 +79,8 @@ public class PlayScreen implements Screen {
         // Initialize BulletManager
         bulletManager = new BulletManager(world);
 
-
         handler = new PlayScreenInputHandler(this);
 
-        world.setContactListener(new ContactListener() {
-            @Override
-            public void beginContact(Contact contact) {
-                Fixture fixtureA = contact.getFixtureA();
-                Fixture fixtureB = contact.getFixtureB();
-
-                // Check if either fixture is the bullet
-                if (fixtureA.getBody().getUserData() != null || fixtureB.getBody().getUserData() != null) {
-                    // Mark the bullet as destroyed
-                    int id = (int) (fixtureA.getBody().getUserData() != null ? fixtureA.getBody().getUserData() : fixtureB.getBody().getUserData());
-                    Bullet bullet = BulletManager.getBulletById(id);
-                    bullet.setShouldDestroy();
-                }
-            }
-
-            @Override
-            public void endContact(Contact contact) {
-            }
-
-            @Override
-            public void preSolve(Contact contact, Manifold oldManifold) {
-            }
-
-            @Override
-            public void postSolve(Contact contact, ContactImpulse contactImpulse) {
-            }
-        });
     }
 
 
