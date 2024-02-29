@@ -1,18 +1,16 @@
 package Screens;
 
-import com.badlogic.gdx.Game;
+import Screens.ReusableElements.BackGround;
+import Screens.ReusableElements.LabelStyle;
+import Screens.ReusableElements.PurpleTextButtonStyle;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -26,23 +24,21 @@ import static com.mygdx.game.MyGDXGame.client;
 
 public class MenuScreen extends ScreenAdapter {
     private Stage stage;
-    private final Game game;
+    private final MyGDXGame game;
     private SpriteBatch batch;
-    public static Sprite backgroundSprite;
-    private Texture backgroundTexture;
+    private BackGround backGround;
     private final SettingsScreen settingsScreen;
-    public static TextButton.TextButtonStyle textButtonStyle;
-    public static Label.LabelStyle labelStyle;
-    public static Skin skin;
+    private final Music music;
 
     /**
      * Constructor for the MenuScreen.
      *
      * @param game The Game instance representing the main game.
      */
-    public MenuScreen(MyGDXGame game) {
+    public MenuScreen(MyGDXGame game, Music music) {
         this.game = game;
-        settingsScreen = new SettingsScreen(this, game);
+        this.music = music;
+        settingsScreen = new SettingsScreen(this, game, music);
     }
 
     /**
@@ -54,30 +50,19 @@ public class MenuScreen extends ScreenAdapter {
         Viewport viewport = new ExtendViewport(MyGDXGame.V_WIDTH, MyGDXGame.V_HEIGHT);
         stage = new Stage(viewport);
 
-        backgroundTexture = new Texture(Gdx.files.internal("MenuBack.jpg")); // Replace with your image file name
-        backgroundSprite = new Sprite(backgroundTexture);
-        backgroundSprite.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        // from the ReusableElements directory
+        backGround = new BackGround();
         batch = new SpriteBatch();
 
         Table table = new Table();
         table.setFillParent(true);
 
-        // font file downloaded from google fonts
-        FreeTypeFontGenerator.setMaxTextureSize(2048);
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("PermanentMarker-Regular.ttf"));
-        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 200;
-        BitmapFont font = generator.generateFont(parameter);
-        generator.dispose(); // if not disposed it might cause memory issues
-
-        labelStyle = new Label.LabelStyle();
-        labelStyle.font = font;
+        // from the ReusableElements directory
+        Label.LabelStyle labelStyle = new LabelStyle().getLabelStyle();
         Label titleLabel = new Label("Planet X", labelStyle);
 
-        skin = new Skin(Gdx.files.internal("uiskin/uiskin.json"));
-        textButtonStyle = skin.get("round", TextButton.TextButtonStyle.class);
-        textButtonStyle.font.getData().setScale(2.5f);
-
+        // from the ReusableElements directory
+        TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
         TextButton singlePlayerButton = new TextButton("SinglePlayer", textButtonStyle);
         TextButton multiPlayerButton = new TextButton("MultiPlayer", textButtonStyle);
         TextButton exitButton = new TextButton("Exit", textButtonStyle);
@@ -86,14 +71,18 @@ public class MenuScreen extends ScreenAdapter {
         singlePlayerButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                game.createScreenAndClient();
                 game.setScreen(MyGDXGame.playScreen);
+                music.dispose();
             }
         });
 
         multiPlayerButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                game.createScreenAndClient();
                 game.setScreen(MyGDXGame.playScreen);
+                music.dispose();
             }
         });
 
@@ -148,7 +137,7 @@ public class MenuScreen extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.begin();
-        backgroundSprite.draw(batch);
+        backGround.getBackgroundSprite().draw(batch);
         batch.end();
 
         stage.draw();
@@ -159,7 +148,7 @@ public class MenuScreen extends ScreenAdapter {
      */
     @Override
     public void hide() {
-        backgroundTexture.dispose();
+        backGround.getBackgroundTexture().dispose();
         batch.dispose();
         stage.dispose();
     }

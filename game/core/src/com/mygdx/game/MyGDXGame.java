@@ -6,6 +6,8 @@ import Screens.MenuScreen;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.World;
 import com.esotericsoftware.kryo.Kryo;
@@ -33,9 +35,7 @@ public class MyGDXGame extends Game {
     public final static int V_WIDTH = 1920;
     public final static int V_HEIGHT = 1080;
     public final static float PPM = 100;
-
     public static Client client;
-
     private Object lastReceivedData;
     private ArrayList<BulletData> lastReceivedBullets = new ArrayList<>();
     public static Map<Integer, OtherPlayer> playerDict = new HashMap<>();
@@ -46,16 +46,14 @@ public class MyGDXGame extends Game {
     public static final short OTHER_PLAYER_CATEGORY = 0x0004;
     public static final short WORLD_CATEGORY = 0x0008;
     public static final short OPPONENT_CATEGORY = 0x0010;
+    private static Music musicInTheMenu;
+
 
     /**
-     * Initializes the game, creates essential objects, and sets up the network client.
+     * Initializes the playScreen and the client.
      */
-    @Override
-    public void create() {
-        batch = new SpriteBatch();
+    public void createScreenAndClient() {
         playScreen = new PlayScreen(this);
-        menu = new MenuScreen(this);
-        setScreen(menu);
 
         client = new Client(1000000, 1000000);
 
@@ -83,7 +81,7 @@ public class MyGDXGame extends Game {
                     if (object instanceof BulletData) {
                         // updating bullet data
                         lastReceivedBullets.add((BulletData) object);
-                    } else if (object instanceof RobotDataMap){
+                    } else if (object instanceof RobotDataMap) {
                         // updating info about robots
                         PlayScreen.robotDataMap = (RobotDataMap) object;
                     } else {
@@ -92,6 +90,22 @@ public class MyGDXGame extends Game {
                 }
             }
         }));
+    }
+
+    /**
+     * Initializes the game, creates music object and menu.
+     */
+    @Override
+    public void create() {
+        batch = new SpriteBatch();
+
+        musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/Ghostrifter-Official-Resurgence(chosic.com).mp3"));
+        musicInTheMenu.setLooping(true);
+        musicInTheMenu.play();
+
+        menu = new MenuScreen(this, musicInTheMenu);
+
+        setScreen(menu);
     }
 
     /**
@@ -110,11 +124,11 @@ public class MyGDXGame extends Game {
             }
             lastReceivedBullets.clear();
 
-            if (lastReceivedData instanceof HashMap){
+            if (lastReceivedData instanceof HashMap) {
                 // updating info about players for the robots to move in the right direction
-                Robot.playersInfo = ((HashMap)lastReceivedData);
+                Robot.playersInfo = ((HashMap) lastReceivedData);
                 World world = playScreen.world;
-                Set keys = ((HashMap)lastReceivedData).keySet();
+                Set keys = ((HashMap) lastReceivedData).keySet();
                 ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
 
                 // Update existing players or create new ones
