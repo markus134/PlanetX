@@ -1,36 +1,38 @@
 package Screens;
 
-import OverridenClasses.MenuSlider;
-import OverridenClasses.SoundButton;
+import Screens.ReusableElements.BackGround;
+import Screens.ReusableElements.LabelStyle;
+import Screens.ReusableElements.MenuSlider;
+import Screens.ReusableElements.PurpleSkin;
+import Screens.ReusableElements.PurpleTextButtonStyle;
+import Screens.ReusableElements.SoundButton;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
-
-import static Screens.MenuScreen.labelStyle;
-import static Screens.MenuScreen.skin;
-import static Screens.MenuScreen.textButtonStyle;
-
 
 public class SettingsScreen extends ScreenAdapter {
     private Stage stage;
     private final MenuScreen menuScreen;
     private final MyGDXGame game;
     private Batch batch;
-    private Texture backgroundTexture;
-    private Sprite backgroundSprite;
+    private BackGround backGround;
+    private final Music music;
+    private float musicValue;
 
     /**
      * Creates a new instance of SettingsScreen.
@@ -38,9 +40,10 @@ public class SettingsScreen extends ScreenAdapter {
      * @param menuScreen The MenuScreen instance to return to when the user clicks the "Back" button.
      * @param game       The main game instance.
      */
-    SettingsScreen(MenuScreen menuScreen, MyGDXGame game) {
+    SettingsScreen(MenuScreen menuScreen, MyGDXGame game, Music music) {
         this.menuScreen = menuScreen;
         this.game = game;
+        this.music = music;
     }
 
     /**
@@ -52,22 +55,52 @@ public class SettingsScreen extends ScreenAdapter {
         Viewport viewport = new ExtendViewport(MyGDXGame.V_WIDTH, MyGDXGame.V_HEIGHT);
         stage = new Stage(viewport);
 
-        backgroundTexture = new Texture(Gdx.files.internal("MenuBack.jpg"));
-        backgroundSprite = new Sprite(backgroundTexture);
-        backgroundSprite.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        backGround = new BackGround();
         batch = new SpriteBatch();
 
         Table table = new Table();
         table.setFillParent(true);
 
+        // from the ReusableElements directory
+        Label.LabelStyle labelStyle = new LabelStyle().getLabelStyle();
         Label titleLabel = new Label("Settings", labelStyle);
 
-        MenuSlider soundSlider = new MenuSlider(0, 100, 10, false, skin, 300f);
-        MenuSlider musicSlider = new MenuSlider(0, 100, 10, false, skin, 300f);
+        // from the ReusableElements directory
+        Skin skin = new PurpleSkin().getSkin();
+
+        MenuSlider soundSlider = new MenuSlider(0, 1, .1f, false, skin, 300f);
+
+        MenuSlider musicSlider = new MenuSlider(0, 1, .1f, false, skin, 300f);
+        musicSlider.setValue(music.getVolume());
+        musicSlider.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                // When the slider value changes, update the volume of the music
+                music.setVolume(musicSlider.getValue());
+            }
+        });
 
         SoundButton soundButton = new SoundButton(skin, "sound", 100f);
-        SoundButton musicButton = new SoundButton(skin, "music", 100f);
 
+        SoundButton musicButton = new SoundButton(skin, "music", 100f);
+        musicButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (music.isPlaying()) {
+                    // If the music is currently playing, pause it
+                    music.pause();
+                    musicValue = music.getVolume();
+                    musicSlider.setValue(0);
+                } else {
+                    // If the music is currently paused, play it
+                    music.play();
+                    musicSlider.setValue(musicValue);
+                }
+            }
+        });
+
+        // from the ReusableElements directory
+        TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
         TextButton backButton = new TextButton("Back", textButtonStyle);
         TextButton someButton = new TextButton("For future use", textButtonStyle);
 
@@ -105,7 +138,7 @@ public class SettingsScreen extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.begin();
-        backgroundSprite.draw(batch);
+        backGround.getBackgroundSprite().draw(batch);
         batch.end();
 
         stage.draw();
@@ -116,7 +149,7 @@ public class SettingsScreen extends ScreenAdapter {
      */
     @Override
     public void hide() {
-        backgroundTexture.dispose();
+        backGround.getBackgroundTexture().dispose();
         batch.dispose();
         stage.dispose();
     }

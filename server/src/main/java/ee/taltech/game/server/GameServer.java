@@ -1,4 +1,4 @@
-package ee.taltech.game.server;
+package main.java.ee.taltech.game.server;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
