@@ -9,7 +9,23 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="203d3818-29a7-4227-955f-cc680d3f5619" name="Changes" comment="" />
+    <list default="true" id="203d3818-29a7-4227-955f-cc680d3f5619" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/serializableObjects/PlayerData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/serializableObjects/PlayerData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/serializableObjects/RobotData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/serializableObjects/RobotData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/serializableObjects/RobotDataMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/serializableObjects/RobotDataMap.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game/core/src/Bullets/Bullet.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Bullets/Bullet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game/core/src/Bullets/BulletManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Bullets/BulletManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game/core/src/InputHandlers/PlayScreenInputHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/InputHandlers/PlayScreenInputHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game/core/src/Opponents/Robot.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Opponents/Robot.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game/core/src/Screens/PlayScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Screens/PlayScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game/core/src/Sprites/OtherPlayer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Sprites/OtherPlayer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game/core/src/Sprites/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Sprites/Player.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game/core/src/Tools/B2WorldCreator.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Tools/B2WorldCreator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game/core/src/com/mygdx/game/MyGDXGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/com/mygdx/game/MyGDXGame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game/desktop/src/com/mygdx/game/DesktopLauncher.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/desktop/src/com/mygdx/game/DesktopLauncher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/src/main/java/ee/taltech/game/server/GameServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../server/src/main/java/ee/taltech/game/server/GameServer.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -38,7 +54,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "refactor__code",
+    "git-widget-placeholder": "health__and__killing",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/home/markus/kursused/game/iti0301-2024-meeskond-suva/SerializableObjects/src/serializableObjects",
     "project.structure.last.edited": "Artifacts",
@@ -51,6 +67,13 @@
       <recent name="$PROJECT_DIR$/src/serializableObjects" />
       <recent name="$PROJECT_DIR$/src" />
     </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="jdk-17.0.9-corretto-17.0.9-4caba194b151-3c5dfc45" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">

@@ -71,10 +71,13 @@ public class PlayScreenInputHandler implements InputProcessor {
     private void generateRobot() {
         Robot robot = new Robot(playScreen.world, playScreen);
         String uniqueID = UUID.randomUUID().toString();
+        robot.setUuid(uniqueID);
 
         robotIds.add(uniqueID);
         robots.put(uniqueID, robot);
-        robotDataMap.put(uniqueID, new RobotData(robot.getX(), robot.getY()));
+        robotDataMap.put(uniqueID, new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid()));
+
+        MyGDXGame.client.sendTCP(robotDataMap);
     }
 
     /**
@@ -168,6 +171,7 @@ public class PlayScreenInputHandler implements InputProcessor {
         Bullet newBullet = playScreen.bulletManager.obtainBullet(x, y);
         newBullet.body.setLinearVelocity(velocityX, velocityY);
 
+        System.out.println("sending bullet data");
         MyGDXGame.client.sendTCP(new BulletData(
                 velocityX,
                 velocityY,
