@@ -66,7 +66,6 @@ public class GameServer {
                     }
                     if (object instanceof BulletData) {
                         // update bullet data
-                        System.out.println("sending bullet data");
                         server.sendToAllExceptTCP(connection.getID(), object);
                     }
                     if (object instanceof RobotDataMap) {

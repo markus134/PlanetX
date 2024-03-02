@@ -10,14 +10,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="203d3818-29a7-4227-955f-cc680d3f5619" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/InputHandlers/PlayScreenInputHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/InputHandlers/PlayScreenInputHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/Opponents/Robot.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Opponents/Robot.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/Screens/PlayScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Screens/PlayScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/Sprites/OtherPlayer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Sprites/OtherPlayer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/Tools/B2WorldCreator.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/Tools/B2WorldCreator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/core/src/com/mygdx/game/MyGDXGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/core/src/com/mygdx/game/MyGDXGame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../game/desktop/src/com/mygdx/game/DesktopLauncher.java" beforeDir="false" afterPath="$PROJECT_DIR$/../game/desktop/src/com/mygdx/game/DesktopLauncher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/src/main/java/ee/taltech/game/server/GameServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../server/src/main/java/ee/taltech/game/server/GameServer.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
