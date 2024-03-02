@@ -10,6 +10,7 @@ import Sprites.Player;
 import Tools.B2WorldCreator;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -54,6 +55,7 @@ public class PlayScreen implements Screen {
     public static HashMap<String, Robot> robots = new HashMap<>();
     public static RobotDataMap robotDataMap = new RobotDataMap();
     private PlayScreenInputHandler handler;
+    private Music music;
 
     /**
      * Constructor for the PlayScreen.
@@ -81,6 +83,10 @@ public class PlayScreen implements Screen {
 
         handler = new PlayScreenInputHandler(this);
 
+        music = Gdx.audio.newMusic(Gdx.files.internal("Music/in-game.mp3"));
+        music.setLooping(true);
+        music.setVolume(.1f);
+        music.play();
     }
 
 

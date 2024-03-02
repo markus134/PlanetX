@@ -33,6 +33,9 @@ public class SettingsScreen extends ScreenAdapter {
     private BackGround backGround;
     private final Music music;
     private float musicValue;
+    public static float soundValue = .1f;
+    private boolean soundON = true;
+    private float tempForSoundValue;
 
     /**
      * Creates a new instance of SettingsScreen.
@@ -68,9 +71,17 @@ public class SettingsScreen extends ScreenAdapter {
         // from the ReusableElements directory
         Skin skin = new PurpleSkin().getSkin();
 
-        MenuSlider soundSlider = new MenuSlider(0, 1, .1f, false, skin, 300f);
+        MenuSlider soundSlider = new MenuSlider(0, 1, .01f, false, skin, 300f);
+        soundSlider.setValue(soundValue);
+        soundSlider.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                // When the slider value changes, update the volume of the music
+                soundValue = soundSlider.getValue();
+            }
+        });
 
-        MenuSlider musicSlider = new MenuSlider(0, 1, .1f, false, skin, 300f);
+        MenuSlider musicSlider = new MenuSlider(0, 1, .01f, false, skin, 300f);
         musicSlider.setValue(music.getVolume());
         musicSlider.addListener(new ChangeListener() {
             @Override
@@ -81,6 +92,26 @@ public class SettingsScreen extends ScreenAdapter {
         });
 
         SoundButton soundButton = new SoundButton(skin, "sound", 100f);
+        soundButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+
+                // one might argue that the temporary value is redundant,
+                // but it is actually necessary due to the soundSlider listener
+                // that overrides the soundValue every time the sliders value
+                // is set to 0.
+                if (soundON) {
+                    // if the sound is on, turn it off
+                    tempForSoundValue = soundSlider.getValue();
+                    soundSlider.setValue(0);
+                    soundON = false;
+                } else {
+                    // vice versa
+                    soundSlider.setValue(tempForSoundValue);
+                    soundON = true;
+                }
+            }
+        });
 
         SoundButton musicButton = new SoundButton(skin, "music", 100f);
         musicButton.addListener(new ClickListener() {
