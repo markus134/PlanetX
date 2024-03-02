@@ -15,6 +15,7 @@ import com.mygdx.game.MyGDXGame;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class Player extends Sprite {
     private static final int FRAME_WIDTH = 32;
@@ -25,6 +26,10 @@ public class Player extends Sprite {
     private static final float PLAYER_HEIGHT = 64 / MyGDXGame.PPM;
     private static final float PLAYER_WIDTH = 64 / MyGDXGame.PPM;
     private static final float VELOCITY_THRESHOLD = 0.8f;
+    private static final int MAX_HEALTH = 100;
+
+
+
 
     // Enums for player state and direction
     public enum State {
@@ -57,6 +62,9 @@ public class Player extends Sprite {
     public boolean runningRight;
     private float stateTimer;
     public TextureRegion region;
+    private int health;
+    public boolean shouldBeDestroyed = false;
+    private String uuid;
 
 
     public Player(World world, PlayScreen screen) {
@@ -80,6 +88,9 @@ public class Player extends Sprite {
 
         setBounds(0, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
         setRegion(playerStand);
+
+        health = MAX_HEALTH;
+        this.uuid = UUID.randomUUID().toString();
     }
 
     /**
@@ -239,6 +250,7 @@ public class Player extends Sprite {
         bdef.position.set(startX / MyGDXGame.PPM, startY / MyGDXGame.PPM);
         bdef.type = BodyDef.BodyType.DynamicBody;
         b2body = world.createBody(bdef);
+        b2body.setUserData(this);
 
         FixtureDef fdef = new FixtureDef();
         CircleShape shape = new CircleShape();
@@ -252,5 +264,26 @@ public class Player extends Sprite {
 
         // Set linear damping to simulate friction
         b2body.setLinearDamping(LINEAR_DAMPING);
+    }
+
+    public int getHealth() {
+        return health;
+    }
+
+    /**
+     * Reduces the robot's health by the specified amount.
+     *
+     * @param damage The amount of damage to apply.
+     */
+    public void takeDamage(int damage) {
+        health -= damage;
+
+        if (health <= 0) {
+            shouldBeDestroyed = true;
+        }
+    }
+
+    public String getUuid() {
+        return uuid;
     }
 }

@@ -32,9 +32,8 @@ public class BulletManager {
     }
 
     public Bullet obtainBullet(float x, float y) {
-        Bullet bullet = new Bullet(world, x, y);
         int bulletId = nextBulletId++;
-        bullet.setId(bulletId); // Set the ID for the bullet
+        Bullet bullet = new Bullet(world, x, y, bulletId);
         bulletsById.put(bulletId, bullet); // Store the bullet in the HashMap
         bullets.add(bullet);
 
@@ -53,7 +52,6 @@ public class BulletManager {
     }
 
     public void update(float deltaTime) {
-
         // Update each bullet
         for (Bullet bullet : bullets) {
             bullet.update(deltaTime);

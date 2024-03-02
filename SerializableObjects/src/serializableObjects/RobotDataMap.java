@@ -14,4 +14,7 @@ public class RobotDataMap {
     public void put(String key, RobotData value) {
         this.map.put(key, value);
     }
+    public void remove(String key) {
+        this.map.remove(key);
+    }
 }

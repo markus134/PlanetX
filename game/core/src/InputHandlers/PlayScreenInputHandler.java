@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.BulletData;
 import serializableObjects.RobotData;
@@ -28,6 +29,8 @@ public class PlayScreenInputHandler implements InputProcessor {
     private static final float PLAYER_RADIUS = 16 / MyGDXGame.PPM;
     private static final float BULLET_OFFSET = 8 / MyGDXGame.PPM;
     private boolean isFirstClick = true;
+    private static final long SHOOT_COOLDOWN_NANOS = 250_000_000L; // 0.25 seconds in nanoseconds
+    private long lastShotTime = 0;
 
 
     public PlayScreenInputHandler(PlayScreen playScreen) {
@@ -71,10 +74,13 @@ public class PlayScreenInputHandler implements InputProcessor {
     private void generateRobot() {
         Robot robot = new Robot(playScreen.world, playScreen);
         String uniqueID = UUID.randomUUID().toString();
+        robot.setUuid(uniqueID);
 
         robotIds.add(uniqueID);
         robots.put(uniqueID, robot);
-        robotDataMap.put(uniqueID, new RobotData(robot.getX(), robot.getY()));
+        robotDataMap.put(uniqueID, new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid()));
+
+        MyGDXGame.client.sendTCP(robotDataMap);
     }
 
     /**
@@ -148,33 +154,45 @@ public class PlayScreenInputHandler implements InputProcessor {
      */
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        // Convert screen coordinates to world coordinates
-        touchPoint.set(screenX, screenY, 0);
-        playScreen.gameCam.unproject(touchPoint);
 
-        float x = playScreen.player.getX() + playScreen.player.getWidth() / 2;
-        float y = playScreen.player.getY() + playScreen.player.getHeight() / 2;
+        // Check if enough time has passed since the last shot
+        long currentTime = TimeUtils.nanoTime();
 
-        Vector2 direction = new Vector2(touchPoint.x - x, touchPoint.y - y);
-        direction.nor(); // Normalize the direction vector
+        // The checks should actually be server side but good enough for now
+        if (TimeUtils.timeSinceNanos(lastShotTime) >= SHOOT_COOLDOWN_NANOS) {
+            // Convert screen coordinates to world coordinates
+            touchPoint.set(screenX, screenY, 0);
+            playScreen.gameCam.unproject(touchPoint);
 
-        x += direction.x * (PLAYER_RADIUS + BULLET_OFFSET);
-        y += direction.y * (PLAYER_RADIUS + BULLET_OFFSET);
+            float x = playScreen.player.getX() + playScreen.player.getWidth() / 2;
+            float y = playScreen.player.getY() + playScreen.player.getHeight() / 2;
 
-        float velocityX = direction.x * bulletSpeed;
-        float velocityY = direction.y * bulletSpeed;
+            Vector2 direction = new Vector2(touchPoint.x - x, touchPoint.y - y);
+            direction.nor(); // Normalize the direction vector
 
-        // Shoot a bullet towards the touched position
-        Bullet newBullet = playScreen.bulletManager.obtainBullet(x, y);
-        newBullet.body.setLinearVelocity(velocityX, velocityY);
+            x += direction.x * (PLAYER_RADIUS + BULLET_OFFSET);
+            y += direction.y * (PLAYER_RADIUS + BULLET_OFFSET);
 
-        MyGDXGame.client.sendTCP(new BulletData(
-                velocityX,
-                velocityY,
-                x,
-                y
-        ));
+            float velocityX = direction.x * bulletSpeed;
+            float velocityY = direction.y * bulletSpeed;
+
+            // Shoot a bullet towards the touched position
+            Bullet newBullet = playScreen.bulletManager.obtainBullet(x, y);
+            newBullet.body.setLinearVelocity(velocityX, velocityY);
+
+            // Update the time of the last shot
+            lastShotTime = currentTime;
+
+            MyGDXGame.client.sendTCP(new BulletData(
+                    velocityX,
+                    velocityY,
+                    x,
+                    y
+            ));
+        }
+
         return true;
+
     }
 
     @Override

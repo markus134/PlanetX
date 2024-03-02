@@ -22,13 +22,18 @@ public class OtherPlayer extends Sprite {
     private static final float LINEAR_DAMPING = 4f;
     private static final float PLAYER_HEIGHT = 64 / MyGDXGame.PPM;
     private static final float PLAYER_WIDTH = 64 / MyGDXGame.PPM;
+
     public World world;
     public Body b2body;
     private TextureRegion playerStand;
     public ArrayList<TextureRegion> playerAllFrames = new ArrayList<>();
+    private int health;
+    public boolean shouldBeDestroyed = false;
+    private String uuid;
+    private int id;
 
 
-    public OtherPlayer(World world, PlayScreen screen, float posX, float posY) {
+    public OtherPlayer(World world, PlayScreen screen, float posX, float posY, int health, String uuid, int id) {
         super(screen.getAtlas().findRegion("player_spritesheet"));
         this.world = world;
 
@@ -41,6 +46,10 @@ public class OtherPlayer extends Sprite {
         setBounds(0, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
         setRegion(playerStand);
         setPosition(posX, posY);
+
+        this.health = health;
+        this.uuid = uuid;
+        this.id = id;
     }
 
     /**
@@ -106,7 +115,35 @@ public class OtherPlayer extends Sprite {
         fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.WORLD_CATEGORY | MyGDXGame.PLAYER_CATEGORY | MyGDXGame.OPPONENT_CATEGORY | MyGDXGame.BULLET_CATEGORY;
         b2body.createFixture(fdef);
 
+        b2body.setUserData(this);
+
         // Set linear damping to simulate friction
         b2body.setLinearDamping(LINEAR_DAMPING);
     }
+
+    public int getHealth() {
+        return health;
+    }
+
+    /**
+     * Reduces the robot's health by the specified amount.
+     *
+     * @param damage The amount of damage to apply.
+     */
+    public void takeDamage(int damage) {
+        health -= damage;
+
+        if (health <= 0) {
+            shouldBeDestroyed = true;
+        }
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public int getId() {
+        return id;
+    }
 }
+

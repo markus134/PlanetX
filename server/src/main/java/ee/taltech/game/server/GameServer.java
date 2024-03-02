@@ -54,16 +54,19 @@ public class GameServer {
             public void received(Connection connection, Object object) {
 
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
-                    System.out.println("Server received: " + object);
+                    //System.out.println("Server received: " + object);
                     if (object instanceof PlayerData) {
                         // updates player coordinates
-                        playerInstanceCoordinates.put(connection.getID(), object);
-                        System.out.println("HERE");
+                        PlayerData playerData = (PlayerData) object;
+
+
+                        playerInstanceCoordinates.put(connection.getID(), playerData);
+                        System.out.println(playerData);
                         server.sendToAllTCP(playerInstanceCoordinates);
                     }
                     if (object instanceof BulletData) {
                         // update bullet data
-                        server.sendToAllTCP(object);
+                        server.sendToAllExceptTCP(connection.getID(), object);
                     }
                     if (object instanceof RobotDataMap) {
                         // update robot data

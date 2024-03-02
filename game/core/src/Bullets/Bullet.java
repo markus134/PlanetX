@@ -15,12 +15,15 @@ public class Bullet extends Sprite {
     private Texture texture;
     private static final int FRAME_WIDTH = 32;
     private static final int FRAME_HEIGHT = 32;
+    public static final int DAMAGE = 20;
     private boolean shouldDestroy = false;
+    private int id;
 
-    public Bullet(World world, float x, float y) {
+    public Bullet(World world, float x, float y, int id) {
         texture = new Texture("Bullets/01.png");
 
         this.world = world;
+        this.id = id;
 
         // Create the Box2D body for the bullet
         BodyDef bodyDef = new BodyDef();
@@ -28,6 +31,7 @@ public class Bullet extends Sprite {
         bodyDef.position.set(x, y);
 
         body = world.createBody(bodyDef);
+        body.setUserData(this);
 
         CircleShape shape = new CircleShape();
         shape.setRadius(4f / MyGDXGame.PPM);
@@ -49,10 +53,11 @@ public class Bullet extends Sprite {
     }
 
     public void update(float deltaTime) {
-        setPosition(body.getPosition().x - getWidth() / 2, body.getPosition().y - getHeight() / 2);
-
         if (shouldDestroy) {
             BulletManager.freeBullet(this);
+        } else {
+            setPosition(body.getPosition().x - getWidth() / 2, body.getPosition().y - getHeight() / 2);
+
         }
     }
 
@@ -64,9 +69,6 @@ public class Bullet extends Sprite {
         shouldDestroy = true;
     }
 
-    public void setId(int id) {
-        body.setUserData(id);
-    }
     public void dispose() {
         texture.dispose();
     }

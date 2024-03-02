@@ -1,6 +1,7 @@
 package Opponents;
 
 import Screens.PlayScreen;
+import Tools.B2WorldCreator;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -21,11 +22,12 @@ public class Robot extends Sprite {
     private static final int FRAME_WIDTH = 48;
     private static final int FRAME_HEIGHT = 48;
     private static final float ANIMATION_SPEED = 0.1f;
-    private static final float robot_RADIUS = 8 / MyGDXGame.PPM;
+    private static final float robot_RADIUS = 16 / MyGDXGame.PPM;
     private static final float LINEAR_DAMPING = 4f;
     private static final float robot_HEIGHT = 64 / MyGDXGame.PPM;
     private static final float robot_WIDTH = 64 / MyGDXGame.PPM;
     private static final float VELOCITY_THRESHOLD = 0.5f;
+    private static final int MAX_HEALTH = 100;
 
     // Enums for robot state and direction
     public enum State {
@@ -57,6 +59,9 @@ public class Robot extends Sprite {
     private float stateTimer;
     public TextureRegion region;
     public static HashMap playersInfo = new HashMap<>();
+    private int health;
+    public boolean shouldBeDestroyed = false;
+    private String uuid;
 
     /**
      * First constructor for a robot that gets created in the center of the map
@@ -82,6 +87,7 @@ public class Robot extends Sprite {
         }
 
         setBounds(0, 0, robot_WIDTH, robot_HEIGHT);
+        health = MAX_HEALTH;
     }
 
     /**
@@ -94,7 +100,7 @@ public class Robot extends Sprite {
      * @param posX
      * @param posY
      */
-    public Robot(World world, PlayScreen screen, float posX, float posY) {
+    public Robot(World world, PlayScreen screen, float posX, float posY, int health, String uuid) {
         super(screen.getAtlas2().findRegion("Robot"));
         this.world = world;
         currentState = State.STANDING;
@@ -114,6 +120,9 @@ public class Robot extends Sprite {
         }
 
         setBounds(0, 0, robot_WIDTH, robot_HEIGHT);
+
+        this.health = health;
+        this.uuid = uuid;
     }
 
     /**
@@ -152,11 +161,17 @@ public class Robot extends Sprite {
      * @param delta The time elapsed since the last frame.
      */
     public void update(float delta) {
+        if (health <= 0) {
+            B2WorldCreator.robotsToDestroy.add(this);
+        }
+
         updatePosition();
         setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
         region = getFrame(delta);
         setRegion(region);
         b2body.setAwake(true);
+
+
     }
 
     /**
@@ -318,6 +333,8 @@ public class Robot extends Sprite {
         fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.WORLD_CATEGORY | MyGDXGame.PLAYER_CATEGORY;
         b2body.createFixture(fdef);
 
+        b2body.setUserData(this);
+
         // Set linear damping to simulate friction
         b2body.setLinearDamping(LINEAR_DAMPING);
     }
@@ -331,4 +348,31 @@ public class Robot extends Sprite {
     public float getY() {
         return this.b2body.getPosition().y;
     }
+
+    public int getHealth() {
+        return health;
+    }
+
+    /**
+     * Reduces the robot's health by the specified amount.
+     *
+     * @param damage The amount of damage to apply.
+     */
+    public void takeDamage(int damage) {
+        health -= damage;
+
+        if (health <= 0) {
+            shouldBeDestroyed = true;
+        }
+    }
+
+    public void setUuid(String UUID) {
+        this.uuid = UUID;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+
 }

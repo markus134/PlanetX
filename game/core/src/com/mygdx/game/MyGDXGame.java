@@ -23,6 +23,7 @@ import serializableObjects.RobotDataMap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,9 +37,9 @@ public class MyGDXGame extends Game {
     public final static int V_HEIGHT = 1080;
     public final static float PPM = 100;
     public static Client client;
-    private Object lastReceivedData;
+    public static Object lastReceivedData;
     private ArrayList<BulletData> lastReceivedBullets = new ArrayList<>();
-    public static Map<Integer, OtherPlayer> playerDict = new HashMap<>();
+    public static Map<Integer, Set<OtherPlayer>> playerDict = new HashMap<>();
     public static PlayScreen playScreen;
     private MenuScreen menu;
     public static final short BULLET_CATEGORY = 0x0001;
@@ -78,9 +79,21 @@ public class MyGDXGame extends Game {
                     if (object instanceof BulletData) {
                         // updating bullet data
                         lastReceivedBullets.add((BulletData) object);
+
                     } else if (object instanceof RobotDataMap) {
                         // updating info about robots
-                        PlayScreen.robotDataMap = (RobotDataMap) object;
+                        RobotDataMap newRobotDataMap = (RobotDataMap) object;
+                        newRobotDataMap.getMap().entrySet().removeIf(entry ->
+                                PlayScreen.allDestroyedRobots.contains(entry.getKey())
+                        );
+
+                        PlayScreen.robotDataMap = newRobotDataMap;
+                    } else if (object instanceof HashMap) {
+                        HashMap<Integer, PlayerData> players = (HashMap) object;
+                        players.entrySet().removeIf(entry ->
+                                PlayScreen.allDestroyedPlayers.contains(entry.getValue().getUuid()));
+                        lastReceivedData = players;
+
                     } else {
                         lastReceivedData = object;
                     }
@@ -112,7 +125,7 @@ public class MyGDXGame extends Game {
     @Override
     public void render() {
         super.render();
-//        System.out.println(lastReceivedData);
+
         if (lastReceivedData != null) {
             // Made a special list for bullets as the packets were otherwise skipped (rendering was slower)
             for (BulletData data : lastReceivedBullets) {
@@ -125,6 +138,8 @@ public class MyGDXGame extends Game {
                 // updating info about players for the robots to move in the right direction
                 Robot.playersInfo = ((HashMap) lastReceivedData);
                 World world = playScreen.world;
+
+
                 Set keys = ((HashMap) lastReceivedData).keySet();
                 ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
 
@@ -136,25 +151,35 @@ public class MyGDXGame extends Game {
                         float otherPlayerPosY = playerData.getY();
                         int frameIndex = playerData.getFrame();
                         boolean runningRight = playerData.isRunningRight();
+                        int health = playerData.getHealth();
+                        String playerId = playerData.getUuid();
 
                         // If playerDict contains id, then update the data, otherwise add it to playerDict
                         if (playerDict.containsKey(id)) {
-                            OtherPlayer otherPlayer = playerDict.get(id);
-                            otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+                            for (OtherPlayer otherPlayer : playerDict.get(id)) {
+                                otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+                            }
                         } else {
-                            OtherPlayer otherPlayer = new OtherPlayer(world, playScreen, otherPlayerPosX, otherPlayerPosY);
-                            playerDict.put(id, otherPlayer);
+                            OtherPlayer otherPlayer = new OtherPlayer(world, playScreen, otherPlayerPosX, otherPlayerPosY, health, playerId, id);
+
+                            Set<OtherPlayer> otherPlayers = playerDict.getOrDefault(id, new HashSet<>());
+                            otherPlayers.add(otherPlayer);
+
+                            playerDict.put(id, otherPlayers);
                             otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
                         }
                     }
+
+
                 }
 
                 // Remove disconnected players and destroy associated Box2D objects
                 playerDict.keySet().removeIf(id -> {
                     if (!allConnectionIDs.contains(id)) {
                         // Player disconnected, destroy associated Box2D objects
-                        OtherPlayer otherPlayer = playerDict.get(id);
-                        world.destroyBody(otherPlayer.b2body);
+                        for (OtherPlayer otherPlayer : playerDict.get(id)) {
+                            world.destroyBody(otherPlayer.b2body);
+                        }
                         return true; // Remove the player from the map
                     }
                     return false;

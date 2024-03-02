@@ -29,8 +29,10 @@ import serializableObjects.RobotDataMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 public class PlayScreen implements Screen {
@@ -55,7 +57,12 @@ public class PlayScreen implements Screen {
     public static HashMap<String, Robot> robots = new HashMap<>();
     public static RobotDataMap robotDataMap = new RobotDataMap();
     private PlayScreenInputHandler handler;
+    private B2WorldCreator b2WorldCreator;
+    public static Set<String> destroyedRobots = new HashSet<>();
+    public static Set<String> allDestroyedRobots = new HashSet<>();
+    public static Set<String> allDestroyedPlayers = new HashSet<>();
     private Music music;
+
 
     /**
      * Constructor for the PlayScreen.
@@ -72,7 +79,7 @@ public class PlayScreen implements Screen {
 
         world = new World(new Vector2(0, 0), true); // Set gravity as null as we have a top-down game
         b2dr = new Box2DDebugRenderer();
-        new B2WorldCreator(world, map, this);
+        b2WorldCreator = new B2WorldCreator(world, map, this);
 
         player = new Player(world, this);
 
@@ -116,8 +123,6 @@ public class PlayScreen implements Screen {
         return atlas2;
     }
 
-
-
     /**
      * Updates the game logic.
      *
@@ -132,22 +137,46 @@ public class PlayScreen implements Screen {
         for (Map.Entry<String, Robot> entry : robots.entrySet()) {
             Robot robot = entry.getValue();
             robotDataMap.put(entry.getKey(),
-                    new RobotData(robot.getX(), robot.getY()));
+                    new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid()));
             robot.update(dt);
+
         }
-        MyGDXGame.client.sendTCP(robotDataMap);
 
         bulletManager.update(dt);
+        b2WorldCreator.destroyDeadRobots();
+        b2WorldCreator.destroyDeadPlayers();
+
+        MyGDXGame.client.sendTCP(robotDataMap);
+
+        for (String id : destroyedRobots) {
+            if (robotDataMap.getMap().containsKey(id)) {
+                robots.remove(id);
+                robotIds.remove(id);
+                robotDataMap.remove(id);
+            }
+        }
+
+        if (player.shouldBeDestroyed) {
+            allDestroyedPlayers.add(player.getUuid());
+            goToMenuWhenPlayerIsDead();
+        }
 
         // robotDataMap is constantly being updated by all client instances
         // this block of code makes new instances of the robot class if it is a robot with a new ID
         HashMap<String, RobotData> map = robotDataMap.getMap();
-        for (Map.Entry<String, RobotData> entry: map.entrySet()){
+        for (Map.Entry<String, RobotData> entry : map.entrySet()) {
             String key = entry.getKey();
-            if (!robotIds.contains(key)) {
-                Robot robot = new Robot(world, this, entry.getValue().getX(), entry.getValue().getY());
+            if (!robotIds.contains(key) && !destroyedRobots.contains(key) && entry.getValue().getHealth() != 0) {
+                Robot robot = new Robot(world,
+                        this,
+                        entry.getValue().getX(),
+                        entry.getValue().getY(),
+                        entry.getValue().getHealth(),
+                        entry.getValue().getUuid());
+
                 robots.put(key, robot);
                 robotIds.add(key);
+
             }
         }
 
@@ -158,18 +187,22 @@ public class PlayScreen implements Screen {
         renderer.setView(gameCam);
 
         // It is used to send the position of the player to the server
-        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState)  {
+        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState) {
             MyGDXGame.client.sendTCP(new PlayerData(
                     gameCam.position.x,
                     gameCam.position.y,
                     player.getCurrentFrameIndex(),
-                    player.runningRight
+                    player.runningRight,
+                    player.getHealth(),
+                    player.getUuid()
             ));
 
             prevPosX = gameCam.position.x;
             prevPosY = gameCam.position.y;
             player.prevState = player.currentState;
         }
+
+        destroyedRobots.clear();
     }
 
 
@@ -202,9 +235,10 @@ public class PlayScreen implements Screen {
         }
 
         // Draw the other players within the game
-        for (Map.Entry<Integer, OtherPlayer> entry : MyGDXGame.playerDict.entrySet()) {
-            OtherPlayer otherPlayer = entry.getValue();
-            otherPlayer.draw(game.batch);
+        for (Map.Entry<Integer, Set<OtherPlayer>> entry : MyGDXGame.playerDict.entrySet()) {
+            for (OtherPlayer otherPlayer : entry.getValue()) {
+                otherPlayer.draw(game.batch);
+            }
         }
 
         // Draw bullets
@@ -237,7 +271,6 @@ public class PlayScreen implements Screen {
 
     @Override
     public void pause() {
-
     }
 
     @Override
@@ -247,6 +280,18 @@ public class PlayScreen implements Screen {
 
     @Override
     public void hide() {
+
+    }
+
+    public void goToMenuWhenPlayerIsDead() {
+        world.destroyBody(player.b2body);
+        MyGDXGame.playerDict.clear();
+        MyGDXGame.lastReceivedData = null;
+        game.dispose();
+        Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
+        musicInTheMenu.setLooping(true);
+        musicInTheMenu.play();
+        game.setScreen(new MenuScreen(game, musicInTheMenu));
 
     }
 
