@@ -61,7 +61,6 @@ public class PlayScreen implements Screen {
     public static Set<String> destroyedRobots = new HashSet<>();
     public static Set<String> allDestroyedRobots = new HashSet<>();
     public static Set<String> allDestroyedPlayers = new HashSet<>();
-    public boolean playerDead = false;
     private Music music;
 
 
@@ -124,8 +123,6 @@ public class PlayScreen implements Screen {
         return atlas2;
     }
 
-
-
     /**
      * Updates the game logic.
      *
@@ -136,19 +133,21 @@ public class PlayScreen implements Screen {
 
         player.update(dt);
 
-
-
         // updating robots and adding info to the robotDataMap, which is sent to the server
         for (Map.Entry<String, Robot> entry : robots.entrySet()) {
             Robot robot = entry.getValue();
             robotDataMap.put(entry.getKey(),
                     new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid()));
             robot.update(dt);
+
+            System.out.println("robot health is now " + robot.getHealth());
         }
 
         bulletManager.update(dt);
         b2WorldCreator.destroyDeadRobots();
         b2WorldCreator.destroyDeadPlayers();
+
+        MyGDXGame.client.sendTCP(robotDataMap);
 
         for (String id : destroyedRobots) {
             if (robotDataMap.getMap().containsKey(id)) {
@@ -158,23 +157,25 @@ public class PlayScreen implements Screen {
             }
         }
 
-
-        MyGDXGame.client.sendTCP(robotDataMap);
-
-        if (playerDead) {
+        if (player.shouldBeDestroyed) {
             allDestroyedPlayers.add(player.getUuid());
             goToMenuWhenPlayerIsDead();
-
         }
 
         // robotDataMap is constantly being updated by all client instances
         // this block of code makes new instances of the robot class if it is a robot with a new ID
         HashMap<String, RobotData> map = robotDataMap.getMap();
-        for (Map.Entry<String, RobotData> entry: map.entrySet()){
+        for (Map.Entry<String, RobotData> entry : map.entrySet()) {
             String key = entry.getKey();
-            if (!robotIds.contains(key) && !destroyedRobots.contains(key)) {
-                System.out.println("spawning new robot");
-                Robot robot = new Robot(world, this, entry.getValue().getX(), entry.getValue().getY(), entry.getValue().getHealth(), entry.getValue().getUuid());
+            if (!robotIds.contains(key) && !destroyedRobots.contains(key) && entry.getValue().getHealth() != 0) {
+                System.out.println("spawning new robot with health " + entry.getValue().getHealth());
+                Robot robot = new Robot(world,
+                        this,
+                        entry.getValue().getX(),
+                        entry.getValue().getY(),
+                        entry.getValue().getHealth(),
+                        entry.getValue().getUuid());
+                
                 robots.put(key, robot);
                 robotIds.add(key);
 
@@ -188,7 +189,7 @@ public class PlayScreen implements Screen {
         renderer.setView(gameCam);
 
         // It is used to send the position of the player to the server
-        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState)  {
+        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState) {
             MyGDXGame.client.sendTCP(new PlayerData(
                     gameCam.position.x,
                     gameCam.position.y,
@@ -289,7 +290,7 @@ public class PlayScreen implements Screen {
         MyGDXGame.playerDict.clear();
         MyGDXGame.lastReceivedData = null;
         game.dispose();
-        Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/Ghostrifter-Official-Resurgence(chosic.com).mp3"));
+        Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
         musicInTheMenu.setLooping(true);
         musicInTheMenu.play();
         game.setScreen(new MenuScreen(game, musicInTheMenu));

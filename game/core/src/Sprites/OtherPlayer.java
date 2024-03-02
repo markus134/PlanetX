@@ -22,7 +22,6 @@ public class OtherPlayer extends Sprite {
     private static final float LINEAR_DAMPING = 4f;
     private static final float PLAYER_HEIGHT = 64 / MyGDXGame.PPM;
     private static final float PLAYER_WIDTH = 64 / MyGDXGame.PPM;
-    private static final int MAX_HEALTH = 100;
 
     public World world;
     public Body b2body;

@@ -164,13 +164,14 @@ public class Robot extends Sprite {
         if (health <= 0) {
             System.out.println("health is lower than 0");
             B2WorldCreator.robotsToDestroy.add(this);
-        } else{
-            updatePosition();
-            setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
-            region = getFrame(delta);
-            setRegion(region);
-            b2body.setAwake(true);
         }
+
+        updatePosition();
+        setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
+        region = getFrame(delta);
+        setRegion(region);
+        b2body.setAwake(true);
+
 
     }
 

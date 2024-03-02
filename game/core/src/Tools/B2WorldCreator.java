@@ -28,27 +28,35 @@ import java.util.Set;
 
 public class B2WorldCreator {
     public static Set<Robot> robotsToDestroy = new HashSet<>();
-    public static Set<OtherPlayer> playersToDestroy = new HashSet<OtherPlayer>();
+    public static Set<OtherPlayer> playersToDestroy = new HashSet<>();
     private World world;
+    private static final int START_POSITION_LAYER_INDEX = 4;
+    private static final int WALLS_LAYER_INDEX = 5;
 
 
     public B2WorldCreator(World world, TiledMap map, PlayScreen playScreen) {
         this.world = world;
 
-        // Get the coordinates of the start position point
-        for (MapObject object : map.getLayers().get(4).getObjects().getByType(RectangleMapObject.class)) {
-            Rectangle rectangle = ((RectangleMapObject) object).getRectangle(); // This is actually a point but LibGDX treats points as rectangles with height and width as 0
+        setStartPosition(map, playScreen);
+        createWalls(map);
+        setContactListener();
+    }
+
+    private void setStartPosition(TiledMap map, PlayScreen playScreen) {
+        for (MapObject object : map.getLayers().get(START_POSITION_LAYER_INDEX).getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rectangle = ((RectangleMapObject) object).getRectangle();
             playScreen.startPosX = rectangle.getX();
             playScreen.startPosY = rectangle.getY();
         }
+    }
 
+    private void createWalls(TiledMap map) {
         BodyDef bdef = new BodyDef();
         PolygonShape shape = new PolygonShape();
         FixtureDef fdef = new FixtureDef();
         Body body;
 
-        // Create the box2d walls
-        for (MapObject object : map.getLayers().get(5).getObjects().getByType(RectangleMapObject.class)) {
+        for (MapObject object : map.getLayers().get(WALLS_LAYER_INDEX).getObjects().getByType(RectangleMapObject.class)) {
             Rectangle rectangle = ((RectangleMapObject) object).getRectangle();
 
             bdef.type = BodyDef.BodyType.StaticBody;
@@ -63,60 +71,14 @@ public class B2WorldCreator {
 
             body.createFixture(fdef);
         }
+    }
 
+    private void setContactListener() {
         world.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
-                Fixture fixtureA = contact.getFixtureA();
-                Fixture fixtureB = contact.getFixtureB();
-
-
-                // Check if either fixture is the bullet
-                if (fixtureA.getBody().getUserData() instanceof Bullet || fixtureB.getBody().getUserData() instanceof Bullet) {
-                    // Mark the bullet as destroyed
-                    Bullet bullet = (Bullet) (fixtureA.getBody().getUserData() instanceof Bullet ? fixtureA.getBody().getUserData() : fixtureB.getBody().getUserData());
-                    bullet.setShouldDestroy();
-
-                    // Check if the other fixture is a robot and apply damage
-                    Fixture robotFixture = (fixtureA.getBody().getUserData() instanceof Robot) ? fixtureA : (fixtureB.getBody().getUserData() instanceof Robot) ? fixtureB : null;
-
-                    if (robotFixture != null) {
-                        Robot robot = (Robot) robotFixture.getBody().getUserData();
-                        robot.takeDamage(Bullet.DAMAGE);
-
-                        if (robot.getHealth() <= 0) {
-                            robotsToDestroy.add(robot);
-                        }
-                    }
-
-                    // Check if the other fixture is a robot and apply damage
-                    Fixture otherPlayerFixture = (fixtureA.getBody().getUserData() instanceof OtherPlayer) ? fixtureA : (fixtureB.getBody().getUserData() instanceof OtherPlayer) ? fixtureB : null;
-
-                    if (otherPlayerFixture != null) {
-                        OtherPlayer player = (OtherPlayer) otherPlayerFixture.getBody().getUserData();
-                        System.out.println("Player took damage from bullet " + bullet);
-                        player.takeDamage(Bullet.DAMAGE);
-                        System.out.println("other player took damage");
-                        if (player.getHealth() <= 0) {
-                            playersToDestroy.add(player);
-                        }
-                    }
-
-                    // Check if the other fixture is a robot and apply damage
-                    Fixture playerFixture = (fixtureA.getBody().getUserData() instanceof Player) ? fixtureA : (fixtureB.getBody().getUserData() instanceof Player) ? fixtureB : null;
-
-                    if (playerFixture != null) {
-                        Player player = (Player) playerFixture.getBody().getUserData();
-                        System.out.println("cur health is " + player.getHealth());
-                        player.takeDamage(Bullet.DAMAGE);
-                        System.out.println("you took damage, health is now " + player.getHealth());
-                        if (player.getHealth() <= 0) {
-                            playScreen.playerDead = true;
-                        }
-                    }
-                }
+                handleBeginContact(contact);
             }
-
 
             @Override
             public void endContact(Contact contact) {
@@ -130,6 +92,44 @@ public class B2WorldCreator {
             public void postSolve(Contact contact, ContactImpulse contactImpulse) {
             }
         });
+    }
+
+    private void handleBeginContact(Contact contact) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+
+        // Check if either fixture is the bullet
+        if (fixtureA.getBody().getUserData() instanceof Bullet || fixtureB.getBody().getUserData() instanceof Bullet) {
+            // Mark the bullet as destroyed
+            Bullet bullet = (Bullet) (fixtureA.getBody().getUserData() instanceof Bullet ? fixtureA.getBody().getUserData() : fixtureB.getBody().getUserData());
+            bullet.setShouldDestroy();
+
+            // Check if the other fixture is a robot and apply damage
+            Fixture robotFixture = (fixtureA.getBody().getUserData() instanceof Robot) ? fixtureA : (fixtureB.getBody().getUserData() instanceof Robot) ? fixtureB : null;
+
+            if (robotFixture != null) {
+                Robot robot = (Robot) robotFixture.getBody().getUserData();
+                robot.takeDamage(Bullet.DAMAGE);
+            }
+
+            // Check if the other fixture is another player and apply damage
+            Fixture otherPlayerFixture = (fixtureA.getBody().getUserData() instanceof OtherPlayer) ? fixtureA : (fixtureB.getBody().getUserData() instanceof OtherPlayer) ? fixtureB : null;
+
+            if (otherPlayerFixture != null) {
+                OtherPlayer player = (OtherPlayer) otherPlayerFixture.getBody().getUserData();
+                player.takeDamage(Bullet.DAMAGE);
+
+            }
+
+            // Check if the other fixture is yourself and apply damage
+            Fixture playerFixture = (fixtureA.getBody().getUserData() instanceof Player) ? fixtureA : (fixtureB.getBody().getUserData() instanceof Player) ? fixtureB : null;
+
+            if (playerFixture != null) {
+                Player player = (Player) playerFixture.getBody().getUserData();
+                player.takeDamage(Bullet.DAMAGE);
+            }
+        }
     }
 
     public void destroyDeadRobots() {

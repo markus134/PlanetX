@@ -176,8 +176,6 @@ public class MyGDXGame extends Game {
                 }
 
                 // Remove disconnected players and destroy associated Box2D objects
-                System.out.println(playerDict);
-                System.out.println(allConnectionIDs);
                 playerDict.keySet().removeIf(id -> {
                     if (!allConnectionIDs.contains(id)) {
                         // Player disconnected, destroy associated Box2D objects
