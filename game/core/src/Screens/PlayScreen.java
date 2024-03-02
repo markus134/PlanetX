@@ -140,7 +140,6 @@ public class PlayScreen implements Screen {
                     new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid()));
             robot.update(dt);
 
-            System.out.println("robot health is now " + robot.getHealth());
         }
 
         bulletManager.update(dt);
@@ -168,14 +167,13 @@ public class PlayScreen implements Screen {
         for (Map.Entry<String, RobotData> entry : map.entrySet()) {
             String key = entry.getKey();
             if (!robotIds.contains(key) && !destroyedRobots.contains(key) && entry.getValue().getHealth() != 0) {
-                System.out.println("spawning new robot with health " + entry.getValue().getHealth());
                 Robot robot = new Robot(world,
                         this,
                         entry.getValue().getX(),
                         entry.getValue().getY(),
                         entry.getValue().getHealth(),
                         entry.getValue().getUuid());
-                
+
                 robots.put(key, robot);
                 robotIds.add(key);
 
@@ -224,7 +222,7 @@ public class PlayScreen implements Screen {
         renderer.render();
 
         // Uncomment the following line if you want to see box2d lines
-        b2dr.render(world, gameCam.combined);
+        // b2dr.render(world, gameCam.combined);
 
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();

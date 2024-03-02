@@ -78,7 +78,6 @@ public class MyGDXGame extends Game {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     if (object instanceof BulletData) {
                         // updating bullet data
-                        System.out.println("Adding bullet data to list");
                         lastReceivedBullets.add((BulletData) object);
 
                     } else if (object instanceof RobotDataMap) {
@@ -161,7 +160,6 @@ public class MyGDXGame extends Game {
                                 otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
                             }
                         } else {
-                            System.out.println("spawning new player " + playerId);
                             OtherPlayer otherPlayer = new OtherPlayer(world, playScreen, otherPlayerPosX, otherPlayerPosY, health, playerId, id);
 
                             Set<OtherPlayer> otherPlayers = playerDict.getOrDefault(id, new HashSet<>());

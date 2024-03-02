@@ -133,7 +133,6 @@ public class OtherPlayer extends Sprite {
     public void takeDamage(int damage) {
         health -= damage;
 
-        System.out.println("Health is " + health);
         if (health <= 0) {
             shouldBeDestroyed = true;
         }

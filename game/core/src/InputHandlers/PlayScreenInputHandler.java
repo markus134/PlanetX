@@ -183,7 +183,6 @@ public class PlayScreenInputHandler implements InputProcessor {
             // Update the time of the last shot
             lastShotTime = currentTime;
 
-            System.out.println("sending bullet data");
             MyGDXGame.client.sendTCP(new BulletData(
                     velocityX,
                     velocityY,

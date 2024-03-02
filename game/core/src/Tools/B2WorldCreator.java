@@ -138,7 +138,6 @@ public class B2WorldCreator {
             world.destroyBody(robot.b2body);
 
             String uniqueId = robot.getUuid();
-            System.out.println("robot " + uniqueId + " is marked for destruction");
 
             PlayScreen.destroyedRobots.add(uniqueId);
             PlayScreen.allDestroyedRobots.add(uniqueId);
@@ -152,7 +151,6 @@ public class B2WorldCreator {
         for (OtherPlayer player : playersToDestroy) {
             world.destroyBody(player.b2body);
 
-            System.out.println("removing player " + player.getUuid());
             MyGDXGame.playerDict.remove(player.getId());
             PlayScreen.allDestroyedPlayers.add(player.getUuid());
 

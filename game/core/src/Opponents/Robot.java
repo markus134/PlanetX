@@ -162,7 +162,6 @@ public class Robot extends Sprite {
      */
     public void update(float delta) {
         if (health <= 0) {
-            System.out.println("health is lower than 0");
             B2WorldCreator.robotsToDestroy.add(this);
         }
 
@@ -362,7 +361,6 @@ public class Robot extends Sprite {
     public void takeDamage(int damage) {
         health -= damage;
 
-        System.out.println("Taking damage in takeDamage");
         if (health <= 0) {
             shouldBeDestroyed = true;
         }

@@ -22,7 +22,6 @@ public class Bullet extends Sprite {
     public Bullet(World world, float x, float y, int id) {
         texture = new Texture("Bullets/01.png");
 
-        System.out.println("spawned bullet");
         this.world = world;
         this.id = id;
 
