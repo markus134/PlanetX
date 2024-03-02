@@ -63,7 +63,13 @@ public class Robot extends Sprite {
     public boolean shouldBeDestroyed = false;
     private String uuid;
 
-
+    /**
+     * First constructor for a robot that gets created in the center of the map
+     * if "B" is pressed.
+     *
+     * @param world
+     * @param screen
+     */
     public Robot(World world, PlayScreen screen) {
         super(screen.getAtlas2().findRegion("Robot"));
         this.world = world;
@@ -84,6 +90,16 @@ public class Robot extends Sprite {
         health = MAX_HEALTH;
     }
 
+    /**
+     * Second constructor.
+     * It is used when a new player enters the game. Then the robot is spawned at
+     * the right place on the screen.
+     *
+     * @param world
+     * @param screen
+     * @param posX
+     * @param posY
+     */
     public Robot(World world, PlayScreen screen, float posX, float posY, int health, String uuid) {
         super(screen.getAtlas2().findRegion("Robot"));
         this.world = world;

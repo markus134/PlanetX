@@ -16,7 +16,7 @@ public class BackGround {
      * Constructor for the class object.
      */
     public BackGround() {
-        backgroundTexture = new Texture(Gdx.files.internal("MenuBack.jpg")); // Replace with your image file name
+        backgroundTexture = new Texture(Gdx.files.internal("Menu/MenuBack.jpg")); // Replace with your image file name
         backgroundSprite = new Sprite(backgroundTexture);
         backgroundSprite.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }

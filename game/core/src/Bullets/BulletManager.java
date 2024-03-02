@@ -1,10 +1,14 @@
 package Bullets;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.physics.box2d.World;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static Screens.SettingsScreen.soundValue;
 
 public class BulletManager {
     public static ArrayList<Bullet> bulletsToRemove;
@@ -13,12 +17,18 @@ public class BulletManager {
     private int nextBulletId;
     private static Map<Integer, Bullet> bulletsById;
 
+    private final Sound bulletSound;
+    private long soundID;
+
     public BulletManager(World world) {
         this.world = world;
         bullets = new ArrayList<>();
         bulletsToRemove = new ArrayList<>();
         bulletsById = new HashMap<>();
         nextBulletId = 1; // Starting ID for bullets
+
+        // soundEffects
+        bulletSound = Gdx.audio.newSound(Gdx.files.internal("WeaponSounds/blaster.mp3"));
     }
 
     public Bullet obtainBullet(float x, float y) {
@@ -26,6 +36,10 @@ public class BulletManager {
         Bullet bullet = new Bullet(world, x, y, bulletId);
         bulletsById.put(bulletId, bullet); // Store the bullet in the HashMap
         bullets.add(bullet);
+
+        // plays the sound and returns a soundID that is used to make the volume lower
+        soundID = bulletSound.play();
+        bulletSound.setVolume(soundID, soundValue);
         return bullet;
     }
 

@@ -47,8 +47,6 @@ public class MyGDXGame extends Game {
     public static final short OTHER_PLAYER_CATEGORY = 0x0004;
     public static final short WORLD_CATEGORY = 0x0008;
     public static final short OPPONENT_CATEGORY = 0x0010;
-    private static Music musicInTheMenu;
-
 
     /**
      * Initializes the playScreen and the client.
@@ -69,7 +67,6 @@ public class MyGDXGame extends Game {
         kryo.register(String.class);
 
         client.start();
-        client.sendTCP("Start");
         try {
             client.connect(5000, "localHost", 8080, 8081);
         } catch (IOException e) {
@@ -113,8 +110,9 @@ public class MyGDXGame extends Game {
     public void create() {
         batch = new SpriteBatch();
 
-        musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/Ghostrifter-Official-Resurgence(chosic.com).mp3"));
+        Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
         musicInTheMenu.setLooping(true);
+        musicInTheMenu.setVolume(.1f);
         musicInTheMenu.play();
 
         menu = new MenuScreen(this, musicInTheMenu);
@@ -128,7 +126,6 @@ public class MyGDXGame extends Game {
     @Override
     public void render() {
         super.render();
-        //System.out.println(lastReceivedData);
 
         if (lastReceivedData != null) {
             // Made a special list for bullets as the packets were otherwise skipped (rendering was slower)

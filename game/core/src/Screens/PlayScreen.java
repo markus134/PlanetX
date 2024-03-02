@@ -62,6 +62,8 @@ public class PlayScreen implements Screen {
     public static Set<String> allDestroyedRobots = new HashSet<>();
     public static Set<String> allDestroyedPlayers = new HashSet<>();
     public boolean playerDead = false;
+    private Music music;
+
 
     /**
      * Constructor for the PlayScreen.
@@ -89,6 +91,10 @@ public class PlayScreen implements Screen {
 
         handler = new PlayScreenInputHandler(this);
 
+        music = Gdx.audio.newMusic(Gdx.files.internal("Music/in-game.mp3"));
+        music.setLooping(true);
+        music.setVolume(.1f);
+        music.play();
     }
 
 

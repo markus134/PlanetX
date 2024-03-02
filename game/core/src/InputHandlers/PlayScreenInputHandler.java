@@ -178,7 +178,6 @@ public class PlayScreenInputHandler implements InputProcessor {
                 x,
                 y
         ));
-
         return true;
     }
 
