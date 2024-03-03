@@ -20,6 +20,11 @@ public class BulletManager {
     private final Sound bulletSound;
     private long soundID;
 
+    /**
+     * Constructor
+     *
+     * @param world
+     */
     public BulletManager(World world) {
         this.world = world;
         bullets = new ArrayList<>();
@@ -31,6 +36,13 @@ public class BulletManager {
         bulletSound = Gdx.audio.newSound(Gdx.files.internal("WeaponSounds/blaster.mp3"));
     }
 
+    /**
+     * Obtains a bullet and adds it to the appropriate data structures
+     *
+     * @param x
+     * @param y
+     * @return
+     */
     public Bullet obtainBullet(float x, float y) {
         int bulletId = nextBulletId++;
         Bullet bullet = new Bullet(world, x, y, bulletId);
@@ -43,14 +55,30 @@ public class BulletManager {
         return bullet;
     }
 
+    /**
+     * Adds the bullet to the list of bullets that will be removed
+     *
+     * @param bullet
+     */
     public static void freeBullet(Bullet bullet) {
         bulletsToRemove.add(bullet);
     }
 
+    /**
+     * Gets a bullet by id
+     *
+     * @param id
+     * @return
+     */
     public static Bullet getBulletById(int id) {
         return bulletsById.get(id);
     }
 
+    /**
+     * Updates the info for the bullets
+     *
+     * @param deltaTime
+     */
     public void update(float deltaTime) {
         // Update each bullet
         for (Bullet bullet : bullets) {
@@ -66,6 +94,11 @@ public class BulletManager {
         bulletsToRemove.clear();
     }
 
+    /**
+     * Returns all the bullets
+     *
+     * @return
+     */
     public ArrayList<Bullet> getBullets() {
         return bullets;
     }

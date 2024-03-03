@@ -20,6 +20,12 @@ public class Debug implements Disposable {
     private float mapCenterX = 7.52667f;
     private float mapCenterY = 8.15333f;
 
+    /**
+     * Constructor
+     *
+     * @param sb
+     * @param player
+     */
     public Debug(SpriteBatch sb, Player player) {
         this.player = player;
         //debug table generation
@@ -77,6 +83,9 @@ public class Debug implements Disposable {
         stage.draw();
     }
 
+    /**
+     * Dispose of the stage
+     */
     @Override
     public void dispose() {
         stage.dispose();

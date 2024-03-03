@@ -32,7 +32,17 @@ public class OtherPlayer extends Sprite {
     private String uuid;
     private int id;
 
-
+    /**
+     * Constructor
+     *
+     * @param world
+     * @param screen
+     * @param posX
+     * @param posY
+     * @param health
+     * @param uuid
+     * @param id
+     */
     public OtherPlayer(World world, PlayScreen screen, float posX, float posY, int health, String uuid, int id) {
         super(screen.getAtlas().findRegion("player_spritesheet"));
         this.world = world;
@@ -138,10 +148,20 @@ public class OtherPlayer extends Sprite {
         }
     }
 
+    /**
+     * Getter method
+     *
+     * @return uuid
+     */
     public String getUuid() {
         return uuid;
     }
 
+    /**
+     * Getter method
+     *
+     * @return id
+     */
     public int getId() {
         return id;
     }
