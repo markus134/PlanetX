@@ -10,13 +10,12 @@ import java.util.Set;
 /**
  * Initializes a cell.
  * <p>
- *      Cells are discrete elements that form a tilemap.
- *      <br>
- *      Each cell has n number of opitons that get collapsed as {@link WaveFunctionCollapse}
- *      collapses cells on the grid. When a cell is collapsed, it is
- *      set to be drawn to the screen in {@link TileMap}.
+ * Cells are discrete elements that form a tilemap.
+ * <br>
+ * Each cell has n number of opitons that get collapsed as {@link WaveFunctionCollapse}
+ * collapses cells on the grid. When a cell is collapsed, it is
+ * set to be drawn to the screen in {@link TileMap}.
  * </p>
- *
  */
 class Cell implements Comparable<Cell> {
     private ArrayList<Integer> options;
@@ -46,35 +45,34 @@ class Cell implements Comparable<Cell> {
      * Collapses the current cell, which has least entropy.
      */
     public void collapseCell() {
-    	if (options.size() > 0) {
-    		double totalWeight = 0;
-    		
-    		for (int id : options) {
-    			totalWeight += TileSetLoader.tileMap.get(id).getWeight();
-    		}
-    		
-    		double randomWeight = Math.random() * totalWeight;
-    		double cumulativeWeight = 0;
-    		
-    		for (int id : options) {
-    			cumulativeWeight += TileSetLoader.tileMap.get(id).getWeight();
-    			if (cumulativeWeight >= randomWeight) {
-    				options = new ArrayList<>(Collections.singletonList(id));
-    				break;
-    			}
-    		}    		
-    	}
-    	else {
-    		options = new ArrayList<>(Collections.singletonList(0));
-    	}
-    	
+        if (options.size() > 0) {
+            double totalWeight = 0;
+
+            for (int id : options) {
+                totalWeight += TileSetLoader.tileMap.get(id).getWeight();
+            }
+
+            double randomWeight = Math.random() * totalWeight;
+            double cumulativeWeight = 0;
+
+            for (int id : options) {
+                cumulativeWeight += TileSetLoader.tileMap.get(id).getWeight();
+                if (cumulativeWeight >= randomWeight) {
+                    options = new ArrayList<>(Collections.singletonList(id));
+                    break;
+                }
+            }
+        } else {
+            options = new ArrayList<>(Collections.singletonList(0));
+        }
+
         collapsed = true;
     }
 
     /**
      * Setter for new options.
      * <p>
-     *  New options from the loss of cell entropy.
+     * New options from the loss of cell entropy.
      * </p>
      *
      * @param options 2D Integer array of tile rules.
@@ -111,5 +109,12 @@ class Cell implements Comparable<Cell> {
     @Override
     public int compareTo(Cell other) {
         return Integer.compare(this.entropy(), other.entropy());
+    }
+
+    @Override
+    public String toString() {
+        return "Cell{" +
+                "options=" + options + ", " +
+                "collapsed=" + collapsed + "}";
     }
 }
