@@ -32,7 +32,7 @@ public class SettingsScreen extends ScreenAdapter {
     private Batch batch;
     private BackGround backGround;
     private final Music music;
-    private float musicValue;
+    public static float musicValue;
     public static float soundValue = .1f;
     private boolean soundON = true;
     private float tempForSoundValue;
@@ -88,6 +88,7 @@ public class SettingsScreen extends ScreenAdapter {
             public void changed(ChangeEvent event, Actor actor) {
                 // When the slider value changes, update the volume of the music
                 music.setVolume(musicSlider.getValue());
+                musicValue = music.getVolume();
             }
         });
 
