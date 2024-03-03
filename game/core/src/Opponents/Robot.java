@@ -339,16 +339,31 @@ public class Robot extends Sprite {
         b2body.setLinearDamping(LINEAR_DAMPING);
     }
 
+    /**
+     * Getter method
+     *
+     * @return x
+     */
     @Override
     public float getX() {
         return this.b2body.getPosition().x;
     }
 
+    /**
+     * Getter method
+     *
+     * @return y
+     */
     @Override
     public float getY() {
         return this.b2body.getPosition().y;
     }
 
+    /**
+     * Getter method
+     *
+     * @return health
+     */
     public int getHealth() {
         return health;
     }
@@ -366,13 +381,21 @@ public class Robot extends Sprite {
         }
     }
 
+    /**
+     * Setter method
+     *
+     * @param UUID
+     */
     public void setUuid(String UUID) {
         this.uuid = UUID;
     }
 
+    /**
+     * Getter method
+     *
+     * @return uuid
+     */
     public String getUuid() {
         return uuid;
     }
-
-
 }

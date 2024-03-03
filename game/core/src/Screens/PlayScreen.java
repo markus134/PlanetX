@@ -139,7 +139,6 @@ public class PlayScreen implements Screen {
             robotDataMap.put(entry.getKey(),
                     new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid()));
             robot.update(dt);
-
         }
 
         bulletManager.update(dt);
@@ -204,7 +203,6 @@ public class PlayScreen implements Screen {
 
         destroyedRobots.clear();
     }
-
 
     /**
      * Renders the game.
@@ -284,12 +282,16 @@ public class PlayScreen implements Screen {
 
     }
 
+    /**
+     * Changes player's screen to the main menu screen if the player dies
+     */
     public void goToMenuWhenPlayerIsDead() {
         world.destroyBody(player.b2body);
         MyGDXGame.playerDict.clear();
         MyGDXGame.lastReceivedData = null;
         game.dispose();
 
+        // starts the music
         Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
         musicInTheMenu.setLooping(true);
         musicInTheMenu.setVolume(SettingsScreen.musicValue);

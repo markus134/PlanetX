@@ -33,7 +33,13 @@ public class B2WorldCreator {
     private static final int START_POSITION_LAYER_INDEX = 4;
     private static final int WALLS_LAYER_INDEX = 5;
 
-
+    /**
+     * Constructor
+     *
+     * @param world
+     * @param map
+     * @param playScreen
+     */
     public B2WorldCreator(World world, TiledMap map, PlayScreen playScreen) {
         this.world = world;
 
@@ -42,6 +48,12 @@ public class B2WorldCreator {
         setContactListener();
     }
 
+    /**
+     * Sets the starting position
+     *
+     * @param map
+     * @param playScreen
+     */
     private void setStartPosition(TiledMap map, PlayScreen playScreen) {
         for (MapObject object : map.getLayers().get(START_POSITION_LAYER_INDEX).getObjects().getByType(RectangleMapObject.class)) {
             Rectangle rectangle = ((RectangleMapObject) object).getRectangle();
@@ -50,6 +62,11 @@ public class B2WorldCreator {
         }
     }
 
+    /**
+     * Creates the walls
+     *
+     * @param map
+     */
     private void createWalls(TiledMap map) {
         BodyDef bdef = new BodyDef();
         PolygonShape shape = new PolygonShape();
@@ -73,6 +90,9 @@ public class B2WorldCreator {
         }
     }
 
+    /**
+     * Sets a contact listener
+     */
     private void setContactListener() {
         world.setContactListener(new ContactListener() {
             @Override
@@ -94,6 +114,11 @@ public class B2WorldCreator {
         });
     }
 
+    /**
+     * Handles contact
+     *
+     * @param contact
+     */
     private void handleBeginContact(Contact contact) {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
@@ -132,6 +157,9 @@ public class B2WorldCreator {
         }
     }
 
+    /**
+     * Removes the killed robots
+     */
     public void destroyDeadRobots() {
         // Destroy robots marked for destruction
         for (Robot robot : robotsToDestroy) {
@@ -146,6 +174,9 @@ public class B2WorldCreator {
         robotsToDestroy.clear();
     }
 
+    /**
+     * Removes the killed players
+     */
     public void destroyDeadPlayers() {
         // Destroy robots marked for destruction
         for (OtherPlayer player : playersToDestroy) {

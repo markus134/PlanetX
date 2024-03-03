@@ -28,9 +28,6 @@ public class Player extends Sprite {
     private static final float VELOCITY_THRESHOLD = 0.8f;
     private static final int MAX_HEALTH = 100;
 
-
-
-
     // Enums for player state and direction
     public enum State {
         RUNNING,
@@ -67,6 +64,12 @@ public class Player extends Sprite {
     private String uuid;
 
 
+    /**
+     * Constructor
+     *
+     * @param world
+     * @param screen
+     */
     public Player(World world, PlayScreen screen) {
         super(screen.getAtlas().findRegion("player_spritesheet"));
         this.world = world;
@@ -102,6 +105,7 @@ public class Player extends Sprite {
     public void move(float xForce, float yForce) {
         b2body.applyLinearImpulse(new Vector2(xForce, yForce), b2body.getWorldCenter(), true);
     }
+
     /**
      * Initializes player animations using sprite sheet regions.
      */
@@ -283,6 +287,11 @@ public class Player extends Sprite {
         }
     }
 
+    /**
+     * Getter method
+     *
+     * @return uuid
+     */
     public String getUuid() {
         return uuid;
     }

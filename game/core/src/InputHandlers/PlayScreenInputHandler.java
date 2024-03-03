@@ -32,11 +32,16 @@ public class PlayScreenInputHandler implements InputProcessor {
     private static final long SHOOT_COOLDOWN_NANOS = 250_000_000L; // 0.25 seconds in nanoseconds
     private long lastShotTime = 0;
 
-
+    /**
+     * Constructor
+     *
+     * @param playScreen
+     */
     public PlayScreenInputHandler(PlayScreen playScreen) {
         this.playScreen = playScreen;
         touchPoint = new Vector3();
     }
+
     /**
      * Handles player input.
      */

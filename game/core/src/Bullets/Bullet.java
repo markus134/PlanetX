@@ -19,6 +19,14 @@ public class Bullet extends Sprite {
     private boolean shouldDestroy = false;
     private int id;
 
+    /**
+     * Constructor
+     *
+     * @param world
+     * @param x
+     * @param y
+     * @param id
+     */
     public Bullet(World world, float x, float y, int id) {
         texture = new Texture("Bullets/01.png");
 
@@ -52,6 +60,11 @@ public class Bullet extends Sprite {
         setRegion(texture);
     }
 
+    /**
+     * Updates the info about the bullet
+     *
+     * @param deltaTime
+     */
     public void update(float deltaTime) {
         if (shouldDestroy) {
             BulletManager.freeBullet(this);
@@ -61,14 +74,23 @@ public class Bullet extends Sprite {
         }
     }
 
+    /**
+     * Destroys the bullet
+     */
     public void destroy() {
         world.destroyBody(body);
     }
 
+    /**
+     * Changes the shouldDestroy property to true
+     */
     public void setShouldDestroy() {
         shouldDestroy = true;
     }
 
+    /**
+     * Dispose of all textures
+     */
     public void dispose() {
         texture.dispose();
     }
