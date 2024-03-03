@@ -213,6 +213,7 @@ public class PlayScreen implements Screen {
      */
     @Override
     public void render(float delta) {
+
         handler.handleInput();
         update(delta);
 
@@ -288,11 +289,12 @@ public class PlayScreen implements Screen {
         MyGDXGame.playerDict.clear();
         MyGDXGame.lastReceivedData = null;
         game.dispose();
+
         Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
         musicInTheMenu.setLooping(true);
+        musicInTheMenu.setVolume(SettingsScreen.musicValue);
         musicInTheMenu.play();
         game.setScreen(new MenuScreen(game, musicInTheMenu));
-
     }
 
     /**
