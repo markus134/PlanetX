@@ -5,6 +5,7 @@ import Bullets.BulletManager;
 import InputHandlers.PlayScreenInputHandler;
 import Opponents.Robot;
 import Scenes.Debug;
+import Scenes.HUD;
 import Sprites.OtherPlayer;
 import Sprites.Player;
 import Tools.B2WorldCreator;
@@ -20,6 +21,7 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
@@ -52,6 +54,7 @@ public class PlayScreen implements Screen {
     public float startPosX;
     public float startPosY;
     private Debug debug;
+    private HUD hud;
     public BulletManager bulletManager;
     public static List<String> robotIds = new ArrayList<>();
     public static HashMap<String, Robot> robots = new HashMap<>();
@@ -71,7 +74,7 @@ public class PlayScreen implements Screen {
      */
     public PlayScreen(MyGDXGame game) {
         this.game = game;
-        gamePort = new StretchViewport(MyGDXGame.V_WIDTH / MyGDXGame.PPM, MyGDXGame.V_HEIGHT / MyGDXGame.PPM, gameCam);
+        gamePort = new FitViewport(MyGDXGame.V_WIDTH / MyGDXGame.PPM, MyGDXGame.V_HEIGHT / MyGDXGame.PPM, gameCam);
 
         map = mapLoader.load("test_map.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1 / MyGDXGame.PPM);
@@ -84,6 +87,7 @@ public class PlayScreen implements Screen {
         player = new Player(world, this);
 
         debug = new Debug(game.batch, player);
+        hud = new HUD(game.batch, player);
 
         // Initialize BulletManager
         bulletManager = new BulletManager(world);
@@ -247,8 +251,10 @@ public class PlayScreen implements Screen {
 
         game.batch.end();
 
-        // rendering debug table
-        debug.updateLabelValues();
+        // rendering debug table (disabled for now)
+        //debug.updateLabelValues();
+
+        hud.updateLabelValues();
     }
 
     /**
@@ -265,7 +271,8 @@ public class PlayScreen implements Screen {
         handler.keyPresses = 0;
         handler.keysPressed.clear();
 
-        debug.stage.getViewport().update(width, height, true);
+        //debug.stage.getViewport().update(width, height, true);
+        hud.stage.getViewport().update(width, height, true);
     }
 
     @Override
