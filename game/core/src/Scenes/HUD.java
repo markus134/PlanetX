@@ -14,27 +14,26 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class HUD implements Disposable {
     public Stage stage;
-    private Table debugTable;
+    private Table hudTable;
     private Player player;
     private Image[] heartArray = new Image[5]; // For displaying health assets
 
     public HUD(SpriteBatch sb, Player player) {
         this.player = player;
 
-        // Debug table generation
         stage = new Stage(new ScreenViewport(), sb);
-        debugTable = new Table();
-        debugTable.top().left();
-        debugTable.setFillParent(true);
+        hudTable = new Table();
+        hudTable.top().left();
+        hudTable.setFillParent(true);
 
         // Add health assets to the table with padding
         for (int i = 0; i < heartArray.length; i++) {
             Texture heartTexture = new Texture(Gdx.files.internal("lives/heart_full.png"));
             heartArray[i] = new Image(new TextureRegion(heartTexture));
-            debugTable.add(heartArray[i]).padLeft(10f).padTop(10f);
+            hudTable.add(heartArray[i]).padLeft(10f).padTop(10f);
         }
 
-        stage.addActor(debugTable);
+        stage.addActor(hudTable);
     }
 
     public void updateLabelValues() {
