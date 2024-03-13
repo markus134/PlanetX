@@ -83,7 +83,7 @@ public class PlayScreenInputHandler implements InputProcessor {
 
         robotIds.add(uniqueID);
         robots.put(uniqueID, robot);
-        robotDataMap.put(uniqueID, new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid()));
+        robotDataMap.put(uniqueID, new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid(), 0, 0));
 
         MyGDXGame.client.sendTCP(robotDataMap);
     }

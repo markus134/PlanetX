@@ -7,6 +7,9 @@ public class RobotData implements Serializable {
     private float y;
     private int health;
     private String uuid;
+    private float linX;
+    private float linY;
+
 
     /**
      * Constructor for the object
@@ -16,11 +19,13 @@ public class RobotData implements Serializable {
      * @param health
      * @param uuid
      */
-    public RobotData(float x, float y, int health, String uuid) {
+    public RobotData(float x, float y, int health, String uuid, float linX, float linY) {
         this.x = x;
         this.y = y;
         this.health = health;
         this.uuid = uuid;
+        this.linX = linX;
+        this.linY = linY;
     }
 
     /**
@@ -30,6 +35,8 @@ public class RobotData implements Serializable {
         this.x = 0;
         this.y = 0;
         this.health = 100;
+        this.linX = 0;
+        this.linY = 0;
     }
 
     /**
@@ -67,4 +74,28 @@ public class RobotData implements Serializable {
     public String getUuid() {
         return uuid;
     }
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
+
+    public float getLinX() {
+        return linX;
+    }
+
+    public void setLinX(float linX) {
+        this.linX = linX;
+    }
+
+    public float getLinY() {
+        return linY;
+    }
+
+    public void setLinY(float linY) {
+        this.linY = linY;
+    }
+
 }

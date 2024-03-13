@@ -160,12 +160,12 @@ public class Robot extends Sprite {
      *
      * @param delta The time elapsed since the last frame.
      */
-    public void update(float delta) {
+    public void update(float delta, float linX, float linY) {
         if (health <= 0) {
             B2WorldCreator.robotsToDestroy.add(this);
         }
 
-        updatePosition();
+        updatePosition(linX, linY);
         setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
         region = getFrame(delta);
         setRegion(region);
@@ -177,74 +177,8 @@ public class Robot extends Sprite {
     /**
      * Seeks for the closest enemy and moves the body of the robot in that direction.
      */
-    private void updatePosition() {
-        float distance = Float.MAX_VALUE;
-        float closestX = 0;
-        float closestY = 0;
-        for (Object playerInfo : playersInfo.values()) {
-            PlayerData info = (PlayerData) playerInfo;
-            float playerX = info.getX();
-            float playerY = info.getY();
-            float actual_distance = (float) (Math.sqrt(Math.pow(playerX, 2) + Math.pow(playerY, 2)));
-            if (actual_distance < distance) {
-                distance = actual_distance;
-                closestX = playerX;
-                closestY = playerY;
-            }
-        }
-
-        float robotX = this.b2body.getPosition().x;
-        float robotY = this.b2body.getPosition().y;
-
-        if (closestX > robotX) {
-            this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
-        } else {
-            this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
-        }
-        if (closestY > robotY) {
-            this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
-        } else {
-            this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
-        }
-
-        // more advanced but still not really a pathfinding algorithm
-
-//        System.out.println(currentDirection);
-//        if (Math.abs(closestX - robotX) > border){
-//            if (closestX > robotX) {
-//                if (Math.abs(closestY - robotY) < border) {
-//                    this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
-//                    return;
-//                } else {
-//                    this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
-//                    if (closestY > robotY) {
-//                        this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
-//                    } else {
-//                        this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
-//                    }
-//                    return;
-//                }
-//            } else {
-//                if (Math.abs(closestY - robotY) < border) {
-//                    this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
-//                    return;
-//                } else {
-//                    this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
-//                    if (closestY > robotY) {
-//                        this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
-//                    } else {
-//                        this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
-//                    }
-//                    return;
-//                }
-//            }
-//        } else {
-//            if (closestY > robotY) {
-//                this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
-//            } else {
-//                this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
-//            }
-//        }
+    private void updatePosition(float linX, float linY) {
+        this.b2body.applyLinearImpulse(new Vector2(linX, linY), this.b2body.getWorldCenter(), true);
     }
 
     /**
@@ -304,6 +238,8 @@ public class Robot extends Sprite {
         float velocityX = Math.abs(b2body.getLinearVelocity().x); // We only care for positive x here so for example if running direction is upper left, then we want to return upper right
         float velocityY = b2body.getLinearVelocity().y;
 
+        System.out.println(velocityX + " " + velocityY);
+
         if (velocityX > VELOCITY_THRESHOLD) {
             if (velocityY > VELOCITY_THRESHOLD) return runDirection.UPPER;
             else if (velocityY < -VELOCITY_THRESHOLD) return runDirection.LOWER;
@@ -311,7 +247,7 @@ public class Robot extends Sprite {
         } else {
             if (velocityY > 0) return runDirection.UP;
             else if (velocityY < 0) return runDirection.DOWN;
-            else return null; // We should never reach this point hopefully as it means that the robot isn't running
+            else return runDirection.UP; // We should never reach this point hopefully as it means that the robot isn't running
         }
     }
 

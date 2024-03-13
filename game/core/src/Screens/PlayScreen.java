@@ -133,19 +133,11 @@ public class PlayScreen implements Screen {
 
         player.update(dt);
 
-        // updating robots and adding info to the robotDataMap, which is sent to the server
-        for (Map.Entry<String, Robot> entry : robots.entrySet()) {
-            Robot robot = entry.getValue();
-            robotDataMap.put(entry.getKey(),
-                    new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid()));
-            robot.update(dt);
-        }
 
         bulletManager.update(dt);
         b2WorldCreator.destroyDeadRobots();
         b2WorldCreator.destroyDeadPlayers();
 
-        MyGDXGame.client.sendTCP(robotDataMap);
 
         for (String id : destroyedRobots) {
             if (robotDataMap.getMap().containsKey(id)) {
@@ -175,8 +167,11 @@ public class PlayScreen implements Screen {
 
                 robots.put(key, robot);
                 robotIds.add(key);
-
             }
+
+            Robot robot = robots.get(key);
+            System.out.println("test" + entry.getValue().getLinX() + " " + entry.getValue().getLinY());
+            robot.update(dt, entry.getValue().getLinX(), entry.getValue().getLinY());
         }
 
         gameCam.position.x = player.b2body.getPosition().x;
