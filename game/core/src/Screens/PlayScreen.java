@@ -288,7 +288,6 @@ public class PlayScreen implements Screen {
     public void goToMenuWhenPlayerIsDead() {
         world.destroyBody(player.b2body);
         MyGDXGame.playerDict.clear();
-        MyGDXGame.lastReceivedData = null;
         game.dispose();
 
         // starts the music

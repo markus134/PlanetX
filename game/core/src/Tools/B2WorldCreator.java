@@ -84,7 +84,7 @@ public class B2WorldCreator {
             shape.setAsBox(rectangle.getWidth() / 2 / MyGDXGame.PPM, rectangle.getHeight() / 2 / MyGDXGame.PPM);
             fdef.shape = shape;
             fdef.filter.categoryBits = MyGDXGame.WORLD_CATEGORY;
-            fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.PLAYER_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY;
+            fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.PLAYER_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.OPPONENT_CATEGORY;
 
             body.createFixture(fdef);
         }
@@ -167,6 +167,7 @@ public class B2WorldCreator {
 
             String uniqueId = robot.getUuid();
 
+            PlayScreen.robots.remove(uniqueId);
             PlayScreen.destroyedRobots.add(uniqueId);
             PlayScreen.allDestroyedRobots.add(uniqueId);
         }
@@ -180,14 +181,12 @@ public class B2WorldCreator {
     public void destroyDeadPlayers() {
         // Destroy robots marked for destruction
         for (OtherPlayer player : playersToDestroy) {
+            System.out.println("Destroying player");
             world.destroyBody(player.b2body);
 
             MyGDXGame.playerDict.remove(player.getId());
+            MyGDXGame.playerDataMap.remove(player.getId());
             PlayScreen.allDestroyedPlayers.add(player.getUuid());
-
-            if (MyGDXGame.lastReceivedData instanceof HashMap) {
-                ((HashMap<Integer, PlayerData>) MyGDXGame.lastReceivedData).remove(player.getId());
-            }
         }
 
         playersToDestroy.clear();

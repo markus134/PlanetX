@@ -1,6 +1,7 @@
 package Opponents;
 
 import Screens.PlayScreen;
+import Sprites.Player;
 import Tools.B2WorldCreator;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -58,7 +59,6 @@ public class Robot extends Sprite {
     public boolean runningRight;
     private float stateTimer;
     public TextureRegion region;
-    public static HashMap playersInfo = new HashMap<>();
     private int health;
     public boolean shouldBeDestroyed = false;
     private String uuid;
@@ -178,24 +178,29 @@ public class Robot extends Sprite {
      * Seeks for the closest enemy and moves the body of the robot in that direction.
      */
     private void updatePosition() {
-        float distance = Float.MAX_VALUE;
+        float shortestDistance = Float.MAX_VALUE;
         float closestX = 0;
         float closestY = 0;
-        for (Object playerInfo : playersInfo.values()) {
-            PlayerData info = (PlayerData) playerInfo;
-            float playerX = info.getX();
-            float playerY = info.getY();
-            float actual_distance = (float) (Math.sqrt(Math.pow(playerX, 2) + Math.pow(playerY, 2)));
-            if (actual_distance < distance) {
-                distance = actual_distance;
-                closestX = playerX;
-                closestY = playerY;
-            }
-        }
 
         float robotX = this.b2body.getPosition().x;
         float robotY = this.b2body.getPosition().y;
 
+
+        for (PlayerData info : MyGDXGame.playerDataMap.values()) {
+            float playerX = info.getX();
+            float playerY = info.getY();
+
+            float deltaX = playerX - robotX;
+            float deltaY = playerY - robotY;
+
+            float actualDistance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            if (actualDistance < shortestDistance) {
+                shortestDistance = actualDistance;
+                closestX = playerX;
+                closestY = playerY;
+            }
+        }
         if (closestX > robotX) {
             this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
         } else {
@@ -207,44 +212,7 @@ public class Robot extends Sprite {
             this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
         }
 
-        // more advanced but still not really a pathfinding algorithm
 
-//        System.out.println(currentDirection);
-//        if (Math.abs(closestX - robotX) > border){
-//            if (closestX > robotX) {
-//                if (Math.abs(closestY - robotY) < border) {
-//                    this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
-//                    return;
-//                } else {
-//                    this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
-//                    if (closestY > robotY) {
-//                        this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
-//                    } else {
-//                        this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
-//                    }
-//                    return;
-//                }
-//            } else {
-//                if (Math.abs(closestY - robotY) < border) {
-//                    this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
-//                    return;
-//                } else {
-//                    this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
-//                    if (closestY > robotY) {
-//                        this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
-//                    } else {
-//                        this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
-//                    }
-//                    return;
-//                }
-//            }
-//        } else {
-//            if (closestY > robotY) {
-//                this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
-//            } else {
-//                this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
-//            }
-//        }
     }
 
     /**

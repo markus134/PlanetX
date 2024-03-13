@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,75 +33,29 @@ import java.util.Set;
  * The main class of the game, responsible for managing screens, rendering, and network communication.
  */
 public class MyGDXGame extends Game {
-    public SpriteBatch batch;
-    public final static int V_WIDTH = 1920;
-    public final static int V_HEIGHT = 1080;
-    public final static float PPM = 100;
-    public static Client client;
-    public static Object lastReceivedData;
-    private ArrayList<BulletData> lastReceivedBullets = new ArrayList<>();
-    public static Map<Integer, Set<OtherPlayer>> playerDict = new HashMap<>();
-    public static PlayScreen playScreen;
-    private MenuScreen menu;
+    // Constants
+    private static final String SERVER_ADDRESS = "localHost";
+    private static final int SERVER_TCP_PORT = 8080;
+    private static final int SERVER_UDP_PORT = 8081;
+
+    // These are used for collisions
     public static final short BULLET_CATEGORY = 0x0001;
     public static final short PLAYER_CATEGORY = 0x0002;
     public static final short OTHER_PLAYER_CATEGORY = 0x0004;
     public static final short WORLD_CATEGORY = 0x0008;
     public static final short OPPONENT_CATEGORY = 0x0010;
 
-    /**
-     * Initializes the playScreen and the client.
-     */
-    public void createScreenAndClient() {
-        playScreen = new PlayScreen(this);
-
-        client = new Client(1000000, 1000000);
-
-        // registering classes
-        Kryo kryo = client.getKryo();
-        kryo.register(RobotData.class, 15);
-        kryo.register(PlayerData.class);
-        kryo.register(Integer.class);
-        kryo.register(BulletData.class, 17);
-        kryo.register(HashMap.class);
-        kryo.register(RobotDataMap.class);
-        kryo.register(String.class);
-
-        client.start();
-        try {
-            client.connect(5000, "localHost", 8080, 8081);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        client.addListener(new Listener.ThreadedListener(new Listener() {
-            @Override
-            public void received(Connection connection, Object object) {
-                if (!(object instanceof FrameworkMessage.KeepAlive)) {
-                    if (object instanceof BulletData) {
-                        // updating bullet data
-                        lastReceivedBullets.add((BulletData) object);
-
-                    } else if (object instanceof RobotDataMap) {
-                        // updating info about robots
-                        RobotDataMap newRobotDataMap = (RobotDataMap) object;
-                        newRobotDataMap.getMap().entrySet().removeIf(entry ->
-                                PlayScreen.allDestroyedRobots.contains(entry.getKey())
-                        );
-
-                        PlayScreen.robotDataMap = newRobotDataMap;
-                    } else if (object instanceof HashMap) {
-                        HashMap<Integer, PlayerData> players = (HashMap) object;
-                        players.entrySet().removeIf(entry ->
-                                PlayScreen.allDestroyedPlayers.contains(entry.getValue().getUuid()));
-                        lastReceivedData = players;
-
-                    } else {
-                        lastReceivedData = object;
-                    }
-                }
-            }
-        }));
-    }
+    // Game attributes
+    public SpriteBatch batch;
+    public static final int V_WIDTH = 1920;
+    public static final int V_HEIGHT = 1080;
+    public static final float PPM = 100;
+    public static Client client;
+    private MenuScreen menu;
+    private List<Object> receivedPackets = new ArrayList<>();
+    public static PlayScreen playScreen;
+    public static Map<Integer, Set<OtherPlayer>> playerDict = new HashMap<>();
+    public static HashMap<Integer, PlayerData> playerDataMap = new HashMap<>();
 
     /**
      * Initializes the game, creates music object and menu.
@@ -108,15 +63,7 @@ public class MyGDXGame extends Game {
     @Override
     public void create() {
         batch = new SpriteBatch();
-
-        Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
-        musicInTheMenu.setLooping(true);
-        musicInTheMenu.setVolume(.1f);
-        musicInTheMenu.play();
-
-        menu = new MenuScreen(this, musicInTheMenu);
-
-        setScreen(menu);
+        initializeMenu();
     }
 
     /**
@@ -126,68 +73,184 @@ public class MyGDXGame extends Game {
     public void render() {
         super.render();
 
-        if (lastReceivedData != null) {
-            // Made a special list for bullets as the packets were otherwise skipped (rendering was slower)
-            for (BulletData data : lastReceivedBullets) {
-                Bullet bullet = playScreen.bulletManager.obtainBullet(data.getX(), data.getY());
-                bullet.body.setLinearVelocity(data.getLinVelX(), data.getLinVelY());
-            }
-            lastReceivedBullets.clear();
+        processReceivedPackets();
+    }
 
-            if (lastReceivedData instanceof HashMap) {
-                // updating info about players for the robots to move in the right direction
-                Robot.playersInfo = ((HashMap) lastReceivedData);
-                World world = playScreen.world;
+    /**
+     * Creates the play screen and sets up the client connection.
+     */
+    public void createScreenAndClient() {
+        playScreen = new PlayScreen(this);
+        client = new Client(1000000, 1000000); // If we don't set these sizes big enough, the game could crash
+        registerClasses(client.getKryo());
 
+        client.start();
+        try {
+            client.connect(5000, SERVER_ADDRESS, SERVER_TCP_PORT, SERVER_UDP_PORT);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
-                Set keys = ((HashMap) lastReceivedData).keySet();
-                ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
+        setupClientListener();
+    }
 
-                // Update existing players or create new ones
-                for (Integer id : allConnectionIDs) {
-                    if (id != client.getID()) {
-                        PlayerData playerData = (PlayerData) ((HashMap) lastReceivedData).get(id);
-                        float otherPlayerPosX = playerData.getX();
-                        float otherPlayerPosY = playerData.getY();
-                        int frameIndex = playerData.getFrame();
-                        boolean runningRight = playerData.isRunningRight();
-                        int health = playerData.getHealth();
-                        String playerId = playerData.getUuid();
+    /**
+     * Registers classes for serialization with Kryo.
+     *
+     * @param kryo The Kryo instance to register classes with.
+     */
+    private void registerClasses(Kryo kryo) {
+        kryo.register(RobotData.class, 15);
+        kryo.register(PlayerData.class);
+        kryo.register(Integer.class);
+        kryo.register(BulletData.class, 17);
+        kryo.register(HashMap.class);
+        kryo.register(RobotDataMap.class);
+        kryo.register(String.class);
+    }
 
-                        // If playerDict contains id, then update the data, otherwise add it to playerDict
-                        if (playerDict.containsKey(id)) {
-                            for (OtherPlayer otherPlayer : playerDict.get(id)) {
-                                otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
-                            }
-                        } else {
-                            OtherPlayer otherPlayer = new OtherPlayer(world, playScreen, otherPlayerPosX, otherPlayerPosY, health, playerId, id);
+    /**
+     * Initializes the menu screen.
+     */
+    private void initializeMenu() {
+        Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
+        musicInTheMenu.setLooping(true);
+        musicInTheMenu.setVolume(.1f);
+        musicInTheMenu.play();
 
-                            Set<OtherPlayer> otherPlayers = playerDict.getOrDefault(id, new HashSet<>());
-                            otherPlayers.add(otherPlayer);
+        menu = new MenuScreen(this, musicInTheMenu);
+        setScreen(menu);
+    }
 
-                            playerDict.put(id, otherPlayers);
-                            otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
-                        }
-                    }
-
-
+    /**
+     * Sets up the listener for the client.
+     */
+    private void setupClientListener() {
+        client.addListener(new Listener.ThreadedListener(new Listener() {
+            @Override
+            public void received(Connection connection, Object object) {
+                if (!(object instanceof FrameworkMessage.KeepAlive)) {
+                    receivedPackets.add(object); // Store received packet in a list, this is because render is only called 60 times a second
                 }
+            }
+        }));
+    }
 
-                // Remove disconnected players and destroy associated Box2D objects
-                playerDict.keySet().removeIf(id -> {
-                    if (!allConnectionIDs.contains(id)) {
-                        // Player disconnected, destroy associated Box2D objects
-                        for (OtherPlayer otherPlayer : playerDict.get(id)) {
-                            world.destroyBody(otherPlayer.b2body);
-                        }
-                        return true; // Remove the player from the map
-                    }
-                    return false;
-                });
+    /**
+     * Processes received packets.
+     */
+    private void processReceivedPackets() {
+        // Create a copy of receivedPackets to avoid concurrent modification
+        ArrayList<Object> packetsCopy = new ArrayList<>(receivedPackets);
+
+        for (Object object : packetsCopy) {
+            if (object instanceof BulletData) {
+                handleBulletData((BulletData) object);
+            } else if (object instanceof RobotDataMap) {
+                handleRobotData((RobotDataMap) object);
+
+            }
+
+            if (object instanceof HashMap) {
+                playerDataMap = (HashMap) object;
+                handlePlayerData();
             }
         }
 
+        receivedPackets.clear();
+    }
 
+    /**
+     * Handles bullet data received from the server.
+     *
+     * @param data The bullet data received.
+     */
+    private void handleBulletData(BulletData data) {
+        Bullet bullet = playScreen.bulletManager.obtainBullet(data.getX(), data.getY());
+        bullet.body.setLinearVelocity(data.getLinVelX(), data.getLinVelY());
+    }
+
+    /**
+     * Handles robot data received from the server.
+     *
+     * @param robotDataMap The robot data map received.
+     */
+    private void handleRobotData(RobotDataMap robotDataMap) {
+        robotDataMap.getMap().entrySet().removeIf(entry ->
+                PlayScreen.allDestroyedRobots.contains(entry.getKey())
+        );
+
+        PlayScreen.robotDataMap = robotDataMap;
+    }
+
+    /**
+     * Handles player data received from the server.
+     */
+    private void handlePlayerData() {
+        // updating info about players for the robots to move in the right direction
+        World world = playScreen.world;
+
+        Set<Integer> keys = playerDataMap.keySet();
+        ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
+
+        // Update existing players or create new ones
+        for (Integer id : allConnectionIDs) {
+            if (id != client.getID()) {
+                PlayerData playerData = playerDataMap.get(id);
+                updatePlayer(id, playerData, world);
+            }
+        }
+
+        removeDisconnectedPlayers(allConnectionIDs, world);
+    }
+
+    /**
+     * Updates player data received from the server.
+     *
+     * @param id The ID of the player.
+     * @param playerData The player data received.
+     * @param world The Box2D world.
+     */
+    private void updatePlayer(int id, PlayerData playerData, World world) {
+        float otherPlayerPosX = playerData.getX();
+        float otherPlayerPosY = playerData.getY();
+        int frameIndex = playerData.getFrame();
+        boolean runningRight = playerData.isRunningRight();
+        int health = playerData.getHealth();
+        String playerId = playerData.getUuid();
+
+        // If playerDict contains id, then update the data, otherwise add it to playerDict
+        if (playerDict.containsKey(id)) {
+            for (OtherPlayer otherPlayer : playerDict.get(id)) {
+                otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+            }
+        } else {
+            OtherPlayer otherPlayer = new OtherPlayer(world, playScreen, otherPlayerPosX, otherPlayerPosY, health, playerId, id);
+
+            Set<OtherPlayer> otherPlayers = playerDict.getOrDefault(id, new HashSet<>());
+            otherPlayers.add(otherPlayer);
+
+            playerDict.put(id, otherPlayers);
+            otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
+        }
+    }
+
+    /**
+     * Removes disconnected players.
+     *
+     * @param allConnectionIDs The IDs of all connected players.
+     * @param world The Box2D world.
+     */
+    private void removeDisconnectedPlayers(List<Integer> allConnectionIDs, World world) {
+        playerDict.keySet().removeIf(id -> {
+            if (!allConnectionIDs.contains(id)) {
+                for (OtherPlayer otherPlayer : playerDict.get(id)) {
+                    world.destroyBody(otherPlayer.b2body);
+                }
+                return true;
+            }
+            return false;
+        });
     }
 
     /**
