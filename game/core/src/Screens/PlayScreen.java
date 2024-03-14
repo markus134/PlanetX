@@ -22,21 +22,13 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.PlayerData;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static Screens.SettingsScreen.musicValue;
+import java.util.*;
 
 
 public class PlayScreen implements Screen {
@@ -98,7 +90,7 @@ public class PlayScreen implements Screen {
 
         music = Gdx.audio.newMusic(Gdx.files.internal("Music/in-game.mp3"));
         music.setLooping(true);
-        music.setVolume(musicValue);
+        music.setVolume(SettingsScreen.musicValue);
         music.play();
     }
 
@@ -297,13 +289,12 @@ public class PlayScreen implements Screen {
     public void goToMenuWhenPlayerIsDead() {
         world.destroyBody(player.b2body);
         MyGDXGame.playerDict.clear();
-        MyGDXGame.lastReceivedData = null;
         game.dispose();
 
         // starts the music
         Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
         musicInTheMenu.setLooping(true);
-        musicInTheMenu.setVolume(musicValue);
+        musicInTheMenu.setVolume(SettingsScreen.musicValue);
         musicInTheMenu.play();
         game.setScreen(new MenuScreen(game, musicInTheMenu));
     }

@@ -9,20 +9,9 @@ import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.ContactImpulse;
-import com.badlogic.gdx.physics.box2d.ContactListener;
-import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.Manifold;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.*;
 import com.mygdx.game.MyGDXGame;
-import serializableObjects.PlayerData;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -84,7 +73,7 @@ public class B2WorldCreator {
             shape.setAsBox(rectangle.getWidth() / 2 / MyGDXGame.PPM, rectangle.getHeight() / 2 / MyGDXGame.PPM);
             fdef.shape = shape;
             fdef.filter.categoryBits = MyGDXGame.WORLD_CATEGORY;
-            fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.PLAYER_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY;
+            fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.PLAYER_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.OPPONENT_CATEGORY;
 
             body.createFixture(fdef);
         }
@@ -167,6 +156,7 @@ public class B2WorldCreator {
 
             String uniqueId = robot.getUuid();
 
+            PlayScreen.robots.remove(uniqueId);
             PlayScreen.destroyedRobots.add(uniqueId);
             PlayScreen.allDestroyedRobots.add(uniqueId);
         }
@@ -180,14 +170,12 @@ public class B2WorldCreator {
     public void destroyDeadPlayers() {
         // Destroy robots marked for destruction
         for (OtherPlayer player : playersToDestroy) {
+            System.out.println("Destroying player");
             world.destroyBody(player.b2body);
 
             MyGDXGame.playerDict.remove(player.getId());
+            MyGDXGame.playerDataMap.remove(player.getId());
             PlayScreen.allDestroyedPlayers.add(player.getUuid());
-
-            if (MyGDXGame.lastReceivedData instanceof HashMap) {
-                ((HashMap<Integer, PlayerData>) MyGDXGame.lastReceivedData).remove(player.getId());
-            }
         }
 
         playersToDestroy.clear();

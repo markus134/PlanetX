@@ -32,7 +32,7 @@ public class SettingsScreen extends ScreenAdapter {
     private Batch batch;
     private BackGround backGround;
     private final Music music;
-    public static float musicValue;
+    public static float musicValue = .1f;
     public static float soundValue = .1f;
     private boolean soundON = true;
     private float tempForSoundValue;
