@@ -29,6 +29,7 @@ public class MenuScreen extends ScreenAdapter {
     private BackGround backGround;
     private final SettingsScreen settingsScreen;
     private final Music music;
+    private final SinglePlayerScreen singlePlayerScreen;
 
     /**
      * Constructor for the MenuScreen.
@@ -38,7 +39,8 @@ public class MenuScreen extends ScreenAdapter {
     public MenuScreen(MyGDXGame game, Music music) {
         this.game = game;
         this.music = music;
-        settingsScreen = new SettingsScreen(this, game, music);
+        this.singlePlayerScreen = new SinglePlayerScreen(this, game, music);
+        this.settingsScreen = new SettingsScreen(this, game, music);
     }
 
     /**
@@ -58,7 +60,7 @@ public class MenuScreen extends ScreenAdapter {
         table.setFillParent(true);
 
         // from the ReusableElements directory
-        Label.LabelStyle labelStyle = new LabelStyle().getLabelStyle();
+        Label.LabelStyle labelStyle = new LabelStyle(200).getLabelStyle();
         Label titleLabel = new Label("Planet X", labelStyle);
 
         // from the ReusableElements directory
@@ -71,9 +73,7 @@ public class MenuScreen extends ScreenAdapter {
         singlePlayerButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.createScreenAndClient();
-                game.setScreen(MyGDXGame.playScreen);
-                music.dispose();
+                game.setScreen(singlePlayerScreen);
             }
         });
 

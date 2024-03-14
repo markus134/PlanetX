@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static Screens.SettingsScreen.musicValue;
+
 
 public class PlayScreen implements Screen {
     private MyGDXGame game;
@@ -96,7 +98,7 @@ public class PlayScreen implements Screen {
 
         music = Gdx.audio.newMusic(Gdx.files.internal("Music/in-game.mp3"));
         music.setLooping(true);
-        music.setVolume(.1f);
+        music.setVolume(musicValue);
         music.play();
     }
 
@@ -301,7 +303,7 @@ public class PlayScreen implements Screen {
         // starts the music
         Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
         musicInTheMenu.setLooping(true);
-        musicInTheMenu.setVolume(SettingsScreen.musicValue);
+        musicInTheMenu.setVolume(musicValue);
         musicInTheMenu.play();
         game.setScreen(new MenuScreen(game, musicInTheMenu));
     }

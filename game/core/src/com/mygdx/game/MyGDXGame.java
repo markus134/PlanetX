@@ -48,6 +48,7 @@ public class MyGDXGame extends Game {
     public static final short WORLD_CATEGORY = 0x0008;
     public static final short OPPONENT_CATEGORY = 0x0010;
 
+
     /**
      * Initializes the playScreen and the client.
      */
@@ -68,7 +69,7 @@ public class MyGDXGame extends Game {
 
         client.start();
         try {
-            client.connect(5000, "localHost", 8080, 8081);
+            client.connect(5000, "localhost", 8080, 8081);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -108,6 +109,8 @@ public class MyGDXGame extends Game {
     @Override
     public void create() {
         batch = new SpriteBatch();
+//        Makes the screen go autamatically fullscreen mode
+//        Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
 
         Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
         musicInTheMenu.setLooping(true);

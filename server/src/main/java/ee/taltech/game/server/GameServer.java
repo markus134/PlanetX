@@ -5,6 +5,7 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
+import main.java.ee.taltech.game.session.Session;
 import serializableObjects.BulletData;
 import serializableObjects.PlayerData;
 import serializableObjects.RobotData;
@@ -20,6 +21,7 @@ public class GameServer {
     private Server server;
     private Map<Integer, Object> playerInstanceCoordinates = new HashMap<>();
     private RobotDataMap robotDataMap = new RobotDataMap();
+    private Map<String, Session> sessionMap = new HashMap<>();
 
     /**
      * Constructor for GameServer. Initializes the KryoNet server and binds it to the specified ports.

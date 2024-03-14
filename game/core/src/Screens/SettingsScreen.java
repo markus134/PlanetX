@@ -36,6 +36,7 @@ public class SettingsScreen extends ScreenAdapter {
     public static float soundValue = .1f;
     private boolean soundON = true;
     private float tempForSoundValue;
+    private float tempForMusicValue;
 
     /**
      * Creates a new instance of SettingsScreen.
@@ -65,7 +66,7 @@ public class SettingsScreen extends ScreenAdapter {
         table.setFillParent(true);
 
         // from the ReusableElements directory
-        Label.LabelStyle labelStyle = new LabelStyle().getLabelStyle();
+        Label.LabelStyle labelStyle = new LabelStyle(200).getLabelStyle();
         Label titleLabel = new Label("Settings", labelStyle);
 
         // from the ReusableElements directory
@@ -121,12 +122,12 @@ public class SettingsScreen extends ScreenAdapter {
                 if (music.isPlaying()) {
                     // If the music is currently playing, pause it
                     music.pause();
-                    musicValue = music.getVolume();
+                    tempForMusicValue = music.getVolume();
                     musicSlider.setValue(0);
                 } else {
                     // If the music is currently paused, play it
                     music.play();
-                    musicSlider.setValue(musicValue);
+                    musicSlider.setValue(tempForMusicValue);
                 }
             }
         });

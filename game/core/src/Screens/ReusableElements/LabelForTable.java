@@ -8,24 +8,24 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 /**
  * The labelStyle class.
  */
-public class LabelStyle extends Label.LabelStyle {
+public class LabelForTable extends Label.LabelStyle {
 
-    private final Label.LabelStyle labelStyle;
+    private final Label.LabelStyle labelForTable;
 
     /**
      * Constructor.
      */
-    public LabelStyle(int size) {
-        // font file downloaded from google fonts
+    public LabelForTable(int size) {
+        labelForTable = new Label.LabelStyle();
+
         FreeTypeFontGenerator.setMaxTextureSize(2048);
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Fonts/PermanentMarker-Regular.ttf"));
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Fonts/Nunito-VariableFont_wght.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
         parameter.size = size;
         BitmapFont font = generator.generateFont(parameter);
-        generator.dispose(); // if not disposed it might cause memory issues
+        generator.dispose();
 
-        labelStyle = new Label.LabelStyle();
-        labelStyle.font = font;
+        labelForTable.font = font;
     }
 
     /**
@@ -34,6 +34,6 @@ public class LabelStyle extends Label.LabelStyle {
      * @return labelStyle
      */
     public Label.LabelStyle getLabelStyle() {
-        return labelStyle;
+        return labelForTable;
     }
 }
