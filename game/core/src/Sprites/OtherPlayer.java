@@ -1,6 +1,7 @@
 package Sprites;
 
 import Screens.PlayScreen;
+import Tools.B2WorldCreator;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -131,9 +132,6 @@ public class OtherPlayer extends Sprite {
         b2body.setLinearDamping(LINEAR_DAMPING);
     }
 
-    public int getHealth() {
-        return health;
-    }
 
     /**
      * Reduces the robot's health by the specified amount.
@@ -144,7 +142,7 @@ public class OtherPlayer extends Sprite {
         health -= damage;
 
         if (health <= 0) {
-            shouldBeDestroyed = true;
+            B2WorldCreator.playersToDestroy.add(this);
         }
     }
 
