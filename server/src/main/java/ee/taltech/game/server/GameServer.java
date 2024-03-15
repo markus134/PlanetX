@@ -6,11 +6,11 @@ import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 import main.java.ee.taltech.game.session.Session;
+import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.BulletData;
 import serializableObjects.PlayerData;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
-
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -21,7 +21,7 @@ public class GameServer {
     private Server server;
     private Map<Integer, Object> playerInstanceCoordinates = new HashMap<>();
     private RobotDataMap robotDataMap = new RobotDataMap();
-    private Map<String, Session> sessionMap = new HashMap<>();
+    private Map<String, Session> worlds = new HashMap<>();
 
     /**
      * Constructor for GameServer. Initializes the KryoNet server and binds it to the specified ports.
@@ -38,6 +38,7 @@ public class GameServer {
         kryo.register(HashMap.class);
         kryo.register(RobotDataMap.class);
         kryo.register(String.class);
+        kryo.register(AddSinglePlayerWorld.class);
 
         server.start();
         try {
@@ -57,6 +58,15 @@ public class GameServer {
 
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     //System.out.println("Server received: " + object);
+
+                    if (object instanceof AddSinglePlayerWorld e) {
+                        Session session = new Session(1);
+                        session.addPlayer(connection);
+
+                        worlds.put(e.getWorldUUID(), session);
+                    }
+
+
                     if (object instanceof PlayerData) {
                         // updates player coordinates
                         PlayerData playerData = (PlayerData) object;

@@ -22,4 +22,8 @@ public class Session {
             players.add(player);
         }
     }
+
+    public List<Connection> getPlayers() {
+        return players;
+    }
 }

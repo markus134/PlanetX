@@ -14,6 +14,8 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 
+import java.util.UUID;
+
 public class CreateSinglePlayerWorld extends ScreenAdapter {
     private Stage stage;
     private final SinglePlayerScreen singlePlayerScreen;
@@ -55,8 +57,8 @@ public class CreateSinglePlayerWorld extends ScreenAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 String worldName = worldNameTextField.getText();
-                if (!SinglePlayerScreen.worlds.contains(worldName)) {
-                    SinglePlayerScreen.worlds.add(worldName);
+                if (!SinglePlayerScreen.singlePlayerWorlds.containsKey(worldName)) {
+                    SinglePlayerScreen.singlePlayerWorlds.put(worldName, UUID.randomUUID().toString());
                     game.setScreen(singlePlayerScreen);
                 } else {
                     enterWorldNameLabel.remove();

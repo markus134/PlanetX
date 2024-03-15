@@ -28,7 +28,9 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SinglePlayerScreen extends ScreenAdapter {
 
@@ -38,7 +40,7 @@ public class SinglePlayerScreen extends ScreenAdapter {
     private Batch batch;
     private Music music;
     private BackGround backGround;
-    public static List<String> worlds = new ArrayList<>();
+    public static Map<String, String> singlePlayerWorlds = new HashMap<>();
     private CreateSinglePlayerWorld createMenu;
     private Label.LabelStyle labelForTable = new LabelForTable(60).getLabelStyle();
     private TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
@@ -99,21 +101,22 @@ public class SinglePlayerScreen extends ScreenAdapter {
     }
 
     public void updateDisplayTable() {
-        if (worlds.size() == 5) newButton.remove();
+        if (singlePlayerWorlds.size() == 5) newButton.remove();
         displayTable.clear();
-        if (worlds.isEmpty()){
+        if (singlePlayerWorlds.isEmpty()){
             Label emptyWorldsLabel = new Label("You have not created any worlds yet", labelForTable);
             Label emptyWorldsLabel2 = new Label("Press the 'Create New' button", labelForTable);
             displayTable.add(emptyWorldsLabel).row();
             displayTable.add(emptyWorldsLabel2);
         } else {
-            for (String world : worlds) {
-                Label label = new Label(world, labelForTable);
+            for (Map.Entry<String, String> entry: singlePlayerWorlds.entrySet()) {
+                String worldName = entry.getKey();
+                Label label = new Label(worldName, labelForTable);
                 TextButton removeButton = new TextButton("remove", textButtonStyle);
                 removeButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        worlds.remove(world);
+                        singlePlayerWorlds.remove(worldName);
                         updateDisplayTable();
                     }
                 });
@@ -139,6 +142,7 @@ public class SinglePlayerScreen extends ScreenAdapter {
                         }
                         chosenWorld = ((Label) container.getActor().getChildren().get(0)).getText().toString();
                         System.out.println(chosenWorld);
+                        System.out.println(singlePlayerWorlds.get(chosenWorld));
                     }
                 });
 
@@ -172,7 +176,7 @@ public class SinglePlayerScreen extends ScreenAdapter {
         connectButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.createScreenAndClient();
+                game.createScreenAndClient(singlePlayerWorlds.get(chosenWorld), 1);
                 game.setScreen(MyGDXGame.playScreen);
                 music.dispose();
             }

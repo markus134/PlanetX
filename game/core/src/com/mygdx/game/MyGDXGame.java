@@ -15,6 +15,7 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
+import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.BulletData;
 import serializableObjects.PlayerData;
 import serializableObjects.RobotData;
@@ -74,7 +75,7 @@ public class MyGDXGame extends Game {
     /**
      * Creates the play screen and sets up the client connection.
      */
-    public void createScreenAndClient() {
+    public void createScreenAndClient(String worldUUID, int numberOfPlayers) {
         playScreen = new PlayScreen(this);
         client = new Client(1000000, 1000000); // If we don't set these sizes big enough, the game could crash
         registerClasses(client.getKryo());
@@ -85,6 +86,8 @@ public class MyGDXGame extends Game {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID));
 
         setupClientListener();
     }
@@ -102,6 +105,7 @@ public class MyGDXGame extends Game {
         kryo.register(HashMap.class);
         kryo.register(RobotDataMap.class);
         kryo.register(String.class);
+        kryo.register(AddSinglePlayerWorld.class);
     }
 
     /**
