@@ -14,6 +14,11 @@ public class RobotDataMap {
         this.worldUUID = worldUUID;
     }
 
+    public RobotDataMap() {
+        map = new HashMap<>();
+        worldUUID = "";
+    }
+
     /**
      * Getter method
      *
