@@ -26,4 +26,12 @@ public class Session {
     public List<Connection> getPlayers() {
         return players;
     }
+
+    public void removePlayer(Connection player) {
+        players.remove(player);
+    }
+
+    public boolean isEmpty() {
+        return players.isEmpty();
+    }
 }

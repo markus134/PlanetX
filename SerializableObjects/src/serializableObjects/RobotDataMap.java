@@ -4,12 +4,14 @@ import java.util.HashMap;
 
 public class RobotDataMap {
     private HashMap<String, RobotData> map;
+    private String worldUUID;
 
     /**
      * Constructor
      */
-    public RobotDataMap() {
+    public RobotDataMap(String worldUUID) {
         map = new HashMap<String, RobotData>();
+        this.worldUUID = worldUUID;
     }
 
     /**
@@ -38,5 +40,13 @@ public class RobotDataMap {
      */
     public void remove(String key) {
         this.map.remove(key);
+    }
+
+    /**
+     * Getter method
+     * @return worldUUID
+     */
+    public String getWorldUUID() {
+        return worldUUID;
     }
 }

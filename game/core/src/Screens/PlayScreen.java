@@ -53,7 +53,7 @@ public class PlayScreen implements Screen {
     public BulletManager bulletManager;
     public static List<String> robotIds = new ArrayList<>();
     public static HashMap<String, Robot> robots = new HashMap<>();
-    public static RobotDataMap robotDataMap = new RobotDataMap();
+    public static RobotDataMap robotDataMap;
     private PlayScreenInputHandler handler;
     private B2WorldCreator b2WorldCreator;
     public static Set<String> destroyedRobots = new HashSet<>();
@@ -61,14 +61,17 @@ public class PlayScreen implements Screen {
     public static Set<String> allDestroyedPlayers = new HashSet<>();
     private Music music;
     private ScrollPane scrollPane;
+    private String worldUUID;
 
     /**
      * Constructor for the PlayScreen.
      *
      * @param game The Game instance representing the main game.
      */
-    public PlayScreen(MyGDXGame game) {
+    public PlayScreen(MyGDXGame game, String worldUUID) {
         this.game = game;
+        this.worldUUID = worldUUID;
+        robotDataMap = new RobotDataMap(worldUUID);
         gamePort = new FitViewport(MyGDXGame.V_WIDTH / MyGDXGame.PPM, MyGDXGame.V_HEIGHT / MyGDXGame.PPM, gameCam);
 
         map = mapLoader.load("test_map.tmx");
@@ -192,7 +195,8 @@ public class PlayScreen implements Screen {
                     player.getCurrentFrameIndex(),
                     player.runningRight,
                     player.getHealth(),
-                    player.getUuid()
+                    player.getUuid(),
+                    worldUUID
             ));
 
             prevPosX = gameCam.position.x;
