@@ -14,15 +14,13 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
  */
 public class InventoryBar extends Actor {
     private static final int SLOT_COUNT = 8;
-    private static final String HOTBAR_TEXTURE_PATH = "hotbar/hotbar.png";
     private static final String SLOT_TEXTURE_PATH = "hotbar/slot.jpg";
     private static final String SLOT_HIGHLIGHT_TEXTURE_PATH = "hotbar/slot_highlight.jpg";
     private static final String ITEM_TEXTURE_PATH = "items/crystal.png";
-    private static final float OFFSET = 4f;
+    private static final float OFFSET = 2f;
     private static final float SLOT_PADDING_BOTTOM = 30f;
-
-    private final Texture hotbarTexture;
-    final Table hotbarTable;
+    private final Texture slotTexture;
+    public final Table hotbarTable;
     private final Image[] slotImages;
     private final Image[] itemImages;
     private int highlightedSlotIndex;
@@ -32,8 +30,8 @@ public class InventoryBar extends Actor {
      * Initializes the inventory bar with default values.
      */
     public InventoryBar() {
-        hotbarTexture = new Texture(HOTBAR_TEXTURE_PATH);
         hotbarTable = new Table();
+        slotTexture = new Texture(SLOT_TEXTURE_PATH);
         slotImages = new Image[SLOT_COUNT];
         itemImages = new Image[SLOT_COUNT];
 
@@ -49,7 +47,7 @@ public class InventoryBar extends Actor {
      * Initializes the hotbar table with slot and item images.
      */
     private void initializeHotbar() {
-        hotbarTable.setSize(hotbarTexture.getWidth(), hotbarTexture.getHeight());
+        hotbarTable.setSize(slotTexture.getWidth() * 8, slotTexture.getHeight());
 
         Texture slotTexture = new Texture(SLOT_TEXTURE_PATH);
         Texture itemTexture = new Texture(ITEM_TEXTURE_PATH);
@@ -58,8 +56,8 @@ public class InventoryBar extends Actor {
             slotImages[i] = new Image(slotTexture);
             itemImages[i] = new Image(itemTexture);
 
-            float itemWidth = hotbarTexture.getWidth() / (float) SLOT_COUNT;
-            float itemHeight = hotbarTexture.getHeight();
+            float itemWidth = slotTexture.getWidth();
+            float itemHeight = slotTexture.getHeight();
 
             itemImages[i].setSize(itemWidth, itemHeight);
             itemImages[i].setPosition(OFFSET, OFFSET); // We put the items at an offset, so it would be inside the slot properly
@@ -123,6 +121,6 @@ public class InventoryBar extends Actor {
      * Disposes of resources used by the inventory bar.
      */
     public void dispose() {
-        hotbarTexture.dispose();
+        slotTexture.dispose();
     }
 }
