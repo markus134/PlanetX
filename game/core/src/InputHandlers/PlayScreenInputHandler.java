@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.BulletData;
@@ -61,6 +62,30 @@ public class PlayScreenInputHandler implements InputProcessor {
                     case Input.Keys.A:
                         playScreen.player.move(-0.1f, 0);
                         break;
+                    case Input.Keys.NUM_1:
+                        playScreen.hud.switchHighlightedSlot(0);
+                        break;
+                    case Input.Keys.NUM_2:
+                        playScreen.hud.switchHighlightedSlot(1);
+                        break;
+                    case Input.Keys.NUM_3:
+                        playScreen.hud.switchHighlightedSlot(2);
+                        break;
+                    case Input.Keys.NUM_4:
+                        playScreen.hud.switchHighlightedSlot(3);
+                        break;
+                    case Input.Keys.NUM_5:
+                        playScreen.hud.switchHighlightedSlot(4);
+                        break;
+                    case Input.Keys.NUM_6:
+                        playScreen.hud.switchHighlightedSlot(5);
+                        break;
+                    case Input.Keys.NUM_7:
+                        playScreen.hud.switchHighlightedSlot(6);
+                        break;
+                    case Input.Keys.NUM_8:
+                        playScreen.hud.switchHighlightedSlot(7);
+                        break;
                     case Input.Keys.B:
                         if (isFirstClick) {
                             generateRobot();
@@ -71,6 +96,7 @@ public class PlayScreenInputHandler implements InputProcessor {
 
             }
         }
+
     }
 
     /**
@@ -221,7 +247,16 @@ public class PlayScreenInputHandler implements InputProcessor {
     }
 
     @Override
-    public boolean scrolled(float v, float v1) {
-        return false;
+    public boolean scrolled(float amountX, float amountY) {
+        int scrollDirection = amountY > 0 ? -1 : 1; // Determine scroll direction
+
+        int currentIndex = playScreen.hud.getHighlightedSlotIndex();
+        int totalSlots = 8; // Total number of slots in the inventory bar
+        int newIndex = (currentIndex + scrollDirection + totalSlots) % totalSlots;
+
+        // Switch to the new index
+        playScreen.hud.switchHighlightedSlot(newIndex);
+
+        return true;
     }
 }
