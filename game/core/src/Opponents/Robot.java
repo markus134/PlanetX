@@ -1,6 +1,7 @@
 package Opponents;
 
 import Screens.PlayScreen;
+import Sprites.Player;
 import Tools.B2WorldCreator;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;

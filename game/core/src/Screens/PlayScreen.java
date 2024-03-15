@@ -21,6 +21,7 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
@@ -33,7 +34,7 @@ import java.util.*;
 
 public class PlayScreen implements Screen {
     private MyGDXGame game;
-    public OrthographicCamera gameCam = new OrthographicCamera();
+    public static OrthographicCamera gameCam = new OrthographicCamera();
     private Viewport gamePort;
     private TiledMap map;
     private TmxMapLoader mapLoader = new TmxMapLoader();
@@ -48,7 +49,7 @@ public class PlayScreen implements Screen {
     public float startPosX;
     public float startPosY;
     private Debug debug;
-    private HUD hud;
+    public HUD hud;
     public BulletManager bulletManager;
     public static List<String> robotIds = new ArrayList<>();
     public static HashMap<String, Robot> robots = new HashMap<>();
@@ -59,7 +60,7 @@ public class PlayScreen implements Screen {
     public static Set<String> allDestroyedRobots = new HashSet<>();
     public static Set<String> allDestroyedPlayers = new HashSet<>();
     private Music music;
-
+    private ScrollPane scrollPane;
 
     /**
      * Constructor for the PlayScreen.
