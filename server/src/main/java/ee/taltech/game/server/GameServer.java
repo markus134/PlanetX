@@ -152,6 +152,7 @@ public class GameServer {
                         if (player.equals(connection)) {
                             session.removePlayer(player);
                             worldUUID = entry.getKey();
+                            playerDatas.get(worldUUID).remove(player.getID());
                             break;
                         }
                     }

@@ -29,6 +29,7 @@ import serializableObjects.PlayerData;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
 
+import java.io.IOException;
 import java.util.*;
 
 
@@ -130,7 +131,7 @@ public class PlayScreen implements Screen {
      *
      * @param dt The time elapsed since the last frame.
      */
-    public void update(float dt) {
+    public void update(float dt) throws IOException {
         world.step(1 / 60f, 6, 2);
 
         player.update(dt);
@@ -216,7 +217,11 @@ public class PlayScreen implements Screen {
     public void render(float delta) {
 
         handler.handleInput();
-        update(delta);
+        try {
+            update(delta);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -291,10 +296,12 @@ public class PlayScreen implements Screen {
     /**
      * Changes player's screen to the main menu screen if the player dies
      */
-    public void goToMenuWhenPlayerIsDead() {
+    public void goToMenuWhenPlayerIsDead() throws IOException {
         world.destroyBody(player.b2body);
         MyGDXGame.playerDict.clear();
         game.dispose();
+        MyGDXGame.client.close();
+        MyGDXGame.client.dispose();
 
         // starts the music
         Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
