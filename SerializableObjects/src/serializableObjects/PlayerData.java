@@ -10,6 +10,7 @@ public class PlayerData implements Serializable {
     private boolean runningRight;
     private int health;
     private String uuid;
+    private String worldUUID;
 
     /**
      * Empty constructor
@@ -21,6 +22,7 @@ public class PlayerData implements Serializable {
         this.runningRight = true;
         this.health = 100;
         this.uuid = "";
+        this.worldUUID = "";
 
     }
 
@@ -34,13 +36,14 @@ public class PlayerData implements Serializable {
      * @param health
      * @param uuid
      */
-    public PlayerData(float x, float y, int frame, boolean runningRight, int health, String uuid) {
+    public PlayerData(float x, float y, int frame, boolean runningRight, int health, String uuid, String worldUUID) {
         this.x = x;
         this.y = y;
         this.frame = frame;
         this.runningRight = runningRight;
         this.health = health;
         this.uuid = uuid;
+        this.worldUUID = worldUUID;
     }
 
     /**
@@ -95,5 +98,13 @@ public class PlayerData implements Serializable {
      */
     public String getUuid() {
         return uuid;
+    }
+
+    /**
+     * Getter method
+     * @return worldUUID
+     */
+    public String getWorldUUID() {
+        return worldUUID;
     }
 }

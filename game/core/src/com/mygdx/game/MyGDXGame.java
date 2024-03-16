@@ -1,9 +1,9 @@
 package com.mygdx.game;
 
 import Bullets.Bullet;
-import Opponents.Robot;
 import Screens.MenuScreen;
 import Screens.PlayScreen;
+import Screens.SettingsScreen;
 import Sprites.OtherPlayer;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -15,18 +15,15 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
+import serializableObjects.AddMultiPlayerWorld;
+import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.BulletData;
 import serializableObjects.PlayerData;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -79,8 +76,8 @@ public class MyGDXGame extends Game {
     /**
      * Creates the play screen and sets up the client connection.
      */
-    public void createScreenAndClient() {
-        playScreen = new PlayScreen(this);
+    public void createScreenAndClient(String worldUUID, int numberOfPlayers) {
+        playScreen = new PlayScreen(this, worldUUID);
         client = new Client(1000000, 1000000); // If we don't set these sizes big enough, the game could crash
         registerClasses(client.getKryo());
 
@@ -90,6 +87,9 @@ public class MyGDXGame extends Game {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID));
+        if (numberOfPlayers == 0) client.sendTCP(new AddMultiPlayerWorld(worldUUID));
 
         setupClientListener();
     }
@@ -107,6 +107,8 @@ public class MyGDXGame extends Game {
         kryo.register(HashMap.class);
         kryo.register(RobotDataMap.class);
         kryo.register(String.class);
+        kryo.register(AddSinglePlayerWorld.class);
+        kryo.register(AddMultiPlayerWorld.class);
     }
 
     /**
@@ -115,7 +117,7 @@ public class MyGDXGame extends Game {
     private void initializeMenu() {
         Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
         musicInTheMenu.setLooping(true);
-        musicInTheMenu.setVolume(.1f);
+        musicInTheMenu.setVolume(SettingsScreen.musicValue);
         musicInTheMenu.play();
 
         menu = new MenuScreen(this, musicInTheMenu);
@@ -130,7 +132,24 @@ public class MyGDXGame extends Game {
             @Override
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
-                    receivedPackets.add(object); // Store received packet in a list, this is because render is only called 60 times a second
+                    if (object instanceof String) {
+                        System.out.println("haha");
+                        // this block terminates connection with the server
+                        client.close();
+                        try {
+                            client.dispose();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        // terminates the window
+                        Gdx.app.exit();
+
+                        // terminates the process
+                        System.exit(0);
+                    } else {
+                        receivedPackets.add(object); // Store received packet in a list, this is because render is only called 60 times a second
+                    }
                 }
             }
         }));
@@ -192,6 +211,7 @@ public class MyGDXGame extends Game {
 
         Set<Integer> keys = playerDataMap.keySet();
         ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
+        System.out.println(allConnectionIDs);
 
         // Update existing players or create new ones
         for (Integer id : allConnectionIDs) {

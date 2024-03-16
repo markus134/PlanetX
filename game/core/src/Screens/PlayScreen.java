@@ -23,19 +23,13 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.PlayerData;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class PlayScreen implements Screen {
@@ -59,7 +53,7 @@ public class PlayScreen implements Screen {
     public BulletManager bulletManager;
     public static List<String> robotIds = new ArrayList<>();
     public static HashMap<String, Robot> robots = new HashMap<>();
-    public static RobotDataMap robotDataMap = new RobotDataMap();
+    public static RobotDataMap robotDataMap;
     private PlayScreenInputHandler handler;
     private B2WorldCreator b2WorldCreator;
     public static Set<String> destroyedRobots = new HashSet<>();
@@ -67,14 +61,17 @@ public class PlayScreen implements Screen {
     public static Set<String> allDestroyedPlayers = new HashSet<>();
     private Music music;
     private ScrollPane scrollPane;
+    private String worldUUID;
 
     /**
      * Constructor for the PlayScreen.
      *
      * @param game The Game instance representing the main game.
      */
-    public PlayScreen(MyGDXGame game) {
+    public PlayScreen(MyGDXGame game, String worldUUID) {
         this.game = game;
+        this.worldUUID = worldUUID;
+        robotDataMap = new RobotDataMap(worldUUID);
         gamePort = new FitViewport(MyGDXGame.V_WIDTH / MyGDXGame.PPM, MyGDXGame.V_HEIGHT / MyGDXGame.PPM, gameCam);
 
         map = mapLoader.load("test_map.tmx");
@@ -97,7 +94,7 @@ public class PlayScreen implements Screen {
 
         music = Gdx.audio.newMusic(Gdx.files.internal("Music/in-game.mp3"));
         music.setLooping(true);
-        music.setVolume(.1f);
+        music.setVolume(SettingsScreen.musicValue);
         music.play();
     }
 
@@ -198,7 +195,8 @@ public class PlayScreen implements Screen {
                     player.getCurrentFrameIndex(),
                     player.runningRight,
                     player.getHealth(),
-                    player.getUuid()
+                    player.getUuid(),
+                    worldUUID
             ));
 
             prevPosX = gameCam.position.x;

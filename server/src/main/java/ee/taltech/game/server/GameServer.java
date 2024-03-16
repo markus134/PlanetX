@@ -5,21 +5,25 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
+import main.java.ee.taltech.game.session.Session;
+import serializableObjects.AddMultiPlayerWorld;
+import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.BulletData;
 import serializableObjects.PlayerData;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
 
-
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GameServer {
 
     private Server server;
-    private Map<Integer, Object> playerInstanceCoordinates = new HashMap<>();
-    private RobotDataMap robotDataMap = new RobotDataMap();
+    private Map<String, Session> worlds = new HashMap<>();
+    private Map<String, Map<Integer, Object>> playerDatas = new HashMap<>();
+    private Map<String, RobotDataMap> robotDatas = new HashMap<>();
 
     /**
      * Constructor for GameServer. Initializes the KryoNet server and binds it to the specified ports.
@@ -36,6 +40,8 @@ public class GameServer {
         kryo.register(HashMap.class);
         kryo.register(RobotDataMap.class);
         kryo.register(String.class);
+        kryo.register(AddSinglePlayerWorld.class);
+        kryo.register(AddMultiPlayerWorld.class);
 
         server.start();
         try {
@@ -55,26 +61,76 @@ public class GameServer {
 
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     //System.out.println("Server received: " + object);
-                    if (object instanceof PlayerData) {
+                    if (object instanceof AddSinglePlayerWorld e) {
+                        Session session = new Session(1);
+                        session.addPlayer(connection);
+
+                        worlds.put(e.getWorldUUID(), session);
+                        playerDatas.put(e.getWorldUUID(), new HashMap<>());
+                        robotDatas.put(e.getWorldUUID(), new RobotDataMap(e.getWorldUUID()));
+                    }
+
+                    if (object instanceof AddMultiPlayerWorld e) {
+                        String worldUUID = e.getWorldUUID();
+
+                        if (!worlds.containsKey(worldUUID)) {
+                            int numberOfPlayers = Integer.parseInt(worldUUID.split(":")[1]);
+                            Session session = new Session(numberOfPlayers);
+                            session.addPlayer(connection);
+
+                            worlds.put(worldUUID, session);
+                            playerDatas.put(worldUUID, new HashMap<>());
+                            robotDatas.put(worldUUID, new RobotDataMap(e.getWorldUUID()));
+                        } else {
+                            Session session = worlds.get(worldUUID);
+                            if (session.isFull()) {
+                                System.out.println("WHAT???");
+                                for (int i = 0; i < 60; i++) {
+                                    connection.sendTCP("LOL");
+                                }
+                            } else {
+                                session.addPlayer(connection);
+                            }
+                        }
+                    }
+
+                    if (object instanceof PlayerData data) {
                         // updates player coordinates
-                        PlayerData playerData = (PlayerData) object;
+                        String worldUUID = data.getWorldUUID();
+                        if (worlds.get(worldUUID).getPlayers().contains(connection)) {
+                            PlayerData playerData = (PlayerData) object;
 
+                            Map<Integer, Object> map = playerDatas.get(worldUUID);
+                            map.put(connection.getID(), playerData);
 
-                        playerInstanceCoordinates.put(connection.getID(), playerData);
-                        System.out.println(playerData);
-                        server.sendToAllTCP(playerInstanceCoordinates);
+                            for (Connection con : worlds.get(worldUUID).getPlayers()) {
+                                con.sendTCP(map);
+                            }
+                        }
                     }
                     if (object instanceof BulletData) {
                         // update bullet data
-                        server.sendToAllExceptTCP(connection.getID(), object);
+                        String worldUUID = ((BulletData) object).getWorldUUID();
+
+                        for (Connection con : worlds.get(worldUUID).getPlayers()) {
+                            if (con.getID() != connection.getID()) {
+                                con.sendTCP(object);
+                            }
+                        }
                     }
-                    if (object instanceof RobotDataMap) {
+                    if (object instanceof RobotDataMap data) {
                         // update robot data
-                        HashMap<String, RobotData> map = ((RobotDataMap) object).getMap();
+                        String worldUUID = data.getWorldUUID();
+                        HashMap<String, RobotData> map = data.getMap();
+
+                        RobotDataMap robotDataMap = robotDatas.get(worldUUID);
                         for (Map.Entry<String, RobotData> entry : map.entrySet()) {
                             robotDataMap.put(entry.getKey(), entry.getValue());
                         }
-                        server.sendToAllTCP(robotDataMap);
+
+                        for (Connection con : worlds.get(worldUUID).getPlayers()) {
+                            con.sendTCP(robotDataMap);
+                        }
                     }
                 }
             }
@@ -87,12 +143,26 @@ public class GameServer {
             @Override
             public void disconnected(Connection connection) {
                 System.out.println("Player disconnected: " + connection.getID());
-                playerInstanceCoordinates.remove(connection.getID());
 
-                // if everyone disconnects, every robot is destroyed
-                if (playerInstanceCoordinates.isEmpty()) {
-                    robotDataMap.getMap().clear();
-                    server.sendToAllTCP(robotDataMap);
+                String worldUUID = "crazy";
+                for (Map.Entry<String, Session> entry : worlds.entrySet()) {
+                    Session session = entry.getValue();
+                    List<Connection> players = entry.getValue().getPlayers();
+                    for (Connection player : players) {
+                        if (player.equals(connection)) {
+                            session.removePlayer(player);
+                            worldUUID = entry.getKey();
+                            break;
+                        }
+                    }
+                }
+
+                if (!worldUUID.equals("crazy")) {
+                    if (worlds.get(worldUUID).isEmpty()) {
+                        worlds.remove(worldUUID);
+                        playerDatas.remove(worldUUID);
+                        robotDatas.remove(worldUUID);
+                    }
                 }
             }
         });
