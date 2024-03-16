@@ -1,6 +1,11 @@
 package Screens;
 
-import Screens.ReusableElements.*;
+import Screens.ReusableElements.BackGround;
+import Screens.ReusableElements.LabelForTable;
+import Screens.ReusableElements.LabelStyle;
+import Screens.ReusableElements.PurpleTextButtonStyle;
+import Screens.ReusableElements.ResizableTextField;
+import Screens.ReusableElements.TextFieldStyleForInput;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
@@ -8,23 +13,25 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 
-import java.util.UUID;
+public class Join extends ScreenAdapter {
 
-public class CreateSinglePlayerWorld extends ScreenAdapter {
     private Stage stage;
-    private final SinglePlayerScreen singlePlayerScreen;
+    private final MultiPlayerScreen multiPlayerScreen;
     private final MyGDXGame game;
     private Batch batch;
     private BackGround backGround;
 
-    public CreateSinglePlayerWorld(SinglePlayerScreen screen, MyGDXGame game) {
-        this.singlePlayerScreen = screen;
+    public Join(MultiPlayerScreen screen, MyGDXGame game) {
+        this.multiPlayerScreen = screen;
         this.game = game;
     }
 
@@ -41,13 +48,16 @@ public class CreateSinglePlayerWorld extends ScreenAdapter {
 
         // Create UI components
         Label.LabelStyle labelStyle = new LabelStyle(200).getLabelStyle();
-        Label titleLabel = new Label("Create new World", labelStyle);
+        Label titleLabel = new Label("Join a new World", labelStyle);
 
         Label.LabelStyle labelForTable = new LabelForTable(80).getLabelStyle();
-        Label enterWorldNameLabel = new Label("Enter world name", labelForTable);
+        Label enterWorldNameLabel = new Label("Enter world name (temporary)", labelForTable);
 
         TextField.TextFieldStyle textFieldStyle = new TextFieldStyleForInput(50).getStyle();
         ResizableTextField worldNameTextField = new ResizableTextField("", textFieldStyle, 500, 100);
+
+        Label enterWorldCodeLabel = new Label("Enter the code", labelForTable);
+        ResizableTextField worldCodeTextField = new ResizableTextField("", textFieldStyle, 500, 100);
 
         TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
         TextButton backButton = new TextButton("Back", textButtonStyle);
@@ -57,13 +67,13 @@ public class CreateSinglePlayerWorld extends ScreenAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 String worldName = worldNameTextField.getText();
-                if (!SinglePlayerScreen.singlePlayerWorlds.containsKey(worldName)) {
-                    SinglePlayerScreen.singlePlayerWorlds.put(worldName, UUID.randomUUID().toString());
-                    game.setScreen(singlePlayerScreen);
-                } else {
-                    enterWorldNameLabel.remove();
+                String worldCode = worldCodeTextField.getText();
+                table.clear();
+                if (!MultiPlayerScreen.multiPlayerWorlds.containsKey(worldName) && !worldName.isBlank()) {
 
-                    table.clear();
+                    MultiPlayerScreen.multiPlayerWorlds.put(worldName, worldCode);
+                    game.setScreen(multiPlayerScreen);
+                } else {
 
                     Label errorLabel1 = new Label("The world with such name already exists", labelForTable);
                     Label errorLabel2 = new Label("Enter another name", labelForTable);
@@ -83,7 +93,7 @@ public class CreateSinglePlayerWorld extends ScreenAdapter {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(singlePlayerScreen);
+                game.setScreen(multiPlayerScreen);
             }
         });
 
@@ -93,6 +103,8 @@ public class CreateSinglePlayerWorld extends ScreenAdapter {
         table.row();
         table.add(worldNameTextField).center().colspan(2).padTop(30);
         table.row();
+        table.add(enterWorldCodeLabel).center().colspan(2).row();
+        table.add(worldCodeTextField).center().colspan(2).row();
         table.add(backButton).padTop(30);
         table.add(saveButton).padTop(30);
 

@@ -6,6 +6,7 @@ import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 import main.java.ee.taltech.game.session.Session;
+import serializableObjects.AddMultiPlayerWorld;
 import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.BulletData;
 import serializableObjects.PlayerData;
@@ -40,6 +41,7 @@ public class GameServer {
         kryo.register(RobotDataMap.class);
         kryo.register(String.class);
         kryo.register(AddSinglePlayerWorld.class);
+        kryo.register(AddMultiPlayerWorld.class);
 
         server.start();
         try {
@@ -59,7 +61,6 @@ public class GameServer {
 
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     //System.out.println("Server received: " + object);
-
                     if (object instanceof AddSinglePlayerWorld e) {
                         Session session = new Session(1);
                         session.addPlayer(connection);
@@ -69,16 +70,42 @@ public class GameServer {
                         robotDatas.put(e.getWorldUUID(), new RobotDataMap(e.getWorldUUID()));
                     }
 
+                    if (object instanceof AddMultiPlayerWorld e) {
+                        String worldUUID = e.getWorldUUID();
+
+                        if (!worlds.containsKey(worldUUID)) {
+                            int numberOfPlayers = Integer.parseInt(worldUUID.split(":")[1]);
+                            Session session = new Session(numberOfPlayers);
+                            session.addPlayer(connection);
+
+                            worlds.put(worldUUID, session);
+                            playerDatas.put(worldUUID, new HashMap<>());
+                            robotDatas.put(worldUUID, new RobotDataMap(e.getWorldUUID()));
+                        } else {
+                            Session session = worlds.get(worldUUID);
+                            if (session.isFull()) {
+                                System.out.println("WHAT???");
+                                for (int i = 0; i < 60; i++) {
+                                    connection.sendTCP("LOL");
+                                }
+                            } else {
+                                session.addPlayer(connection);
+                            }
+                        }
+                    }
+
                     if (object instanceof PlayerData data) {
                         // updates player coordinates
                         String worldUUID = data.getWorldUUID();
-                        PlayerData playerData = (PlayerData) object;
+                        if (worlds.get(worldUUID).getPlayers().contains(connection)) {
+                            PlayerData playerData = (PlayerData) object;
 
-                        Map<Integer, Object> map = playerDatas.get(worldUUID);
-                        map.put(connection.getID(), playerData);
+                            Map<Integer, Object> map = playerDatas.get(worldUUID);
+                            map.put(connection.getID(), playerData);
 
-                        for (Connection con : worlds.get(worldUUID).getPlayers()) {
-                            con.sendTCP(map);
+                            for (Connection con : worlds.get(worldUUID).getPlayers()) {
+                                con.sendTCP(map);
+                            }
                         }
                     }
                     if (object instanceof BulletData) {
@@ -130,10 +157,12 @@ public class GameServer {
                     }
                 }
 
-                if (worlds.get(worldUUID).isEmpty()) {
-                    worlds.remove(worldUUID);
-                    playerDatas.remove(worldUUID);
-                    robotDatas.remove(worldUUID);
+                if (!worldUUID.equals("crazy")) {
+                    if (worlds.get(worldUUID).isEmpty()) {
+                        worlds.remove(worldUUID);
+                        playerDatas.remove(worldUUID);
+                        robotDatas.remove(worldUUID);
+                    }
                 }
             }
         });

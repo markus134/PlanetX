@@ -54,7 +54,7 @@ public class SinglePlayerScreen extends ScreenAdapter {
     private Drawable drawableNormal;
     private Drawable drawableClicked;
 
-    SinglePlayerScreen(MenuScreen menuScreen, MyGDXGame game, Music music) {
+    public SinglePlayerScreen(MenuScreen menuScreen, MyGDXGame game, Music music) {
         this.menuScreen = menuScreen;
         this.game = game;
         this.music = music;
@@ -176,9 +176,11 @@ public class SinglePlayerScreen extends ScreenAdapter {
         connectButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.createScreenAndClient(singlePlayerWorlds.get(chosenWorld), 1);
-                game.setScreen(MyGDXGame.playScreen);
-                music.dispose();
+                if (chosenWorld != null) {
+                    game.createScreenAndClient(singlePlayerWorlds.get(chosenWorld), 1);
+                    game.setScreen(MyGDXGame.playScreen);
+                    music.dispose();
+                }
             }
         });
 

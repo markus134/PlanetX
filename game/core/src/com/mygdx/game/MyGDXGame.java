@@ -15,6 +15,7 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
+import serializableObjects.AddMultiPlayerWorld;
 import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.BulletData;
 import serializableObjects.PlayerData;
@@ -88,6 +89,7 @@ public class MyGDXGame extends Game {
         }
 
         if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID));
+        if (numberOfPlayers == 0) client.sendTCP(new AddMultiPlayerWorld(worldUUID));
 
         setupClientListener();
     }
@@ -106,6 +108,7 @@ public class MyGDXGame extends Game {
         kryo.register(RobotDataMap.class);
         kryo.register(String.class);
         kryo.register(AddSinglePlayerWorld.class);
+        kryo.register(AddMultiPlayerWorld.class);
     }
 
     /**
@@ -129,7 +132,24 @@ public class MyGDXGame extends Game {
             @Override
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
-                    receivedPackets.add(object); // Store received packet in a list, this is because render is only called 60 times a second
+                    if (object instanceof String) {
+                        System.out.println("haha");
+                        // this block terminates connection with the server
+                        client.close();
+                        try {
+                            client.dispose();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        // terminates the window
+                        Gdx.app.exit();
+
+                        // terminates the process
+                        System.exit(0);
+                    } else {
+                        receivedPackets.add(object); // Store received packet in a list, this is because render is only called 60 times a second
+                    }
                 }
             }
         }));
@@ -191,6 +211,7 @@ public class MyGDXGame extends Game {
 
         Set<Integer> keys = playerDataMap.keySet();
         ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
+        System.out.println(allConnectionIDs);
 
         // Update existing players or create new ones
         for (Integer id : allConnectionIDs) {

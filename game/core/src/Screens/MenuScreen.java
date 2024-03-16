@@ -30,6 +30,7 @@ public class MenuScreen extends ScreenAdapter {
     private final SettingsScreen settingsScreen;
     private final Music music;
     private final SinglePlayerScreen singlePlayerScreen;
+    private final MultiPlayerScreen multiPlayerScreen;
 
     /**
      * Constructor for the MenuScreen.
@@ -40,6 +41,7 @@ public class MenuScreen extends ScreenAdapter {
         this.game = game;
         this.music = music;
         this.singlePlayerScreen = new SinglePlayerScreen(this, game, music);
+        this.multiPlayerScreen = new MultiPlayerScreen(this, game, music);
         this.settingsScreen = new SettingsScreen(this, game, music);
     }
 
@@ -80,9 +82,7 @@ public class MenuScreen extends ScreenAdapter {
         multiPlayerButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.createScreenAndClient("String", 10);
-                game.setScreen(MyGDXGame.playScreen);
-                music.dispose();
+                game.setScreen(multiPlayerScreen);
             }
         });
 
