@@ -30,6 +30,12 @@ public class Join extends ScreenAdapter {
     private Batch batch;
     private BackGround backGround;
 
+    /**
+     * The screen is opened when a player tries to join an existing world
+     *
+     * @param screen
+     * @param game
+     */
     public Join(MultiPlayerScreen screen, MyGDXGame game) {
         this.multiPlayerScreen = screen;
         this.game = game;

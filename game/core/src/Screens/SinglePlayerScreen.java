@@ -54,6 +54,12 @@ public class SinglePlayerScreen extends ScreenAdapter {
     private Drawable drawableNormal;
     private Drawable drawableClicked;
 
+    /**
+     * Constructor
+     * @param menuScreen
+     * @param game
+     * @param music
+     */
     public SinglePlayerScreen(MenuScreen menuScreen, MyGDXGame game, Music music) {
         this.menuScreen = menuScreen;
         this.game = game;

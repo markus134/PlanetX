@@ -30,7 +30,12 @@ import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 public class PlayScreen implements Screen {
@@ -300,6 +305,10 @@ public class PlayScreen implements Screen {
         world.destroyBody(player.b2body);
         MyGDXGame.playerDict.clear();
         game.dispose();
+
+        // currently we have not yet decided what to do when the player dies
+        // bcs the dead players go back to the main menu, it is logical to
+        // remove their connection with the server
         MyGDXGame.client.close();
         MyGDXGame.client.dispose();
 

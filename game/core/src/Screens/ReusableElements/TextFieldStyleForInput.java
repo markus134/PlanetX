@@ -15,6 +15,11 @@ public class TextFieldStyleForInput extends TextField.TextFieldStyle {
 
     private TextField.TextFieldStyle style;
 
+    /**
+     * Constructor
+     *
+     * @param size
+     */
     public TextFieldStyleForInput(int size) {
         style = new TextField.TextFieldStyle();
         FreeTypeFontGenerator.setMaxTextureSize(2048);
@@ -22,7 +27,7 @@ public class TextFieldStyleForInput extends TextField.TextFieldStyle {
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
         parameter.size = size;
         BitmapFont font = generator.generateFont(parameter);
-        generator.dispose(); // You can also load a custom font here
+        generator.dispose();
         style.font = font;
 
         Pixmap pixmap = new Pixmap(1, 100, Pixmap.Format.RGB888);
@@ -32,10 +37,15 @@ public class TextFieldStyleForInput extends TextField.TextFieldStyle {
         style.background = drawable;
 
         style.fontColor = Color.BLACK;
-        style.cursor = drawable; // You can also create a custom drawable for the cursor
-        style.selection = drawable; // You can also create a custom drawable for the selection
+        style.cursor = drawable;
+        style.selection = drawable;
     }
 
+    /**
+     * Gets the style
+     *
+     * @return
+     */
     public TextField.TextFieldStyle getStyle() {
         return style;
     }
