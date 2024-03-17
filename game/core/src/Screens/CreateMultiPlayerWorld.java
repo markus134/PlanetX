@@ -32,11 +32,20 @@ public class CreateMultiPlayerWorld extends ScreenAdapter {
     private Batch batch;
     private BackGround backGround;
 
+    /**
+     * Constructor
+     *
+     * @param screen
+     * @param game
+     */
     public CreateMultiPlayerWorld(MultiPlayerScreen screen, MyGDXGame game) {
         this.multiPlayerScreen = screen;
         this.game = game;
     }
 
+    /**
+     * This is what is shown on the screen
+     */
     @Override
     public void show() {
         Viewport viewport = new ExtendViewport(MyGDXGame.V_WIDTH, MyGDXGame.V_HEIGHT);
@@ -77,7 +86,7 @@ public class CreateMultiPlayerWorld extends ScreenAdapter {
                     Label titleLabel2 = new Label("Info", labelStyle);
 
                     Label worldCodeLabel1 = new Label("We have generated a unique code for this world", labelForTable);
-                    Label worldCodeLabel2 = new Label("Others can use it to join you" , labelForTable);
+                    Label worldCodeLabel2 = new Label("Others can use it to join you", labelForTable);
                     Label worldCodeLabel3 = new Label("It will be automatically copied to your ClipBoard", labelForTable);
                     Label worldCodeLabel4 = new Label("When you press the 'OK' button below", labelForTable);
 

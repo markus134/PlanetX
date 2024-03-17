@@ -53,6 +53,12 @@ public class MultiPlayerScreen extends ScreenAdapter {
     private Drawable drawableClicked;
     private NewOrJoin newOrJoin;
 
+    /**
+     * Constructor
+     * @param menuScreen
+     * @param game
+     * @param music
+     */
     public MultiPlayerScreen(MenuScreen menuScreen, MyGDXGame game, Music music) {
         this.menuScreen = menuScreen;
         this.game = game;

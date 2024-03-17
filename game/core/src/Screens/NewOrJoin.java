@@ -26,6 +26,12 @@ public class NewOrJoin extends ScreenAdapter {
     private CreateMultiPlayerWorld createMenu;
     private Join joinMenu;
 
+    /**
+     * Constructor
+     *
+     * @param screen
+     * @param game
+     */
     public NewOrJoin(MultiPlayerScreen screen, MyGDXGame game) {
         this.multiPlayerScreen = screen;
         this.game = game;
@@ -33,6 +39,9 @@ public class NewOrJoin extends ScreenAdapter {
         this.joinMenu = new Join(screen, game);
     }
 
+    /**
+     * This is what is shown when the screen is displayed
+     */
     @Override
     public void show() {
         Viewport viewport = new ExtendViewport(MyGDXGame.V_WIDTH, MyGDXGame.V_HEIGHT);
@@ -52,8 +61,9 @@ public class NewOrJoin extends ScreenAdapter {
         newButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                    game.setScreen(createMenu);
-        }});
+                game.setScreen(createMenu);
+            }
+        });
 
         backButton.addListener(new ClickListener() {
             @Override

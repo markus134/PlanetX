@@ -60,7 +60,8 @@ public class GameServer {
             public void received(Connection connection, Object object) {
 
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
-                    //System.out.println("Server received: " + object);
+
+                    // new singlePlayer world is created
                     if (object instanceof AddSinglePlayerWorld e) {
                         Session session = new Session(1);
                         session.addPlayer(connection);
@@ -70,9 +71,13 @@ public class GameServer {
                         robotDatas.put(e.getWorldUUID(), new RobotDataMap(e.getWorldUUID()));
                     }
 
+                    // new multiPlayer world is created
                     if (object instanceof AddMultiPlayerWorld e) {
                         String worldUUID = e.getWorldUUID();
 
+                        // checking if a world with this id already exists
+                        // basically checking if a person is trying to join a world
+                        // or if they are creating a new one
                         if (!worlds.containsKey(worldUUID)) {
                             int numberOfPlayers = Integer.parseInt(worldUUID.split(":")[1]);
                             Session session = new Session(numberOfPlayers);
@@ -84,7 +89,12 @@ public class GameServer {
                         } else {
                             Session session = worlds.get(worldUUID);
                             if (session.isFull()) {
-                                System.out.println("WHAT???");
+
+                                // sending one packet is not enough
+                                // bcs we already send a lot of packets
+                                // if we just send one, it might get discarded
+                                // or lost in the process. That is why we are
+                                // sending 60. It is an arbitrary number.
                                 for (int i = 0; i < 60; i++) {
                                     connection.sendTCP("LOL");
                                 }
@@ -144,6 +154,9 @@ public class GameServer {
             public void disconnected(Connection connection) {
                 System.out.println("Player disconnected: " + connection.getID());
 
+                // string "crazy" is needed bcs sometimes the player is connected to the server
+                // but never added to the session. If we do not implement the extra check with the
+                // string, it might cause unexpected behaviour.
                 String worldUUID = "crazy";
                 for (Map.Entry<String, Session> entry : worlds.entrySet()) {
                     Session session = entry.getValue();
@@ -152,12 +165,17 @@ public class GameServer {
                         if (player.equals(connection)) {
                             session.removePlayer(player);
                             worldUUID = entry.getKey();
+
+                            // removes the info about the disconnected player from the dictionary that
+                            // is sent to all players in that session. This fixes the bug when a dead player
+                            // stays on the screen, after they went back to the main menu.
                             playerDatas.get(worldUUID).remove(player.getID());
                             break;
                         }
                     }
                 }
 
+                // removing the data from the database if the session is empty
                 if (!worldUUID.equals("crazy")) {
                     if (worlds.get(worldUUID).isEmpty()) {
                         worlds.remove(worldUUID);

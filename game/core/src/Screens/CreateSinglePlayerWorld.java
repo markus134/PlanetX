@@ -1,6 +1,11 @@
 package Screens;
 
-import Screens.ReusableElements.*;
+import Screens.ReusableElements.BackGround;
+import Screens.ReusableElements.LabelForTable;
+import Screens.ReusableElements.LabelStyle;
+import Screens.ReusableElements.PurpleTextButtonStyle;
+import Screens.ReusableElements.ResizableTextField;
+import Screens.ReusableElements.TextFieldStyleForInput;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
@@ -8,7 +13,10 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -23,11 +31,19 @@ public class CreateSinglePlayerWorld extends ScreenAdapter {
     private Batch batch;
     private BackGround backGround;
 
+    /**
+     * Constructor
+     * @param screen
+     * @param game
+     */
     public CreateSinglePlayerWorld(SinglePlayerScreen screen, MyGDXGame game) {
         this.singlePlayerScreen = screen;
         this.game = game;
     }
 
+    /**
+     * This is what is shown on the screen
+     */
     @Override
     public void show() {
         Viewport viewport = new ExtendViewport(MyGDXGame.V_WIDTH, MyGDXGame.V_HEIGHT);
