@@ -10,20 +10,22 @@ class Chunk {
     private int y;
     private Cell[][] cells;
     private int gridSize;
+    private long seed;
 
     /**
      * Initialize chunk at specific position with size.
-     *
-     * @param x        X-position of the chunk.
-     * @param y        Y-position of the chunk.
+     * 
+     * @param x X-position of the chunk.
+     * @param y Y-position of the chunk.
      * @param gridSize Number of cells in the chunk (NxN).
      */
-    public Chunk(int x, int y, int gridSize) {
-        this.x = x;
-        this.y = y;
-        this.gridSize = gridSize;
-
-        cells = new Cell[gridSize][gridSize];
+    public Chunk(int x, int y, int gridSize, long seed) {
+    	this.x = x;
+    	this.y = y;
+    	this.gridSize = gridSize;
+    	this.seed = seed;
+    	    	
+    	cells = new Cell[gridSize][gridSize];
         initializeCells();
     }
 
@@ -33,14 +35,14 @@ class Chunk {
     private void initializeCells() {
         for (int row = 0; row < gridSize; row++) {
             for (int col = 0; col < gridSize; col++) {
-                cells[row][col] = new Cell(new ArrayList<>(TileSetLoader.tileMap.keySet()));
+            	cells[row][col] = new Cell(new ArrayList<>(TileSetLoader.tileMap.keySet()), seed);
             }
         }
     }
 
     /**
      * Get cells.
-     *
+     * 
      * @return 2D Array of cells.
      */
     public Cell[][] getCells() {
@@ -49,21 +51,21 @@ class Chunk {
 
     /**
      * Set cells.
-     *
+     * 
      * @param cells 2D Array of cells.
      */
     public void setCells(Cell[][] cells) {
         this.cells = cells;
     }
-
+    
     /**
      * Display the x-coordinate, y-coordinate and the number of cells in the chunk.
      */
     @Override
     public String toString() {
-        return "Chunk{" +
-                "x=" + x + ", " +
-                "y=" + y + ", " +
-                "cells=" + cells.length + "}";
+    	return "Chunk{" +
+    			"x=" + x + ", " +
+    			"y=" + y + ", " +
+    			"cells=" + cells.length + "}";
     }
 }
