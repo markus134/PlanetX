@@ -1,5 +1,6 @@
 package Scenes;
 
+import Items.Items;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -16,13 +17,16 @@ public class InventoryBar extends Actor {
     private static final int SLOT_COUNT = 8;
     private static final String SLOT_TEXTURE_PATH = "hotbar/slot.jpg";
     private static final String SLOT_HIGHLIGHT_TEXTURE_PATH = "hotbar/slot_highlight.jpg";
-    private static final String ITEM_TEXTURE_PATH = "items/crystal.png";
+    private static final String CRYSTAL_TEXTURE_PATH = "items/crystal.png";
+    private static final String BLASTER_TEXTURE_PATH = "items/blaster.png";
+    private static final String DRILL_TEXTURE_PATH = "items/drill.png";
     private static final float OFFSET = 2f;
     private static final float SLOT_PADDING_BOTTOM = 30f;
     private final Texture slotTexture;
     public final Table hotbarTable;
     private final Image[] slotImages;
     private final Image[] itemImages;
+    private Items[] items;
     private int highlightedSlotIndex;
 
     /**
@@ -34,6 +38,7 @@ public class InventoryBar extends Actor {
         slotTexture = new Texture(SLOT_TEXTURE_PATH);
         slotImages = new Image[SLOT_COUNT];
         itemImages = new Image[SLOT_COUNT];
+        items = new Items[SLOT_COUNT];
 
         initializeHotbar();
 
@@ -47,27 +52,28 @@ public class InventoryBar extends Actor {
      * Initializes the hotbar table with slot and item images.
      */
     private void initializeHotbar() {
-        hotbarTable.setSize(slotTexture.getWidth() * 8, slotTexture.getHeight());
+        hotbarTable.setSize(slotTexture.getWidth() * SLOT_COUNT, slotTexture.getHeight());
 
         Texture slotTexture = new Texture(SLOT_TEXTURE_PATH);
-        Texture itemTexture = new Texture(ITEM_TEXTURE_PATH);
 
         for (int i = 0; i < SLOT_COUNT; i++) {
             slotImages[i] = new Image(slotTexture);
-            itemImages[i] = new Image(itemTexture);
+            itemImages[i] = new Image();
 
             float itemWidth = slotTexture.getWidth();
             float itemHeight = slotTexture.getHeight();
 
             itemImages[i].setSize(itemWidth, itemHeight);
-            itemImages[i].setPosition(OFFSET, OFFSET); // We put the items at an offset, so it would be inside the slot properly
+            itemImages[i].setPosition(OFFSET, OFFSET);
 
-            // Overlay the images and add them to the table
             Group overlay = new Group();
             overlay.addActor(slotImages[i]);
             overlay.addActor(itemImages[i]);
 
             hotbarTable.add(overlay).size(itemWidth, itemHeight);
+
+            // Set initial item to NONE
+            items[i] = Items.NONE;
         }
 
         hotbarTable.padBottom(SLOT_PADDING_BOTTOM);
@@ -84,6 +90,69 @@ public class InventoryBar extends Actor {
             slotImages[newIndex].setDrawable(new TextureRegionDrawable(new Texture(SLOT_HIGHLIGHT_TEXTURE_PATH)));
             highlightedSlotIndex = newIndex;
         }
+    }
+
+    /**
+     * Retrieves the index of the currently highlighted slot in the inventory bar.
+     *
+     * @return The index of the highlighted slot.
+     */
+    public int getHighlightedSlotIndex() {
+        return highlightedSlotIndex;
+    }
+
+    public void addItemToSlot(Items item, int slotIndex) {
+        if (slotIndex >= 0 && slotIndex < SLOT_COUNT) {
+            items[slotIndex] = item;
+            Texture itemTexture = getItemTexture(item);
+            itemImages[slotIndex].setDrawable(new TextureRegionDrawable(itemTexture));
+        }
+    }
+
+    private Texture getItemTexture(Items item) {
+        switch (item) {
+            case BLASTER:
+                return new Texture(BLASTER_TEXTURE_PATH);
+            case DRILL:
+                return new Texture(DRILL_TEXTURE_PATH);
+            case CRYSTAL:
+                return new Texture(CRYSTAL_TEXTURE_PATH);
+            case NONE:
+            default:
+                return null; // Return null or a default texture for NONE case
+        }
+    }
+
+    /**
+     * Get highlighted item.
+     * @return highlighted item
+     */
+    public Items getHighlightedItem() {
+        return items[highlightedSlotIndex];
+    }
+
+    /**
+     * Adds an item to the next available slot in the inventory bar.
+     *
+     * @param item The item to add.
+     * @return True if the item was successfully added, false otherwise.
+     */
+    public boolean addItemToNextFreeSlot(Items item) {
+        for (int i = 0; i < SLOT_COUNT; i++) {
+            if (items[i] == Items.NONE) {
+                addItemToSlot(item, i);
+                return true; // Item added successfully
+            }
+        }
+        return false; // No free slot available
+    }
+
+    /**
+     * Removes the item from the highlighted slot in the inventory bar.
+     */
+    public void removeHighlightedItem() {
+        items[highlightedSlotIndex] = Items.NONE;
+        itemImages[highlightedSlotIndex].setDrawable(null); // Remove the item image from the slot
     }
 
     /**
@@ -108,14 +177,6 @@ public class InventoryBar extends Actor {
         hotbarTable.act(delta);
     }
 
-    /**
-     * Retrieves the index of the currently highlighted slot in the inventory bar.
-     *
-     * @return The index of the highlighted slot.
-     */
-    public int getHighlightedSlotIndex() {
-        return highlightedSlotIndex;
-    }
 
     /**
      * Disposes of resources used by the inventory bar.

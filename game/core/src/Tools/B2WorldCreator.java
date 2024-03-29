@@ -1,6 +1,7 @@
 package Tools;
 
 import Bullets.Bullet;
+import crystals.Crystal;
 import Opponents.Robot;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
@@ -28,8 +29,9 @@ public class B2WorldCreator {
     public static Set<Robot> robotsToDestroy = new HashSet<>();
     public static Set<OtherPlayer> playersToDestroy = new HashSet<>();
     private World world;
-    private static final int START_POSITION_LAYER_INDEX = 4;
-    private static final int WALLS_LAYER_INDEX = 5;
+    private static final int CRYSTALS_LAYER_INDEX = 4;
+    private static final int START_POSITION_LAYER_INDEX = 5;
+    private static final int WALLS_LAYER_INDEX = 6;
 
     /**
      * Constructor
@@ -43,6 +45,7 @@ public class B2WorldCreator {
 
         setStartPosition(map, playScreen);
         createWalls(map);
+        createCrystals(map);
         setContactListener();
     }
 
@@ -85,6 +88,17 @@ public class B2WorldCreator {
             fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.PLAYER_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.OPPONENT_CATEGORY;
 
             body.createFixture(fdef);
+        }
+    }
+
+    private void createCrystals(TiledMap map) {
+        for (MapObject object : map.getLayers().get(CRYSTALS_LAYER_INDEX).getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rectangle = ((RectangleMapObject) object).getRectangle();
+
+            float x = rectangle.getX();
+            float y = rectangle.getY();
+
+            PlayScreen.crystals.add(new Crystal(x, y));
         }
     }
 

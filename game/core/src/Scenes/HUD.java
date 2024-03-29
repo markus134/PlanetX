@@ -1,5 +1,6 @@
 package Scenes;
 
+import Items.Items;
 import Sprites.Player;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -22,7 +23,6 @@ public class HUD implements Disposable {
     private static final String HEART_EMPTY_TEXTURE_PATH = "lives/heart_empty.png";
     private static final float HEART_PADDING_LEFT = 10f;
     private static final float HEART_PADDING_TOP = 10f;
-
     public Stage stage;
     private Table heartsTable;
     private Player player;
@@ -56,6 +56,9 @@ public class HUD implements Disposable {
         float inventoryBarX = (stage.getWidth() - inventoryBar.hotbarTable.getWidth()) / 2f;
         float inventoryBarY = 0; // Assuming you want it at the bottom
         inventoryBar.hotbarTable.setPosition(inventoryBarX, inventoryBarY);
+
+        inventoryBar.addItemToSlot(Items.BLASTER, 0);
+        inventoryBar.addItemToSlot(Items.DRILL, 1);
         stage.addActor(inventoryBar);
     }
 
@@ -125,6 +128,30 @@ public class HUD implements Disposable {
      */
     public int getHighlightedSlotIndex() {
         return inventoryBar.getHighlightedSlotIndex();
+    }
+
+    /**
+     * Get highlighted item.
+     * @return highlighted item
+     */
+    public Items getHighlightedItem() {
+        return inventoryBar.getHighlightedItem();
+    }
+
+    /**
+     * Add item to next free slot.
+     * @param item
+     * @return whether adding was successful
+     */
+    public boolean addItemToNextFreeSlot(Items item) {
+        return inventoryBar.addItemToNextFreeSlot(item);
+    }
+
+    /**
+     * Remove highlighted item.
+     */
+    public void removeHighlightedItem() {
+        inventoryBar.removeHighlightedItem();
     }
 
     /**

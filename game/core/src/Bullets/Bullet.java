@@ -10,9 +10,9 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.game.MyGDXGame;
 
 public class Bullet extends Sprite {
-    private World world;
+    private final World world;
     public Body body;
-    private Texture texture;
+    private final Texture texture;
     private static final int FRAME_WIDTH = 32;
     private static final int FRAME_HEIGHT = 32;
     public static final int DAMAGE = 20;
