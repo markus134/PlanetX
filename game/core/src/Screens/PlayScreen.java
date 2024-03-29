@@ -3,6 +3,7 @@ package Screens;
 import Bullets.Bullet;
 import Bullets.BulletManager;
 import InputHandlers.PlayScreenInputHandler;
+import crystals.Crystal;
 import Opponents.Robot;
 import Scenes.Debug;
 import Scenes.HUD;
@@ -21,7 +22,6 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
@@ -48,10 +48,11 @@ public class PlayScreen implements Screen {
     public World world;
     private Box2DDebugRenderer b2dr;
     public Player player;
-    private TextureAtlas atlas = new TextureAtlas("player_spritesheet.atlas");
-    private TextureAtlas atlas2 = new TextureAtlas("Opponents/Robot.atlas");
+    private final TextureAtlas playerAtlas = new TextureAtlas("player/player_spritesheet.atlas");
+    private final TextureAtlas robotAtlas = new TextureAtlas("Opponents/Robot.atlas");
     private float prevPosX = 0;
     private float prevPosY = 0;
+
     public float startPosX;
     public float startPosY;
     private Debug debug;
@@ -66,8 +67,8 @@ public class PlayScreen implements Screen {
     public static Set<String> allDestroyedRobots = new HashSet<>();
     public static Set<String> allDestroyedPlayers = new HashSet<>();
     private Music music;
-    private ScrollPane scrollPane;
     private String worldUUID;
+    public static List<Crystal> crystals = new ArrayList<>();
 
     /**
      * Constructor for the PlayScreen.
@@ -80,7 +81,7 @@ public class PlayScreen implements Screen {
         robotDataMap = new RobotDataMap(worldUUID);
         gamePort = new FitViewport(MyGDXGame.V_WIDTH / MyGDXGame.PPM, MyGDXGame.V_HEIGHT / MyGDXGame.PPM, gameCam);
 
-        map = mapLoader.load("test_map.tmx");
+        map = mapLoader.load("level/test_map.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1 / MyGDXGame.PPM);
         gameCam.position.set(gamePort.getWorldWidth() / 2, gamePort.getWorldHeight() / 2, 0);
 
@@ -114,22 +115,23 @@ public class PlayScreen implements Screen {
     }
 
     /**
-     * Gets the texture atlas used in the game.
+     * Gets the player texture atlas used in the game.
      *
      * @return The texture atlas.
      */
-    public TextureAtlas getAtlas() {
-        return atlas;
+    public TextureAtlas getPlayerAtlas() {
+        return playerAtlas;
     }
 
     /**
-     * Gets the texture atlas used in the game.
+     * Gets the robot texture atlas used in the game.
      *
      * @return The texture atlas.
      */
-    public TextureAtlas getAtlas2() {
-        return atlas2;
+    public TextureAtlas getRobotAtlas() {
+        return robotAtlas;
     }
+
 
     /**
      * Updates the game logic.
@@ -194,7 +196,7 @@ public class PlayScreen implements Screen {
         renderer.setView(gameCam);
 
         // It is used to send the position of the player to the server
-        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState) {
+        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState || player.getIsMining()) {
             MyGDXGame.client.sendTCP(new PlayerData(
                     gameCam.position.x,
                     gameCam.position.y,
@@ -238,6 +240,12 @@ public class PlayScreen implements Screen {
 
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();
+
+        // Draw crystals
+        for (Crystal crystal: crystals) {
+            crystal.draw(game.batch);
+        }
+
         player.draw(game.batch); // Draw the player after rendering the physics world
 
         // draws all robots
@@ -329,7 +337,7 @@ public class PlayScreen implements Screen {
         renderer.dispose();
         world.dispose();
         b2dr.dispose();
-        atlas.dispose();
-        atlas2.dispose();
+        playerAtlas.dispose();
+        robotAtlas.dispose();
     }
 }
