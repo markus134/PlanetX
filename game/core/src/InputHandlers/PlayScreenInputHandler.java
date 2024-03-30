@@ -1,6 +1,7 @@
 package InputHandlers;
 
 import Bullets.Bullet;
+import Items.Items;
 import Opponents.Robot;
 import Screens.PlayScreen;
 import com.badlogic.gdx.Input;
@@ -255,7 +256,8 @@ public class PlayScreenInputHandler implements InputProcessor {
         Vector3 playerPos = new Vector3(playerX, playerY, 0);
         PlayScreen.gameCam.project(playerPos);
 
-        for (Crystal crystal : PlayScreen.crystals) {
+
+        for (Crystal crystal : playScreen.crystals) {
             // Convert crystal position to screen coordinates
             Vector3 crystalPos = new Vector3(crystal.getX() / MyGDXGame.PPM, crystal.getY() / MyGDXGame.PPM, 0);
             PlayScreen.gameCam.project(crystalPos);
@@ -282,6 +284,8 @@ public class PlayScreenInputHandler implements InputProcessor {
                     long miningDuration = TimeUtils.timeSinceNanos(miningStartTime); // Calculate the duration of mining
                     if (miningDuration >= 1_000_000_000L) { // If mining duration is >= 1 second
                         PlayScreen.crystals.remove(closeCrystal);
+
+                        MyGDXGame.client.sendTCP(new CrystalToRemove(closeCrystal.getId()));
                         miningStartTime = 0;
                         playScreen.hud.addItemToNextFreeSlot(Items.CRYSTAL);
                     }

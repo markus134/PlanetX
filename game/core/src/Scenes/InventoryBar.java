@@ -20,6 +20,7 @@ public class InventoryBar extends Actor {
     private static final String CRYSTAL_TEXTURE_PATH = "Items/crystal.png";
     private static final String BLASTER_TEXTURE_PATH = "Items/blaster.png";
     private static final String DRILL_TEXTURE_PATH = "Items/drill.png";
+
     private static final float OFFSET = 2f;
     private static final float SLOT_PADDING_BOTTOM = 30f;
     private final Texture slotTexture;

@@ -72,6 +72,7 @@ public class OtherPlayer extends Sprite {
         addFrames(0, 5, 3);
         addFrames(0, 3, 4);
         addFrames(0, 3, 5);
+        addFrames(0, 3, 6);
     }
 
     /**
