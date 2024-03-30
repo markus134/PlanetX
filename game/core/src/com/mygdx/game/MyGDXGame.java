@@ -15,9 +15,11 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
+import crystals.Crystal;
 import serializableObjects.AddMultiPlayerWorld;
 import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.BulletData;
+import serializableObjects.CrystalToRemove;
 import serializableObjects.PlayerData;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
@@ -114,6 +116,7 @@ public class MyGDXGame extends Game {
         kryo.register(String.class);
         kryo.register(AddSinglePlayerWorld.class);
         kryo.register(AddMultiPlayerWorld.class);
+        kryo.register(CrystalToRemove.class, 22);
     }
 
     /**
@@ -172,7 +175,8 @@ public class MyGDXGame extends Game {
                 handleBulletData((BulletData) object);
             } else if (object instanceof RobotDataMap) {
                 handleRobotData((RobotDataMap) object);
-
+            } else if (object instanceof CrystalToRemove) {
+                handleCrystalData((CrystalToRemove) object);
             }
 
             if (object instanceof HashMap) {
@@ -227,6 +231,10 @@ public class MyGDXGame extends Game {
         }
 
         removeDisconnectedPlayers(allConnectionIDs, world);
+    }
+
+    private void handleCrystalData(CrystalToRemove crystal) {
+        PlayScreen.crystals.remove(Crystal.getCrystalById(crystal.getId()));
     }
 
     /**

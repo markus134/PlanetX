@@ -28,6 +28,8 @@ public class Player extends Sprite {
     private static final float VELOCITY_THRESHOLD = 0.8f;
     private static final int MAX_HEALTH = 100;
 
+
+
     // Enums for player state and direction
     public enum State {
         RUNNING,
@@ -54,6 +56,7 @@ public class Player extends Sprite {
     private Animation<TextureRegion> playerRunLower;
     private Animation<TextureRegion> playerRunUp;
     private Animation<TextureRegion> playerRunDown;
+    private Animation<TextureRegion> playerMine;
     public ArrayList<TextureRegion> playerAllFrames = new ArrayList<>();
     private HashMap<TextureRegion, Integer> frameIndexMap = new HashMap<>();
     public boolean runningRight;
@@ -62,6 +65,7 @@ public class Player extends Sprite {
     private int health;
     public boolean shouldBeDestroyed = false;
     private String uuid;
+    private boolean isMining = false;
 
 
     /**
@@ -71,7 +75,7 @@ public class Player extends Sprite {
      * @param screen
      */
     public Player(World world, PlayScreen screen) {
-        super(screen.getAtlas().findRegion("player_spritesheet"));
+        super(screen.getPlayerAtlas().findRegion("player_spritesheet"));
         this.world = world;
         currentState = State.STANDING;
         currentDirection = runDirection.RIGHT;
@@ -115,6 +119,8 @@ public class Player extends Sprite {
         playerRun = createAnimation(0, 5, 3);
         playerRunDown = createAnimation(0, 3, 4);
         playerRunUp = createAnimation(0, 3, 5);
+
+        playerMine = createAnimation(0, 3, 6);
     }
 
     public int getCurrentFrameIndex() {
@@ -159,6 +165,11 @@ public class Player extends Sprite {
     public TextureRegion getFrame(float dt) {
         currentState = getState();
 
+
+        if (isMining) {
+            stateTimer = stateTimer + dt;
+            return playerMine.getKeyFrame(stateTimer, true);
+        }
         // If we are standing, then there is no point in continuing and we can return playerStand
         if (currentState == State.STANDING) {
             return playerStand;
@@ -287,6 +298,10 @@ public class Player extends Sprite {
         }
     }
 
+    public void recoverHealth(int recoverHealth) {
+        health = Math.min(MAX_HEALTH, health + recoverHealth);
+    }
+
     /**
      * Getter method
      *
@@ -294,5 +309,13 @@ public class Player extends Sprite {
      */
     public String getUuid() {
         return uuid;
+    }
+
+    public void setIsMining(boolean isMining) {
+        this.isMining = isMining;
+    }
+
+    public boolean getIsMining() {
+        return isMining;
     }
 }

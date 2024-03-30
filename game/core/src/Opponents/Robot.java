@@ -70,7 +70,7 @@ public class Robot extends Sprite {
      * @param screen
      */
     public Robot(World world, PlayScreen screen) {
-        super(screen.getAtlas2().findRegion("Robot"));
+        super(screen.getRobotAtlas().findRegion("Robot"));
         this.world = world;
         currentState = State.STANDING;
         currentDirection = runDirection.RIGHT;
@@ -100,7 +100,7 @@ public class Robot extends Sprite {
      * @param posY
      */
     public Robot(World world, PlayScreen screen, float posX, float posY, int health, String uuid) {
-        super(screen.getAtlas2().findRegion("Robot"));
+        super(screen.getPlayerAtlas().findRegion("Robot"));
         this.world = world;
         currentState = State.STANDING;
         currentDirection = runDirection.RIGHT;

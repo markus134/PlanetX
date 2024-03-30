@@ -45,7 +45,7 @@ public class OtherPlayer extends Sprite {
      * @param id
      */
     public OtherPlayer(World world, PlayScreen screen, float posX, float posY, int health, String uuid, int id) {
-        super(screen.getAtlas().findRegion("player_spritesheet"));
+        super(screen.getPlayerAtlas().findRegion("player_spritesheet"));
         this.world = world;
 
         initializeAllFrames();

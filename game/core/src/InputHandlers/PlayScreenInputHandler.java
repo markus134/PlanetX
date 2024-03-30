@@ -9,9 +9,11 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.mygdx.game.MyGDXGame;
+import crystals.Crystal;
 import serializableObjects.BulletData;
+import serializableObjects.CrystalToRemove;
 import serializableObjects.RobotData;
-
+import Items.Items;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -31,6 +33,9 @@ public class PlayScreenInputHandler implements InputProcessor {
     private boolean isFirstClick = true;
     private static final long SHOOT_COOLDOWN_NANOS = 250_000_000L; // 0.25 seconds in nanoseconds
     private long lastShotTime = 0;
+    private long miningStartTime = 0;
+    private Crystal closeCrystal;
+
 
     /**
      * Constructor
@@ -46,7 +51,7 @@ public class PlayScreenInputHandler implements InputProcessor {
      * Handles player input.
      */
     public void handleInput() {
-        if (keyPresses > 0) {
+        if (keyPresses > 0 && !playScreen.player.getIsMining()) {
             for (Integer keypress : keysPressed) {
                 switch (keypress) {
                     case Input.Keys.W:
@@ -184,51 +189,108 @@ public class PlayScreenInputHandler implements InputProcessor {
      */
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (button == Input.Buttons.LEFT) {
+            Items selectedItem = playScreen.hud.getHighlightedItem();
 
-        // Check if enough time has passed since the last shot
-        long currentTime = TimeUtils.nanoTime();
-
-        // The checks should actually be server side but good enough for now
-        if (TimeUtils.timeSinceNanos(lastShotTime) >= SHOOT_COOLDOWN_NANOS) {
-            // Convert screen coordinates to world coordinates
-            touchPoint.set(screenX, screenY, 0);
-            playScreen.gameCam.unproject(touchPoint);
-
-            float x = playScreen.player.getX() + playScreen.player.getWidth() / 2;
-            float y = playScreen.player.getY() + playScreen.player.getHeight() / 2;
-
-            Vector2 direction = new Vector2(touchPoint.x - x, touchPoint.y - y);
-            direction.nor(); // Normalize the direction vector
-
-            x += direction.x * (PLAYER_RADIUS + BULLET_OFFSET);
-            y += direction.y * (PLAYER_RADIUS + BULLET_OFFSET);
-
-            float velocityX = direction.x * bulletSpeed;
-            float velocityY = direction.y * bulletSpeed;
-
-            // Shoot a bullet towards the touched position
-            Bullet newBullet = playScreen.bulletManager.obtainBullet(x, y);
-            newBullet.body.setLinearVelocity(velocityX, velocityY);
-
-            // Update the time of the last shot
-            lastShotTime = currentTime;
-
-            MyGDXGame.client.sendTCP(new BulletData(
-                    velocityX,
-                    velocityY,
-                    x,
-                    y,
-                    robotDataMap.getWorldUUID()
-            ));
+            if (TimeUtils.timeSinceNanos(lastShotTime) >= SHOOT_COOLDOWN_NANOS && selectedItem.equals(Items.BLASTER)) {
+                shootBullet(touchPoint, screenX, screenY);
+            } else if (selectedItem.equals(Items.DRILL)) {
+                if (isCloseToCrystal(playScreen.player.getX(), playScreen.player.getY())) {
+                    miningStartTime = TimeUtils.nanoTime();
+                    System.out.println("close to crystal");
+                }
+                playScreen.player.setIsMining(true);
+            } else if (selectedItem.equals(Items.CRYSTAL)) {
+                playScreen.player.recoverHealth(20);
+                playScreen.hud.removeHighlightedItem();
+            }
+        } else if (button == Input.Buttons.RIGHT) {
+            System.out.println("right click");
         }
 
         return true;
 
     }
 
-    @Override
-    public boolean touchUp(int i, int i1, int i2, int i3) {
+    private void shootBullet(Vector3 touchPoint, int screenX, int screenY) {
+        // Check if enough time has passed since the last shot
+        long currentTime = TimeUtils.nanoTime();
+
+        // Convert screen coordinates to world coordinates
+        touchPoint.set(screenX, screenY, 0);
+        PlayScreen.gameCam.unproject(touchPoint);
+
+        float x = playScreen.player.getX() + playScreen.player.getWidth() / 2;
+        float y = playScreen.player.getY() + playScreen.player.getHeight() / 2;
+
+        Vector2 direction = new Vector2(touchPoint.x - x, touchPoint.y - y);
+        direction.nor(); // Normalize the direction vector
+
+        x += direction.x * (PLAYER_RADIUS + BULLET_OFFSET);
+        y += direction.y * (PLAYER_RADIUS + BULLET_OFFSET);
+
+        float velocityX = direction.x * bulletSpeed;
+        float velocityY = direction.y * bulletSpeed;
+
+        // Shoot a bullet towards the touched position
+        Bullet newBullet = playScreen.bulletManager.obtainBullet(x, y);
+        newBullet.body.setLinearVelocity(velocityX, velocityY);
+
+        // Update the time of the last shot
+        lastShotTime = currentTime;
+
+        MyGDXGame.client.sendTCP(new BulletData(
+                velocityX,
+                velocityY,
+                x,
+                y,
+                robotDataMap.getWorldUUID()
+        ));
+    }
+
+    private boolean isCloseToCrystal(float playerX, float playerY) {
+        float miningRange = 30f;
+
+        // Convert player's position to screen coordinates
+        Vector3 playerPos = new Vector3(playerX, playerY, 0);
+        PlayScreen.gameCam.project(playerPos);
+
+        for (Crystal crystal : PlayScreen.crystals) {
+            // Convert crystal position to screen coordinates
+            Vector3 crystalPos = new Vector3(crystal.getX() / MyGDXGame.PPM, crystal.getY() / MyGDXGame.PPM, 0);
+            PlayScreen.gameCam.project(crystalPos);
+
+            System.out.println("player x: " + playerPos.x + " player y: " + playerPos.y);
+            System.out.println("crystal x: " + crystalPos.x + " crystal y: " + crystalPos.y);
+            // Calculate the distance between the player and the crystal
+            float distance = Vector2.dst(playerPos.x, playerPos.y, crystalPos.x, crystalPos.y);
+            if (distance <= miningRange) {
+                closeCrystal = crystal;
+                return true;
+            }
+        }
         return false;
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        if (button == Input.Buttons.LEFT) {
+            Items selectedItem = playScreen.hud.getHighlightedItem();
+
+            if (selectedItem.equals(Items.DRILL)) {
+                if (isCloseToCrystal(playScreen.player.getX(), playScreen.player.getY())) {
+                    long miningDuration = TimeUtils.timeSinceNanos(miningStartTime); // Calculate the duration of mining
+                    if (miningDuration >= 1_000_000_000L) { // If mining duration is >= 1 second
+                        PlayScreen.crystals.remove(closeCrystal);
+                        miningStartTime = 0;
+                        playScreen.hud.addItemToNextFreeSlot(Items.CRYSTAL);
+                    }
+                }
+                playScreen.player.setIsMining(false); // Stop mining when touch is released
+            }
+        }
+
+        return true;
     }
 
     @Override
@@ -246,16 +308,19 @@ public class PlayScreenInputHandler implements InputProcessor {
         return false;
     }
 
+
     @Override
     public boolean scrolled(float amountX, float amountY) {
-        int scrollDirection = amountY > 0 ? -1 : 1; // Determine scroll direction
+        if (!playScreen.player.getIsMining()) {
+            int scrollDirection = amountY > 0 ? -1 : 1; // Determine scroll direction
 
-        int currentIndex = playScreen.hud.getHighlightedSlotIndex();
-        int totalSlots = 8; // Total number of slots in the inventory bar
-        int newIndex = (currentIndex + scrollDirection + totalSlots) % totalSlots;
+            int currentIndex = playScreen.hud.getHighlightedSlotIndex();
+            int totalSlots = 8; // Total number of slots in the inventory bar
+            int newIndex = (currentIndex + scrollDirection + totalSlots) % totalSlots;
 
-        // Switch to the new index
-        playScreen.hud.switchHighlightedSlot(newIndex);
+            // Switch to the new index
+            playScreen.hud.switchHighlightedSlot(newIndex);
+        }
 
         return true;
     }
