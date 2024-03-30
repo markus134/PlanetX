@@ -1,8 +1,8 @@
 package serializableObjects;
 
 public class AddMultiPlayerWorld {
-    private String worldUUID;
-    private int numberOfPlayers;
+    private final String worldUUID;
+    private final int numberOfPlayers;
 
     /**
      * Empty constructor

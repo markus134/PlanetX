@@ -17,9 +17,10 @@ public class InventoryBar extends Actor {
     private static final int SLOT_COUNT = 8;
     private static final String SLOT_TEXTURE_PATH = "hotbar/slot.jpg";
     private static final String SLOT_HIGHLIGHT_TEXTURE_PATH = "hotbar/slot_highlight.jpg";
-    private static final String CRYSTAL_TEXTURE_PATH = "items/crystal.png";
-    private static final String BLASTER_TEXTURE_PATH = "items/blaster.png";
-    private static final String DRILL_TEXTURE_PATH = "items/drill.png";
+    private static final String CRYSTAL_TEXTURE_PATH = "Items/crystal.png";
+    private static final String BLASTER_TEXTURE_PATH = "Items/blaster.png";
+    private static final String DRILL_TEXTURE_PATH = "Items/drill.png";
+
     private static final float OFFSET = 2f;
     private static final float SLOT_PADDING_BOTTOM = 30f;
     private final Texture slotTexture;

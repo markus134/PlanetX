@@ -12,8 +12,9 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.mygdx.game.MyGDXGame;
 import crystals.Crystal;
 import serializableObjects.BulletData;
+import serializableObjects.CrystalToRemove;
 import serializableObjects.RobotData;
-
+import Items.Items;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -35,6 +36,7 @@ public class PlayScreenInputHandler implements InputProcessor {
     private long lastShotTime = 0;
     private long miningStartTime = 0;
     private Crystal closeCrystal;
+
 
     /**
      * Constructor
@@ -254,6 +256,7 @@ public class PlayScreenInputHandler implements InputProcessor {
         Vector3 playerPos = new Vector3(playerX, playerY, 0);
         PlayScreen.gameCam.project(playerPos);
 
+
         for (Crystal crystal : playScreen.crystals) {
             // Convert crystal position to screen coordinates
             Vector3 crystalPos = new Vector3(crystal.getX() / MyGDXGame.PPM, crystal.getY() / MyGDXGame.PPM, 0);
@@ -281,6 +284,8 @@ public class PlayScreenInputHandler implements InputProcessor {
                     long miningDuration = TimeUtils.timeSinceNanos(miningStartTime); // Calculate the duration of mining
                     if (miningDuration >= 1_000_000_000L) { // If mining duration is >= 1 second
                         PlayScreen.crystals.remove(closeCrystal);
+
+                        MyGDXGame.client.sendTCP(new CrystalToRemove(closeCrystal.getId()));
                         miningStartTime = 0;
                         playScreen.hud.addItemToNextFreeSlot(Items.CRYSTAL);
                     }
@@ -307,16 +312,19 @@ public class PlayScreenInputHandler implements InputProcessor {
         return false;
     }
 
+
     @Override
     public boolean scrolled(float amountX, float amountY) {
-        int scrollDirection = amountY > 0 ? -1 : 1; // Determine scroll direction
+        if (!playScreen.player.getIsMining()) {
+            int scrollDirection = amountY > 0 ? -1 : 1; // Determine scroll direction
 
-        int currentIndex = playScreen.hud.getHighlightedSlotIndex();
-        int totalSlots = 8; // Total number of slots in the inventory bar
-        int newIndex = (currentIndex + scrollDirection + totalSlots) % totalSlots;
+            int currentIndex = playScreen.hud.getHighlightedSlotIndex();
+            int totalSlots = 8; // Total number of slots in the inventory bar
+            int newIndex = (currentIndex + scrollDirection + totalSlots) % totalSlots;
 
-        // Switch to the new index
-        playScreen.hud.switchHighlightedSlot(newIndex);
+            // Switch to the new index
+            playScreen.hud.switchHighlightedSlot(newIndex);
+        }
 
         return true;
     }
