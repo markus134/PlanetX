@@ -1,7 +1,10 @@
 package Opponents;
 
 import Screens.PlayScreen;
+import Screens.SettingsScreen;
 import Tools.B2WorldCreator;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -64,7 +67,9 @@ public class Robot extends Sprite {
     public boolean shouldBeDestroyed = false;
     private String uuid;
     private int counter = 0;
-    private int timeForExplosion = 25;
+    private final int timeForExplosion = 48;
+    private final Sound explosion = Gdx.audio.newSound(Gdx.files.internal("WeaponSounds/explosion.mp3"));
+    public static final int EXPLOSION_DAMAGE = 20;
 
     /**
      * First constructor for a robot that gets created in the center of the map
@@ -167,12 +172,17 @@ public class Robot extends Sprite {
     public void update(float delta) {
         if (health <= 0) {
             counter++;
+            if (counter <= 1) {
+                explosion.play(SettingsScreen.soundValue);
+            }
             if (counter >= timeForExplosion) {
                 B2WorldCreator.robotsToDestroy.add(this);
+                explosion.dispose();
             }
+        } else {
+            updatePosition();
+            setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
         }
-        updatePosition();
-        setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
         region = getFrame(delta);
         setRegion(region);
         b2body.setAwake(true);
