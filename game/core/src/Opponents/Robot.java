@@ -39,7 +39,8 @@ public class Robot extends Sprite {
         RIGHT,
         LOWER,
         UP,
-        DOWN
+        DOWN,
+        DEAD
     }
 
     public State currentState;
@@ -53,6 +54,7 @@ public class Robot extends Sprite {
     private Animation<TextureRegion> robotRunLower;
     private Animation<TextureRegion> robotRunUp;
     private Animation<TextureRegion> robotRunDown;
+    private Animation<TextureRegion> robotExplode;
     public ArrayList<TextureRegion> robotAllFrames = new ArrayList<>();
     private HashMap<TextureRegion, Integer> frameIndexMap = new HashMap<>();
     public boolean runningRight;
@@ -61,6 +63,8 @@ public class Robot extends Sprite {
     private int health;
     public boolean shouldBeDestroyed = false;
     private String uuid;
+    private int counter = 0;
+    private int timeForExplosion = 25;
 
     /**
      * First constructor for a robot that gets created in the center of the map
@@ -133,6 +137,7 @@ public class Robot extends Sprite {
         robotRun = createAnimation(0, 3, 0);
         robotRunDown = createAnimation(0, 3, 3);
         robotRunUp = createAnimation(0, 3, 4);
+        robotExplode = createAnimation(0, 3, 5);
     }
 
 
@@ -161,16 +166,16 @@ public class Robot extends Sprite {
      */
     public void update(float delta) {
         if (health <= 0) {
-            B2WorldCreator.robotsToDestroy.add(this);
+            counter++;
+            if (counter >= timeForExplosion) {
+                B2WorldCreator.robotsToDestroy.add(this);
+            }
         }
-
         updatePosition();
         setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
         region = getFrame(delta);
         setRegion(region);
         b2body.setAwake(true);
-
-
     }
 
     /**
@@ -243,6 +248,9 @@ public class Robot extends Sprite {
             case DOWN:
                 region = robotRunDown.getKeyFrame(stateTimer, true);
                 break;
+            case DEAD:
+                region = robotExplode.getKeyFrame(stateTimer, true);
+                break;
         }
         // Start the animation from the start if currentState or currentDirection have changed
         stateTimer = (currentState == prevState && currentDirection == prevRunDirection) ? stateTimer + dt : 0;
@@ -268,6 +276,9 @@ public class Robot extends Sprite {
      * @return The current running direction of the robot (right side).
      */
     private runDirection getRunDirection() {
+        if (health <= 0) {
+            return runDirection.DEAD;
+        }
         float velocityX = Math.abs(b2body.getLinearVelocity().x); // We only care for positive x here so for example if running direction is upper left, then we want to return upper right
         float velocityY = b2body.getLinearVelocity().y;
 
@@ -343,8 +354,9 @@ public class Robot extends Sprite {
     public void takeDamage(int damage) {
         health -= damage;
 
-        if (health <= 0) {
+        if (health <= 0 && counter >= timeForExplosion) {
             shouldBeDestroyed = true;
+            counter = 0;
         }
     }
 
