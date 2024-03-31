@@ -53,6 +53,7 @@ public class PlayScreen implements Screen {
     private final TextureAtlas robotAtlas = new TextureAtlas("Opponents/Robot.atlas");
     private float prevPosX = 0;
     private float prevPosY = 0;
+    private int prevFrameIndex = 0;
 
     public float startPosX;
     public float startPosY;
@@ -68,7 +69,7 @@ public class PlayScreen implements Screen {
     public static Set<String> allDestroyedRobots = new HashSet<>();
     public static Set<String> allDestroyedPlayers = new HashSet<>();
     private Music music;
-    private String worldUUID;
+    public String worldUUID;
     public static List<Crystal> crystals = new ArrayList<>();
     public final ExitToMainMenu pauseDialog;
     private final MenuScreen menuScreen;
@@ -214,7 +215,12 @@ public class PlayScreen implements Screen {
         renderer.setView(gameCam);
 
         // It is used to send the position of the player to the server
-        if (prevPosX != gameCam.position.x || prevPosY != gameCam.position.y || player.prevState != player.currentState || player.getIsMining()) {
+        if (prevPosX != gameCam.position.x
+                || prevPosY != gameCam.position.y
+                || player.prevState != player.currentState
+                || player.getCurrentFrameIndex() != prevFrameIndex
+                || player.getIsMining()) {
+
             MyGDXGame.client.sendTCP(new PlayerData(
                     gameCam.position.x,
                     gameCam.position.y,
@@ -228,6 +234,7 @@ public class PlayScreen implements Screen {
             prevPosX = gameCam.position.x;
             prevPosY = gameCam.position.y;
             player.prevState = player.currentState;
+            prevFrameIndex = player.getCurrentFrameIndex();
         }
 
         destroyedRobots.clear();

@@ -12,6 +12,7 @@ public class PlayerData implements Serializable {
     private String uuid;
     private String worldUUID;
 
+
     /**
      * Empty constructor
      */

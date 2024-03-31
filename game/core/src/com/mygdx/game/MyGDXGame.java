@@ -21,6 +21,7 @@ import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
 import serializableObjects.PlayerData;
+import serializableObjects.RevivePlayer;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
 
@@ -117,6 +118,7 @@ public class MyGDXGame extends Game {
         kryo.register(AddSinglePlayerWorld.class);
         kryo.register(AddMultiPlayerWorld.class);
         kryo.register(CrystalToRemove.class, 22);
+        kryo.register(RevivePlayer.class);
     }
 
     /**
@@ -177,6 +179,10 @@ public class MyGDXGame extends Game {
                 handleRobotData((RobotDataMap) object);
             } else if (object instanceof CrystalToRemove) {
                 handleCrystalData((CrystalToRemove) object);
+            } else if (object instanceof RevivePlayer) {
+                if (playScreen.player.getUuid().equals(((RevivePlayer) object).getUuid())) {
+                    playScreen.player.revive();
+                }
             }
 
             if (object instanceof HashMap) {
