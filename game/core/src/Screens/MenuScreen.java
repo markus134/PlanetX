@@ -28,7 +28,7 @@ public class MenuScreen extends ScreenAdapter {
     private SpriteBatch batch;
     private BackGround backGround;
     private final SettingsScreen settingsScreen;
-    private final Music music;
+    public final Music music;
     private final SinglePlayerScreen singlePlayerScreen;
     private final MultiPlayerScreen multiPlayerScreen;
 

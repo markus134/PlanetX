@@ -14,7 +14,7 @@ import crystals.Crystal;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
 import serializableObjects.RobotData;
-import Items.Items;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -32,6 +32,7 @@ public class PlayScreenInputHandler implements InputProcessor {
     private static final float PLAYER_RADIUS = 16 / MyGDXGame.PPM;
     private static final float BULLET_OFFSET = 8 / MyGDXGame.PPM;
     private boolean isFirstClick = true;
+    private static boolean isFirstExitClick = true;
     private static final long SHOOT_COOLDOWN_NANOS = 250_000_000L; // 0.25 seconds in nanoseconds
     private long lastShotTime = 0;
     private long miningStartTime = 0;
@@ -97,11 +98,15 @@ public class PlayScreenInputHandler implements InputProcessor {
                             isFirstClick = false;
                         }
                         break;
+                    case Input.Keys.ESCAPE:
+                        if (isFirstExitClick) {
+                            playScreen.pauseDialog.showStage();
+                            keysPressed.remove(Input.Keys.ESCAPE);
+                        }
+                        break;
                 }
-
             }
         }
-
     }
 
     /**
@@ -155,6 +160,7 @@ public class PlayScreenInputHandler implements InputProcessor {
         if (keycode == Input.Keys.B) {
             isFirstClick = true;
         }
+
         // Reset horizontal velocity when D or A key is released
         if (keycode == Input.Keys.D || keycode == Input.Keys.A) {
             playScreen.player.b2body.setLinearVelocity(0, playScreen.player.b2body.getLinearVelocity().y);

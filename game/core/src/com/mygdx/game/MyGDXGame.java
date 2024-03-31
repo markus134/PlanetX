@@ -84,7 +84,7 @@ public class MyGDXGame extends Game {
      * Creates the play screen and sets up the client connection.
      */
     public void createScreenAndClient(String worldUUID, int numberOfPlayers) {
-        playScreen = new PlayScreen(this, worldUUID);
+        playScreen = new PlayScreen(this, worldUUID, menu);
         client = new Client(1000000, 1000000); // If we don't set these sizes big enough, the game could crash
         registerClasses(client.getKryo());
 
