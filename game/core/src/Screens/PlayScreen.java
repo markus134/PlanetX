@@ -159,6 +159,15 @@ public class PlayScreen implements Screen {
 
         for (String id : destroyedRobots) {
             if (robotDataMap.getMap().containsKey(id)) {
+
+                float x = robotDataMap.getMap().get(id).getX();
+                float y = robotDataMap.getMap().get(id).getY();
+
+                if (Math.abs(player.getX() - x) < 1f &&
+                        Math.abs(player.getY() - y) < 1f) {
+                    player.takeDamage(Robot.EXPLOSION_DAMAGE);
+                }
+
                 robots.remove(id);
                 robotIds.remove(id);
                 robotDataMap.remove(id);
