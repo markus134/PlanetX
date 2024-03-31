@@ -55,6 +55,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
 
     /**
      * Constructor
+     *
      * @param menuScreen
      * @param game
      * @param music
@@ -105,10 +106,13 @@ public class MultiPlayerScreen extends ScreenAdapter {
         Gdx.input.setInputProcessor(stage);
     }
 
+    /**
+     * Updates the displayTable
+     */
     public void updateDisplayTable() {
         if (multiPlayerWorlds.size() == 5) newButton.remove();
         displayTable.clear();
-        if (multiPlayerWorlds.isEmpty()){
+        if (multiPlayerWorlds.isEmpty()) {
             Label emptyWorldsLabel = new Label("Press the 'Add' button", labelForTable);
             Label emptyWorldsLabel2 = new Label("To connect to an existing world", labelForTable);
             Label emptyWorldsLabel3 = new Label("Or to make a new one", labelForTable);
@@ -116,7 +120,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
             displayTable.add(emptyWorldsLabel2).row();
             displayTable.add(emptyWorldsLabel3);
         } else {
-            for (Map.Entry<String, String> entry: multiPlayerWorlds.entrySet()) {
+            for (Map.Entry<String, String> entry : multiPlayerWorlds.entrySet()) {
                 String worldName = entry.getKey();
                 Label label = new Label(worldName, labelForTable);
                 TextButton removeButton = new TextButton("R", textButtonStyle);
@@ -127,13 +131,21 @@ public class MultiPlayerScreen extends ScreenAdapter {
                         updateDisplayTable();
                     }
                 });
+                TextButton copybutton = new TextButton("C", textButtonStyle);
+                copybutton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        Gdx.app.getClipboard().setContents(MultiPlayerScreen.multiPlayerWorlds.get(worldName));
+                    }
+                });
 
                 Container<Table> container = new Container<Table>();
                 containers.add(container);
 
                 Table rowTable = new Table();
                 rowTable.add(label).width(600).padRight(280).padLeft(100);
-                rowTable.add(removeButton).width(400);
+                rowTable.add(removeButton).width(200);
+                rowTable.add(copybutton).width(200);
                 rowTable.row();
                 container.setActor(rowTable);
                 container.setBackground(drawableNormal);
@@ -159,6 +171,9 @@ public class MultiPlayerScreen extends ScreenAdapter {
         }
     }
 
+    /**
+     * Updates the table
+     */
     public void updateTable() {
         // from the ReusableElements directory
         Label.LabelStyle labelStyle = new LabelStyle(200).getLabelStyle();

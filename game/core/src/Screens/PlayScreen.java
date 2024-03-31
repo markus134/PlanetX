@@ -3,6 +3,7 @@ package Screens;
 import Bullets.Bullet;
 import Bullets.BulletManager;
 import InputHandlers.PlayScreenInputHandler;
+import Scenes.ExitToMainMenu;
 import crystals.Crystal;
 import Opponents.Robot;
 import Scenes.Debug;
@@ -69,13 +70,17 @@ public class PlayScreen implements Screen {
     private Music music;
     private String worldUUID;
     public static List<Crystal> crystals = new ArrayList<>();
+    public final ExitToMainMenu pauseDialog;
+    private final MenuScreen menuScreen;
 
     /**
      * Constructor for the PlayScreen.
      *
      * @param game The Game instance representing the main game.
+     * @param menu
      */
-    public PlayScreen(MyGDXGame game, String worldUUID) {
+    public PlayScreen(MyGDXGame game, String worldUUID, MenuScreen menu) {
+        this.menuScreen = menu;
         this.game = game;
         this.worldUUID = worldUUID;
         robotDataMap = new RobotDataMap(worldUUID);
@@ -93,6 +98,7 @@ public class PlayScreen implements Screen {
 
         debug = new Debug(game.batch, player);
         hud = new HUD(game.batch, player);
+        pauseDialog = new ExitToMainMenu(game.batch, menu, this);
 
         // Initialize BulletManager
         bulletManager = new BulletManager(world);
@@ -105,13 +111,16 @@ public class PlayScreen implements Screen {
         music.play();
     }
 
+    public void changeInputToHandler(){
+        Gdx.input.setInputProcessor(handler);
+    }
 
     /**
      * Shows the PlayScreen and sets the input processor.
      */
     @Override
     public void show() {
-        Gdx.input.setInputProcessor(handler);
+        changeInputToHandler();
     }
 
     /**
@@ -281,6 +290,7 @@ public class PlayScreen implements Screen {
         //debug.updateLabelValues();
 
         hud.updateLabelValues();
+        if (pauseDialog.isToShow()) pauseDialog.renderStage();
     }
 
     /**
@@ -299,6 +309,7 @@ public class PlayScreen implements Screen {
 
         //debug.stage.getViewport().update(width, height, true);
         hud.stage.getViewport().update(width, height, true);
+        pauseDialog.stage.getViewport().update(width, height, true);
     }
 
     @Override
@@ -322,6 +333,7 @@ public class PlayScreen implements Screen {
         world.destroyBody(player.b2body);
         MyGDXGame.playerDict.clear();
         game.dispose();
+        music.dispose();
 
         // currently we have not yet decided what to do when the player dies
         // bcs the dead players go back to the main menu, it is logical to
@@ -330,11 +342,8 @@ public class PlayScreen implements Screen {
         MyGDXGame.client.dispose();
 
         // starts the music
-        Music musicInTheMenu = Gdx.audio.newMusic(Gdx.files.internal("Music/menu.mp3"));
-        musicInTheMenu.setLooping(true);
-        musicInTheMenu.setVolume(SettingsScreen.musicValue);
-        musicInTheMenu.play();
-        game.setScreen(new MenuScreen(game, musicInTheMenu));
+        menuScreen.music.play();
+        game.setScreen(menuScreen);
     }
 
     /**
