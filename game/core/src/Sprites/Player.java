@@ -12,10 +12,13 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
+import serializableObjects.PlayerData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
+
+import static Screens.PlayScreen.gameCam;
 
 public class Player extends Sprite {
     private static final int FRAME_WIDTH = 32;
@@ -50,15 +53,18 @@ public class Player extends Sprite {
     public runDirection prevRunDirection;
     public World world;
     public Body b2body;
-    private TextureRegion playerStand;
+    private final TextureRegion playerStand;
     private Animation<TextureRegion> playerRunUpper;
     private Animation<TextureRegion> playerRun;
     private Animation<TextureRegion> playerRunLower;
     private Animation<TextureRegion> playerRunUp;
     private Animation<TextureRegion> playerRunDown;
     private Animation<TextureRegion> playerMine;
+    private Animation<TextureRegion> playerDeath;
+    private Animation<TextureRegion> playerRevive;
+    private Animation<TextureRegion> playerShell;
     public ArrayList<TextureRegion> playerAllFrames = new ArrayList<>();
-    private HashMap<TextureRegion, Integer> frameIndexMap = new HashMap<>();
+    private final HashMap<TextureRegion, Integer> frameIndexMap = new HashMap<>();
     public boolean runningRight;
     private float stateTimer;
     public TextureRegion region;
@@ -66,6 +72,12 @@ public class Player extends Sprite {
     public boolean shouldBeDestroyed = false;
     private String uuid;
     private boolean isMining = false;
+    private boolean isReviving = false;
+    private boolean isFirstDeath = true;
+    private boolean isDead = false;
+    private PlayScreen playScreen;
+    private int counter = 0;
+    private final int timeForDeathAnimation = 5;
 
 
     /**
@@ -76,7 +88,9 @@ public class Player extends Sprite {
      */
     public Player(World world, PlayScreen screen) {
         super(screen.getPlayerAtlas().findRegion("player_spritesheet"));
+        this.playScreen = screen;
         this.world = world;
+
         currentState = State.STANDING;
         currentDirection = runDirection.RIGHT;
         stateTimer = 0;
@@ -121,6 +135,9 @@ public class Player extends Sprite {
         playerRunUp = createAnimation(0, 3, 5);
 
         playerMine = createAnimation(0, 3, 6);
+        playerDeath = createAnimation(0, 4, 7);
+        playerRevive = createAnimation(0, 4, 8);
+        playerShell = createAnimation(0, 4, 9);
     }
 
     public int getCurrentFrameIndex() {
@@ -165,11 +182,31 @@ public class Player extends Sprite {
     public TextureRegion getFrame(float dt) {
         currentState = getState();
 
+        // If the player is dead, and it's the first death, play the first three frames of playerShell
+        if (isDead && isFirstDeath) {
+            stateTimer += dt;
+            return playerShell.getKeyFrame(stateTimer, false);
+        } else if (isDead) {
+            counter++;
+            stateTimer += dt;
+
+            if (counter > timeForDeathAnimation) {
+                shouldBeDestroyed = true;
+            }
+
+            return playerDeath.getKeyFrame(stateTimer, false);
+        }
+
+        if (isReviving) {
+            stateTimer = stateTimer + dt;
+            return playerRevive.getKeyFrame(stateTimer,true);
+        }
 
         if (isMining) {
             stateTimer = stateTimer + dt;
             return playerMine.getKeyFrame(stateTimer, true);
         }
+
         // If we are standing, then there is no point in continuing and we can return playerStand
         if (currentState == State.STANDING) {
             return playerStand;
@@ -291,15 +328,24 @@ public class Player extends Sprite {
      * @param damage The amount of damage to apply.
      */
     public void takeDamage(int damage) {
+        if (isDead) return;
         health -= damage;
 
         if (health <= 0) {
-            shouldBeDestroyed = true;
+            isDead = true;
         }
     }
 
     public void recoverHealth(int recoverHealth) {
         health = Math.min(MAX_HEALTH, health + recoverHealth);
+    }
+
+    public void revive() {
+        health = 20;
+        isDead = false;
+        isFirstDeath = false;
+
+
     }
 
     /**
@@ -317,5 +363,17 @@ public class Player extends Sprite {
 
     public boolean getIsMining() {
         return isMining;
+    }
+
+    public void setIsReviving(boolean isReviving) {
+        this.isReviving = isReviving;
+    }
+
+    public boolean getIsReviving() {
+        return isReviving;
+    }
+
+    public boolean isInShell() {
+        return isFirstDeath && isDead;
     }
 }

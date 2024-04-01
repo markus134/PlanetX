@@ -4,6 +4,7 @@ import Bullets.Bullet;
 import Items.Items;
 import Opponents.Robot;
 import Screens.PlayScreen;
+import Sprites.OtherPlayer;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
@@ -13,9 +14,11 @@ import com.mygdx.game.MyGDXGame;
 import crystals.Crystal;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
+import serializableObjects.RevivePlayer;
 import serializableObjects.RobotData;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,7 +39,9 @@ public class PlayScreenInputHandler implements InputProcessor {
     private static final long SHOOT_COOLDOWN_NANOS = 250_000_000L; // 0.25 seconds in nanoseconds
     private long lastShotTime = 0;
     private long miningStartTime = 0;
+    private long revivingStartTime = 0;
     private Crystal closeCrystal;
+    private OtherPlayer closeDeadPlayer;
 
 
     /**
@@ -53,7 +58,7 @@ public class PlayScreenInputHandler implements InputProcessor {
      * Handles player input.
      */
     public void handleInput() {
-        if (keyPresses > 0 && !playScreen.player.getIsMining()) {
+        if (keyPresses > 0 && !playScreen.player.getIsMining() && !(playScreen.player.isInShell())) {
             for (Integer keypress : keysPressed) {
                 switch (keypress) {
                     case Input.Keys.W:
@@ -96,6 +101,12 @@ public class PlayScreenInputHandler implements InputProcessor {
                         if (isFirstClick) {
                             generateRobot();
                             isFirstClick = false;
+                        }
+                        break;
+                    case Input.Keys.R:
+                        if (!playScreen.player.getIsReviving() && isCloseToDeadPlayer(playScreen.player.getX(), playScreen.player.getY())) {
+                            revivingStartTime = TimeUtils.nanoTime();
+                            playScreen.player.setIsReviving(true);
                         }
                         break;
                     case Input.Keys.ESCAPE:
@@ -161,6 +172,19 @@ public class PlayScreenInputHandler implements InputProcessor {
             isFirstClick = true;
         }
 
+        // Stop reviving animation when R key is released
+        if (keycode == Input.Keys.R) {
+            playScreen.player.setIsReviving(false);
+
+            long revivingDuration = TimeUtils.timeSinceNanos(revivingStartTime);
+            if (revivingDuration >= 1_000_000_000L) {
+                MyGDXGame.client.sendTCP(new RevivePlayer(closeDeadPlayer.getUuid()));
+                revivingStartTime = 0;
+                closeDeadPlayer.setIsDead(false);
+                closeDeadPlayer.setIsFirstDeath(false);
+            }
+        }
+
         // Reset horizontal velocity when D or A key is released
         if (keycode == Input.Keys.D || keycode == Input.Keys.A) {
             playScreen.player.b2body.setLinearVelocity(0, playScreen.player.b2body.getLinearVelocity().y);
@@ -196,7 +220,7 @@ public class PlayScreenInputHandler implements InputProcessor {
      */
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (button == Input.Buttons.LEFT) {
+        if (button == Input.Buttons.LEFT && !playScreen.player.isInShell()) {
             Items selectedItem = playScreen.hud.getHighlightedItem();
 
             if (TimeUtils.timeSinceNanos(lastShotTime) >= SHOOT_COOLDOWN_NANOS && selectedItem.equals(Items.BLASTER)) {
@@ -204,7 +228,7 @@ public class PlayScreenInputHandler implements InputProcessor {
             } else if (selectedItem.equals(Items.DRILL)) {
                 if (isCloseToCrystal(playScreen.player.getX(), playScreen.player.getY())) {
                     miningStartTime = TimeUtils.nanoTime();
-                    System.out.println("close to crystal");
+//                    System.out.println("close to crystal");
                 }
                 playScreen.player.setIsMining(true);
             } else if (selectedItem.equals(Items.CRYSTAL)) {
@@ -212,7 +236,7 @@ public class PlayScreenInputHandler implements InputProcessor {
                 playScreen.hud.removeHighlightedItem();
             }
         } else if (button == Input.Buttons.RIGHT) {
-            System.out.println("right click");
+//            System.out.println("right click");
         }
 
         return true;
@@ -255,6 +279,12 @@ public class PlayScreenInputHandler implements InputProcessor {
         ));
     }
 
+    /**
+     * Check if player is close to any crystals.
+     * @param playerX
+     * @param playerY
+     * @return true if player is close, otherwise false
+     */
     private boolean isCloseToCrystal(float playerX, float playerY) {
         float miningRange = 30f;
 
@@ -263,13 +293,13 @@ public class PlayScreenInputHandler implements InputProcessor {
         PlayScreen.gameCam.project(playerPos);
 
 
-        for (Crystal crystal : playScreen.crystals) {
+        for (Crystal crystal : PlayScreen.crystals) {
             // Convert crystal position to screen coordinates
             Vector3 crystalPos = new Vector3(crystal.getX() / MyGDXGame.PPM, crystal.getY() / MyGDXGame.PPM, 0);
             PlayScreen.gameCam.project(crystalPos);
 
-            System.out.println("player x: " + playerPos.x + " player y: " + playerPos.y);
-            System.out.println("crystal x: " + crystalPos.x + " crystal y: " + crystalPos.y);
+//            System.out.println("player x: " + playerPos.x + " player y: " + playerPos.y);
+//            System.out.println("crystal x: " + crystalPos.x + " crystal y: " + crystalPos.y);
             // Calculate the distance between the player and the crystal
             float distance = Vector2.dst(playerPos.x, playerPos.y, crystalPos.x, crystalPos.y);
             if (distance <= miningRange) {
@@ -280,6 +310,46 @@ public class PlayScreenInputHandler implements InputProcessor {
         return false;
     }
 
+    /**
+     * Check if player is close to any dead player. Dead in this case means that they are in a shell.
+     * @param playerX
+     * @param playerY
+     * @return true if player is close, otherwise false
+     */
+    private boolean isCloseToDeadPlayer(float playerX, float playerY) {
+        float deadPlayerRange = 100f;
+
+        // Convert player's position to screen coordinates
+        Vector3 playerPos = new Vector3(playerX, playerY, 0);
+        PlayScreen.gameCam.project(playerPos);
+
+
+        for (Map.Entry<Integer, Set<OtherPlayer>> entry : MyGDXGame.playerDict.entrySet()) {
+            for (OtherPlayer otherPlayer : entry.getValue()) {
+                if (!otherPlayer.isInShell()) continue;
+
+                Vector3 otherPlayerPos = new Vector3(otherPlayer.b2body.getPosition().x, otherPlayer.b2body.getPosition().y, 0);
+                PlayScreen.gameCam.project(otherPlayerPos);
+
+//                System.out.println("player x: " + playerPos.x + " player y: " + playerPos.y);
+//                System.out.println("other player pos x: " + otherPlayerPos.x + " other player pos y: " + otherPlayerPos.y);
+
+                // Calculate the distance between the player and the crystal
+                float distance = Vector2.dst(playerPos.x, playerPos.y, otherPlayerPos.x, otherPlayerPos.y);
+
+//                System.out.println("distance: " + distance);
+
+                if (distance <= deadPlayerRange) {
+                    closeDeadPlayer = otherPlayer;
+                    playScreen.player.setIsReviving(true);
+                    return true;
+                }
+
+            }
+        }
+
+        return false;
+    }
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         if (button == Input.Buttons.LEFT) {

@@ -11,6 +11,7 @@ import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
 import serializableObjects.PlayerData;
+import serializableObjects.RevivePlayer;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
 
@@ -47,6 +48,7 @@ public class GameServer {
         kryo.register(AddSinglePlayerWorld.class);
         kryo.register(AddMultiPlayerWorld.class);
         kryo.register(CrystalToRemove.class, 22);
+        kryo.register(RevivePlayer.class);
 
         server.start();
         try {
@@ -67,6 +69,11 @@ public class GameServer {
                     if (object instanceof CrystalToRemove) {
                         handleRemovedCrystal(connection, (CrystalToRemove) object);
                     }
+
+                    if (object instanceof RevivePlayer) {
+                        server.sendToAllExceptTCP(connection.getID(), object);
+                    }
+
                     // new singlePlayer world is created
                     if (object instanceof AddSinglePlayerWorld) {
                         createSinglePlayerWorld(connection, (AddSinglePlayerWorld) object);
@@ -86,6 +93,8 @@ public class GameServer {
                     if (object instanceof RobotDataMap) {
                         updateRobotData((RobotDataMap) object);
                     }
+
+
                 }
             }
 

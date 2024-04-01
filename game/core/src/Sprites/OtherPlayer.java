@@ -32,6 +32,9 @@ public class OtherPlayer extends Sprite {
     public boolean shouldBeDestroyed = false;
     private String uuid;
     private int id;
+    private boolean isFirstDeath = true;
+    private boolean isDead = false;
+
 
     /**
      * Constructor
@@ -73,6 +76,9 @@ public class OtherPlayer extends Sprite {
         addFrames(0, 3, 4);
         addFrames(0, 3, 5);
         addFrames(0, 3, 6);
+        addFrames(0, 4, 7);
+        addFrames(0, 4, 8);
+        addFrames(0, 4, 9);
     }
 
     /**
@@ -140,10 +146,11 @@ public class OtherPlayer extends Sprite {
      * @param damage The amount of damage to apply.
      */
     public void takeDamage(int damage) {
+        if (isDead) return;
         health -= damage;
 
         if (health <= 0) {
-            B2WorldCreator.playersToDestroy.add(this);
+            isDead = true;
         }
     }
 
@@ -163,6 +170,18 @@ public class OtherPlayer extends Sprite {
      */
     public int getId() {
         return id;
+    }
+
+    public boolean isInShell() {
+        return isFirstDeath && isDead;
+    }
+
+    public void setIsDead(boolean isDead) {
+        this.isDead = isDead;
+    }
+
+    public void setIsFirstDeath(boolean isFirstDeath) {
+        this.isFirstDeath = isFirstDeath;
     }
 }
 
