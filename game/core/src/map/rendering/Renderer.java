@@ -1,12 +1,12 @@
 package map.rendering;
 
-import map.World;
+import map.WorldMap;
 import map.Chunk;
 
 /**
  * Define the methods and attributes that every renderer class
  * should contain.
  */
-public abstract class Renderer {
+public class Renderer {
 }
 

@@ -1,6 +1,6 @@
 package map.rendering;
 
-import map.World;
+import map.WorldMap;
 import map.Chunk;
 
 /**

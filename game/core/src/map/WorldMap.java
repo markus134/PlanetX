@@ -1,19 +1,29 @@
 package map;
 
+import map.rendering.ChunkRenderer;
+
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
 /**
  * Handle the world data. Load entities and chunks from a file.
  * Generate new chunks, entities, ores.
  */
-public class World {
+public class WorldMap {
     private static int worldId;
 
     // Parameters for the world generator. TODO: Create a config file
 
     // Id number of this world.
-    private final int ID;
+    private final int id;
 
     // Seed for this world.
-    private final long SEED;
+    private final long seed;
+
+    // SpriteBatch for this world.
+    private SpriteBatch spriteBatch;
+
+    // TEMPORARY VARIABLES
+    private Chunk chunk;
 
 
    /**
@@ -21,21 +31,25 @@ public class World {
     *
     * @param seed Long Integer representing the seed.
     */
-    public World(long seed) {
-        this.SEED = seed;
-        this.ID = worldId++;
+    public WorldMap(long seed, SpriteBatch spriteBatch) {
+        this.seed = seed;
+        this.spriteBatch = spriteBatch;
+
+        this.id = worldId++;
     }
 
    /**
     * Generate the world according to input parameters.
     */
-    private void generateWorld() {
+    public void generateWorld() {
+        chunk = new Chunk(this, 0, 0);
     }
 
    /**
     * Render the current and surrounding chunks near the player.
     */
-    private void renderWorld() {
+    public void renderWorld() {
+        new ChunkRenderer(this, this.chunk, spriteBatch);
     }
 
    /**
@@ -44,7 +58,7 @@ public class World {
     * @return Long Integer containing the seed.
     */
     public long getSeed() {
-        return this.SEED;
+        return this.seed;
     }
 
    /**
@@ -53,7 +67,7 @@ public class World {
     * @return Integer containing the id.
     */
     public long getId() {
-        return this.ID;
+        return this.id;
     }
 
    /**
@@ -63,8 +77,8 @@ public class World {
     */
     public String toString() {
         return "World{"
-                + "id=" + this.ID + ";"
-                + "seed=" + this.SEED + "}";
+                + "id=" + this.id + ";"
+                + "seed=" + this.seed + "}";
     }
 }
 

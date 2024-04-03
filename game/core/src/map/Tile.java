@@ -1,5 +1,7 @@
 package map;
 
+import com.badlogic.gdx.graphics.Texture;
+
 /**
  * Tiles are the smallest discrete elements of a map. Tiles
  * contain information about the entities on top of them, the
@@ -12,8 +14,8 @@ public class Tile {
     public static final int WIDTH = 1;
     public static final int HEIGHT = 1;
 
-    // Associated World object.
-    private final World world;
+    // Associated WorldMap object.
+    private final WorldMap world;
 
     // Associated Chunk object.
     private final Chunk chunk;
@@ -30,6 +32,16 @@ public class Tile {
     // TODO: Entities.
     // TODO: Ores.
 
+
+    // TEMPORARY VARIABLES
+    private static Texture tex1 = new Texture("map_test_images/empty.png");
+    private static Texture tex2 = new Texture("map_test_images/full.png");
+
+    private static Texture[] textures = { tex1, tex2 };
+    private Texture texture;
+
+    // END OF TEMPORARY VARIABLES
+
    /**
     * Create a tile object.
     *
@@ -40,7 +52,9 @@ public class Tile {
         this.x = x;
         this.y = y;
 
-        this.world = chunk.getWorld();
+        this.world = chunk.getWorldMap();
+
+        this.texture = textures[(x + y) % 2];
     }
 
    /**
@@ -68,6 +82,15 @@ public class Tile {
     */
     public int getY() {
         return this.y;
+    }
+
+   /**
+    * Get the Texture of this tile.
+    *
+    * @return Texture object of this tile.
+    */
+    public Texture getTexture() {
+        return this.texture;
     }
 
    /**
