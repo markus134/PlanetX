@@ -1,5 +1,7 @@
 package map;
 
+import tile.Tile;
+
 /**
  * Each chunk is defined as an area spanning x by y tiles.
  * Chunks can see what chunks are next to it. Chunks do not
@@ -12,7 +14,7 @@ public class Chunk {
     public static final int HEIGHT = 32;
 
     // The world the chunk is in.
-    private final WorldMap world;
+    private final CustomWorld world;
 
     // Position in the world.
     public final int X_POSITION;
@@ -30,28 +32,14 @@ public class Chunk {
    /**
     * Create a chunk.
     *
-    * @param world WorldMap of this chunk.
+    * @param world CustomWorld of this chunk.
     * @param x X-Coordinate of this chunk.
     * @param y Y-Coordinate of this chunk.
     */
-    public Chunk(WorldMap world, int x, int y) {
+    public Chunk(CustomWorld world, int x, int y) {
         this.world = world;
         this.X_POSITION = x;
         this.Y_POSITION = y;
-
-        initializeTiles();
-    }
-
-   /**
-    * Initialize all the tiles in this chunk.
-    * Creates blank tiles for the chunk.
-    */
-    private void initializeTiles() {
-        for (int y = 0; y < HEIGHT; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                tileArray[y][x] = new Tile(this, x, y);
-            }
-        }
     }
 
    /**
@@ -74,11 +62,32 @@ public class Chunk {
     }
 
    /**
-    * Get the WorldMap object of this chunk.
+    * Get a 2-D array of all tiles.
     *
-    * @return WorldMap object associated with this chunk.
+    * @return All tiles.
     */
-    public WorldMap getWorldMap() {
+    public Tile[][] getTiles() {
+        return tileArray;
+    }
+
+   /**
+    * Set the tile.
+    * This means that the generator has run over this tile.
+    *
+    * @param x X-Coordinate of the tile in this chunk.
+    * @param y Y-Coordinate of the tile in this chunk.
+    * @param type Type of the tile.
+    */
+    public void setTile(int x, int y, int type) {
+        tileArray[y][x] = type;
+    }
+
+   /**
+    * Get the CustomWorld object of this chunk.
+    *
+    * @return CustomWorld object associated with this chunk.
+    */
+    public CustomWorld getCustomWorld() {
         return this.world;
     }
 

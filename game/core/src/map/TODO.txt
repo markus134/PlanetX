@@ -1,9 +1,10 @@
 Generate the map using simplex noise.
 
 [x] - Figuring out what the hell am I even supposed to do. (7h 30m)
+[x] - Render colors to the screen. (2h)
+[ ] - Reimplement the GameScreen class with no collision.
 [ ] - Add a chunk system.
 [ ] - Render chunks on the screen.
-[ ] - Render the colors to the screen.
 [ ] - Find out how to generate simple colors using Simplex noise.
 [ ] - Find out how to render box2d objects.
 [ ] - Render box2d objects to the screen. Add collision.

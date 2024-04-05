@@ -1,5 +1,7 @@
 package map;
 
+import util.TileType;
+
 import com.badlogic.gdx.graphics.Texture;
 
 /**
@@ -14,10 +16,8 @@ public class Tile {
     public static final int WIDTH = 1;
     public static final int HEIGHT = 1;
 
-    // Associated WorldMap object.
-    private final WorldMap world;
-
-    // Associated Chunk object.
+    // CustomWorld and chunk.
+    private final CustomWorld world;
     private final Chunk chunk;
 
     // Coordinates within the chunk.
@@ -25,6 +25,8 @@ public class Tile {
     private int y;
 
     // General attributes of this tile.
+    private Texture texture;
+    private Integer type;
     private boolean isSolid = false;
 
 
@@ -36,10 +38,7 @@ public class Tile {
     // TEMPORARY VARIABLES
     private static Texture tex1 = new Texture("map_test_images/empty.png");
     private static Texture tex2 = new Texture("map_test_images/full.png");
-
     private static Texture[] textures = { tex1, tex2 };
-    private Texture texture;
-
     // END OF TEMPORARY VARIABLES
 
    /**
@@ -52,9 +51,19 @@ public class Tile {
         this.x = x;
         this.y = y;
 
-        this.world = chunk.getWorldMap();
-
+        this.world = chunk.getCustomWorld();
         this.texture = textures[(x + y) % 2];
+    }
+
+   /**
+    * Set the type of this tile.
+    *
+    * @param tileType Integer indicating what type this tile will be.
+    */
+    public void setType(int tileType) {
+        switch (tileType) {
+            case TileType.GROUND: this.tileType
+        }
     }
 
    /**

@@ -1,6 +1,7 @@
 package map;
 
 import map.rendering.ChunkRenderer;
+import map.generaiton.Generator;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -8,7 +9,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
  * Handle the world data. Load entities and chunks from a file.
  * Generate new chunks, entities, ores.
  */
-public class WorldMap {
+public class CustomWorld {
     private static int worldId;
 
     // Parameters for the world generator. TODO: Create a config file
@@ -27,11 +28,11 @@ public class WorldMap {
 
 
    /**
-    * Create a World.
+    * Create a CustomWorld.
     *
     * @param seed Long Integer representing the seed.
     */
-    public WorldMap(long seed, SpriteBatch spriteBatch) {
+    public CustomWorld(long seed, SpriteBatch spriteBatch) {
         this.seed = seed;
         this.spriteBatch = spriteBatch;
 
@@ -41,15 +42,16 @@ public class WorldMap {
    /**
     * Generate the world according to input parameters.
     */
-    public void generateWorld() {
+    public void generateCustomWorld() {
         chunk = new Chunk(this, 0, 0);
+        Generator.generate();
     }
 
    /**
     * Render the current and surrounding chunks near the player.
     */
-    public void renderWorld() {
-        new ChunkRenderer(this, this.chunk, spriteBatch);
+    public void renderCustomWorld() {
+        ChunkRenderer.draw(this, this.chunk, spriteBatch);
     }
 
    /**
@@ -73,10 +75,10 @@ public class WorldMap {
    /**
     * Get the string representation of this object.
     *
-    * @return String representation of a World.
+    * @return String representation of a CustomWorld.
     */
     public String toString() {
-        return "World{"
+        return "CustomWorld{"
                 + "id=" + this.id + ";"
                 + "seed=" + this.seed + "}";
     }
