@@ -52,6 +52,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
     private Drawable drawableNormal;
     private Drawable drawableClicked;
     private NewOrJoin newOrJoin;
+    private final HandleFullWorld handleFullWorld;
 
     /**
      * Constructor
@@ -65,6 +66,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
         this.game = game;
         this.music = music;
         this.newOrJoin = new NewOrJoin(this, game);
+        this.handleFullWorld = new HandleFullWorld(this, game);
     }
 
     /**
@@ -215,6 +217,14 @@ public class MultiPlayerScreen extends ScreenAdapter {
         table.row();
         table.add(backButton).bottom();
         table.add(connectButton);
+    }
+
+    /**
+     * Getter method
+     * @return handleFullWorld
+     */
+    public HandleFullWorld getHandleFullWorld() {
+        return handleFullWorld;
     }
 
     /**

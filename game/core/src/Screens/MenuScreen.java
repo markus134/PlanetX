@@ -144,6 +144,13 @@ public class MenuScreen extends ScreenAdapter {
     }
 
     /**
+     * Opens the HandleFullWorld screen when called.
+     */
+    public HandleFullWorld getHandleFullWorldScreen() {
+        return this.multiPlayerScreen.getHandleFullWorld();
+    }
+
+    /**
      * Called when the MenuScreen is no longer the current screen.
      */
     @Override

@@ -145,18 +145,15 @@ public class MyGDXGame extends Game {
                     if (object instanceof String) {
                         System.out.println("haha");
                         // this block terminates connection with the server
-                        client.close();
-                        try {
-                            client.dispose();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        // terminates the window
-                        Gdx.app.exit();
-
-                        // terminates the process
-                        System.exit(0);
+                        Gdx.app.postRunnable(() -> {
+                            client.close();
+                            try {
+                                client.dispose();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            setScreen(menu.getHandleFullWorldScreen());
+                        });
                     } else {
                         receivedPackets.add(object); // Store received packet in a list, this is because render is only called 60 times a second
                     }
