@@ -1,8 +1,8 @@
 package Scenes;
 
 import Screens.PlayScreen;
+import Sprites.Player;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
@@ -13,10 +13,12 @@ import com.mygdx.game.MyGDXGame;
 
 import java.io.IOException;
 
-public class ExitToMainMenu implements Disposable {
+import static Screens.PlayScreen.allDestroyedPlayers;
+
+public class DeathScene implements Disposable {
 
     public final Stage stage;
-    private Dialog pauseDialog;
+    private Dialog deathScene;
     private boolean toShow = false;
 
     /**
@@ -25,44 +27,39 @@ public class ExitToMainMenu implements Disposable {
      * @param sb
      * @param playScreen
      */
-    public ExitToMainMenu(SpriteBatch sb, PlayScreen playScreen) {
+    public DeathScene(SpriteBatch sb, PlayScreen playScreen, Player player) {
         this.stage = new Stage(new ExtendViewport((float) MyGDXGame.V_WIDTH / 2,
                 (float) MyGDXGame.V_HEIGHT / 2), sb);
 
         Skin skin = new Skin(Gdx.files.internal("uiskin/uiskin.json"));
-        pauseDialog = new Dialog("Pause", skin) {
+        deathScene = new Dialog("", skin) {
             protected void result(Object object) {
                 if (object.equals(true)) {
-                    System.out.println("Exiting to main menu...");
                     try {
+                        allDestroyedPlayers.add(player.getUuid());
                         playScreen.goToMenuWhenPlayerIsDead();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                } else {
-                    System.out.println("Resuming game...");
-                    playScreen.changeInputToHandler();
                 }
-                toShow = !toShow;
+                toShow = false;
             }
         };
-        pauseDialog.text("Do you want to exit to the main menu?");
-        pauseDialog.button("Yes", true);
-        pauseDialog.button("No", false);
-        pauseDialog.key(Input.Keys.ESCAPE, false);
-        pauseDialog.center();
-        pauseDialog.setMovable(false);
+        deathScene.text("Game Over!");
+        deathScene.button("Go to menu", true);
+        deathScene.center();
+        deathScene.setMovable(false);
     }
 
     /**
      * Show the popUp menu
      */
     public void showStage() {
-        if (!pauseDialog.hasParent()) {
-            stage.addActor(pauseDialog);
+        if (!deathScene.hasParent()) {
+            stage.addActor(deathScene);
         }
-        pauseDialog.show(stage);
-        toShow = !toShow;
+        deathScene.show(stage);
+        toShow = true;
         Gdx.input.setInputProcessor(stage);
     }
 
