@@ -3,6 +3,7 @@ package Screens;
 import Bullets.Bullet;
 import Bullets.BulletManager;
 import InputHandlers.PlayScreenInputHandler;
+import Scenes.DeathScene;
 import Scenes.ExitToMainMenu;
 import crystals.Crystal;
 import Opponents.Robot;
@@ -73,6 +74,8 @@ public class PlayScreen implements Screen {
     public static List<Crystal> crystals = new ArrayList<>();
     public final ExitToMainMenu pauseDialog;
     private final MenuScreen menuScreen;
+    public final DeathScene deathScene;
+    private int deathSceneCounter = 0;
 
     /**
      * Constructor for the PlayScreen.
@@ -99,7 +102,8 @@ public class PlayScreen implements Screen {
 
         debug = new Debug(game.batch, player);
         hud = new HUD(game.batch, player);
-        pauseDialog = new ExitToMainMenu(game.batch, menu, this);
+        pauseDialog = new ExitToMainMenu(game.batch, this);
+        deathScene = new DeathScene(game.batch, this, this.player);
 
         // Initialize BulletManager
         bulletManager = new BulletManager(world);
@@ -185,8 +189,10 @@ public class PlayScreen implements Screen {
         }
 
         if (player.shouldBeDestroyed) {
-            allDestroyedPlayers.add(player.getUuid());
-            goToMenuWhenPlayerIsDead();
+            if (deathSceneCounter == 0) {
+                deathScene.showStage();
+                deathSceneCounter++;
+            }
         }
 
         // robotDataMap is constantly being updated by all client instances
@@ -298,6 +304,10 @@ public class PlayScreen implements Screen {
 
         hud.updateLabelValues();
         if (pauseDialog.isToShow()) pauseDialog.renderStage();
+        if (deathScene.isToShow()) {
+            deathScene.renderStage();
+            System.out.println("death scene has to be rendered");
+        }
     }
 
     /**
@@ -317,6 +327,7 @@ public class PlayScreen implements Screen {
         //debug.stage.getViewport().update(width, height, true);
         hud.stage.getViewport().update(width, height, true);
         pauseDialog.stage.getViewport().update(width, height, true);
+        deathScene.stage.getViewport().update(width, height, true);
     }
 
     @Override
@@ -364,5 +375,7 @@ public class PlayScreen implements Screen {
         b2dr.dispose();
         playerAtlas.dispose();
         robotAtlas.dispose();
+        deathScene.dispose();
+        pauseDialog.dispose();
     }
 }

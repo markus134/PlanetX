@@ -12,13 +12,10 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
-import serializableObjects.PlayerData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
-
-import static Screens.PlayScreen.gameCam;
 
 public class Player extends Sprite {
     private static final int FRAME_WIDTH = 32;

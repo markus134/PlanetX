@@ -305,5 +305,3 @@ public class MyGDXGame extends Game {
         }
     }
 }
-
-

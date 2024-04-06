@@ -1,7 +1,6 @@
 package Sprites;
 
 import Screens.PlayScreen;
-import Tools.B2WorldCreator;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -184,4 +183,3 @@ public class OtherPlayer extends Sprite {
         this.isFirstDeath = isFirstDeath;
     }
 }
-
