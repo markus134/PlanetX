@@ -8,9 +8,11 @@ import com.esotericsoftware.kryonet.Server;
 import main.java.ee.taltech.game.session.Session;
 import serializableObjects.AddMultiPlayerWorld;
 import serializableObjects.AddSinglePlayerWorld;
+import serializableObjects.AskIfSessionIsFull;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
 import serializableObjects.PlayerData;
+import serializableObjects.PlayerLeavesTheWorld;
 import serializableObjects.RevivePlayer;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
@@ -49,6 +51,8 @@ public class GameServer {
         kryo.register(AddMultiPlayerWorld.class);
         kryo.register(CrystalToRemove.class, 22);
         kryo.register(RevivePlayer.class);
+        kryo.register(AskIfSessionIsFull.class);
+        kryo.register(PlayerLeavesTheWorld.class);
 
         server.start();
         try {
@@ -66,6 +70,15 @@ public class GameServer {
              */
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
+
+                    if (object instanceof PlayerLeavesTheWorld message) {
+                        handlePlayerLeavesTheWorld(connection, message);
+                    }
+
+                    if (object instanceof AskIfSessionIsFull request) {
+                        handleAskIfSessionIsFull(connection, request);
+                    }
+
                     if (object instanceof CrystalToRemove) {
                         handleRemovedCrystal(connection, (CrystalToRemove) object);
                     }
@@ -119,6 +132,27 @@ public class GameServer {
                 }
             }
         });
+    }
+
+    public void handlePlayerLeavesTheWorld(Connection connection, PlayerLeavesTheWorld message) {
+        String worldID = message.getWorldID();
+        Session session = worlds.get(worldID);
+
+        session.removePlayer(connection);
+        playerDatas.get(worldID).remove(connection.getID());
+    }
+
+    public void handleAskIfSessionIsFull(Connection connection, AskIfSessionIsFull request) {
+        String worldID = request.getWorldID();
+        System.out.println("Sending a reply");
+
+        if (!worlds.containsKey(worldID)) {
+            request.setFull(false);
+        } else {
+            Session session = worlds.get(worldID);
+            request.setFull(session.isFull());
+        }
+        connection.sendTCP(request);
     }
 
     /**

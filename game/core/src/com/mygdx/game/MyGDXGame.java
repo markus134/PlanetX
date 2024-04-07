@@ -18,9 +18,11 @@ import com.esotericsoftware.kryonet.Listener;
 import crystals.Crystal;
 import serializableObjects.AddMultiPlayerWorld;
 import serializableObjects.AddSinglePlayerWorld;
+import serializableObjects.AskIfSessionIsFull;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
 import serializableObjects.PlayerData;
+import serializableObjects.PlayerLeavesTheWorld;
 import serializableObjects.RevivePlayer;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
@@ -61,6 +63,7 @@ public class MyGDXGame extends Game {
     public static PlayScreen playScreen;
     public static Map<Integer, Set<OtherPlayer>> playerDict = new HashMap<>();
     public static HashMap<Integer, PlayerData> playerDataMap = new HashMap<>();
+    public AskIfSessionIsFull serverReply;
 
     /**
      * Initializes the game, creates music object and menu.
@@ -82,10 +85,9 @@ public class MyGDXGame extends Game {
     }
 
     /**
-     * Creates the play screen and sets up the client connection.
+     * Creates the client and sets up the connection with the server
      */
-    public void createScreenAndClient(String worldUUID, int numberOfPlayers) {
-        playScreen = new PlayScreen(this, worldUUID, menu);
+    public void createClient() {
         client = new Client(1000000, 1000000); // If we don't set these sizes big enough, the game could crash
         registerClasses(client.getKryo());
 
@@ -95,11 +97,17 @@ public class MyGDXGame extends Game {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        setupClientListener();
+    }
+
+    /**
+     * Creates the playScreen.
+     */
+    public void createScreen(String worldUUID, int numberOfPlayers) {
+        playScreen = new PlayScreen(this, worldUUID, menu);
 
         if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID));
         if (numberOfPlayers == 0) client.sendTCP(new AddMultiPlayerWorld(worldUUID));
-
-        setupClientListener();
     }
 
     /**
@@ -119,6 +127,8 @@ public class MyGDXGame extends Game {
         kryo.register(AddMultiPlayerWorld.class);
         kryo.register(CrystalToRemove.class, 22);
         kryo.register(RevivePlayer.class);
+        kryo.register(AskIfSessionIsFull.class);
+        kryo.register(PlayerLeavesTheWorld.class);
     }
 
     /**
@@ -132,6 +142,7 @@ public class MyGDXGame extends Game {
 
         menu = new MenuScreen(this, musicInTheMenu);
         setScreen(menu);
+        this.createClient();
     }
 
     /**
@@ -143,17 +154,12 @@ public class MyGDXGame extends Game {
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     if (object instanceof String) {
-                        System.out.println("haha");
                         // this block terminates connection with the server
-                        Gdx.app.postRunnable(() -> {
-                            client.close();
-                            try {
-                                client.dispose();
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                            setScreen(menu.getHandleFullWorldScreen());
-                        });
+//                        Gdx.app.postRunnable(() -> {
+//                            setScreen(menu.getHandleFullWorldScreen());
+//                        });
+                    } else if (object instanceof AskIfSessionIsFull) {
+                        serverReply = (AskIfSessionIsFull) object;
                     } else {
                         receivedPackets.add(object); // Store received packet in a list, this is because render is only called 60 times a second
                     }

@@ -183,7 +183,7 @@ public class SinglePlayerScreen extends ScreenAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (chosenWorld != null) {
-                    game.createScreenAndClient(singlePlayerWorlds.get(chosenWorld), 1);
+                    game.createScreen(singlePlayerWorlds.get(chosenWorld), 1);
                     game.setScreen(MyGDXGame.playScreen);
                     music.dispose();
                 }
