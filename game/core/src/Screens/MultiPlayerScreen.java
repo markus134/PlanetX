@@ -26,11 +26,14 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
+import serializableObjects.AskIfSessionIsFull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.mygdx.game.MyGDXGame.client;
 
 public class MultiPlayerScreen extends ScreenAdapter {
     private final MenuScreen menuScreen;
@@ -52,6 +55,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
     private Drawable drawableNormal;
     private Drawable drawableClicked;
     private NewOrJoin newOrJoin;
+    private final HandleFullWorld handleFullWorld;
 
     /**
      * Constructor
@@ -65,6 +69,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
         this.game = game;
         this.music = music;
         this.newOrJoin = new NewOrJoin(this, game);
+        this.handleFullWorld = new HandleFullWorld(this, game);
     }
 
     /**
@@ -198,11 +203,19 @@ public class MultiPlayerScreen extends ScreenAdapter {
         connectButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (chosenWorld != null) {
-                    game.createScreenAndClient(multiPlayerWorlds.get(chosenWorld), 0);
+                client.sendTCP(new AskIfSessionIsFull(multiPlayerWorlds.get(chosenWorld)));
+                while (game.serverReply == null) {
+                    // waiting for the reply
+                    System.out.println("waiting");
+                }
+                if (chosenWorld != null && !game.serverReply.isFull()) {
+                    game.createScreen(multiPlayerWorlds.get(chosenWorld), 0);
                     game.setScreen(MyGDXGame.playScreen);
                     music.dispose();
+                } else {
+                    game.setScreen(handleFullWorld);
                 }
+                game.serverReply = null;
             }
         });
 
@@ -215,6 +228,14 @@ public class MultiPlayerScreen extends ScreenAdapter {
         table.row();
         table.add(backButton).bottom();
         table.add(connectButton);
+    }
+
+    /**
+     * Getter method
+     * @return handleFullWorld
+     */
+    public HandleFullWorld getHandleFullWorld() {
+        return handleFullWorld;
     }
 
     /**

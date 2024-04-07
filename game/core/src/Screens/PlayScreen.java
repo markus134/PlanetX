@@ -28,6 +28,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.PlayerData;
+import serializableObjects.PlayerLeavesTheWorld;
 import serializableObjects.RobotData;
 import serializableObjects.RobotDataMap;
 
@@ -38,6 +39,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.mygdx.game.MyGDXGame.client;
 
 
 public class PlayScreen implements Screen {
@@ -169,7 +172,7 @@ public class PlayScreen implements Screen {
         b2WorldCreator.destroyDeadRobots();
         b2WorldCreator.destroyDeadPlayers();
 
-        MyGDXGame.client.sendTCP(robotDataMap);
+        client.sendTCP(robotDataMap);
 
         for (String id : destroyedRobots) {
             if (robotDataMap.getMap().containsKey(id)) {
@@ -227,7 +230,7 @@ public class PlayScreen implements Screen {
                 || player.getCurrentFrameIndex() != prevFrameIndex
                 || player.getIsMining()) {
 
-            MyGDXGame.client.sendTCP(new PlayerData(
+            client.sendTCP(new PlayerData(
                     gameCam.position.x,
                     gameCam.position.y,
                     player.getCurrentFrameIndex(),
@@ -350,14 +353,15 @@ public class PlayScreen implements Screen {
     public void goToMenuWhenPlayerIsDead() throws IOException {
         world.destroyBody(player.b2body);
         MyGDXGame.playerDict.clear();
-        game.dispose();
+//        game.dispose();
         music.dispose();
+        client.sendTCP(new PlayerLeavesTheWorld(worldUUID));
 
         // currently we have not yet decided what to do when the player dies
         // bcs the dead players go back to the main menu, it is logical to
         // remove their connection with the server
-        MyGDXGame.client.close();
-        MyGDXGame.client.dispose();
+//        MyGDXGame.client.close();
+//        MyGDXGame.client.dispose();
 
         // starts the music
         menuScreen.music.play();
