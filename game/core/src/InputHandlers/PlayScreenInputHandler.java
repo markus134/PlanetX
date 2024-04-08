@@ -35,7 +35,6 @@ public class PlayScreenInputHandler implements InputProcessor {
     private static final float PLAYER_RADIUS = 16 / MyGDXGame.PPM;
     private static final float BULLET_OFFSET = 8 / MyGDXGame.PPM;
     private boolean isFirstClick = true;
-    private static boolean isFirstExitClick = true;
     private static final long SHOOT_COOLDOWN_NANOS = 250_000_000L; // 0.25 seconds in nanoseconds
     private long lastShotTime = 0;
     private long miningStartTime = 0;
@@ -58,7 +57,7 @@ public class PlayScreenInputHandler implements InputProcessor {
      * Handles player input.
      */
     public void handleInput() {
-        if (keyPresses > 0 && !playScreen.player.getIsMining() && !(playScreen.player.isInShell())) {
+        if (keyPresses > 0 && !playScreen.player.getIsMining() && !playScreen.player.isInShell() && !playScreen.player.getIsReviving()) {
             for (Integer keypress : keysPressed) {
                 switch (keypress) {
                     case Input.Keys.W:
@@ -104,17 +103,13 @@ public class PlayScreenInputHandler implements InputProcessor {
                         }
                         break;
                     case Input.Keys.R:
+                        System.out.println("Clicked r, reviving: " + playScreen.player.getIsReviving());
                         if (!playScreen.player.getIsReviving() && isCloseToDeadPlayer(playScreen.player.getX(), playScreen.player.getY())) {
                             revivingStartTime = TimeUtils.nanoTime();
                             playScreen.player.setIsReviving(true);
                         }
                         break;
-                    case Input.Keys.ESCAPE:
-                        if (isFirstExitClick) {
-                            playScreen.pauseDialog.showStage();
-                            keysPressed.remove(Input.Keys.ESCAPE);
-                        }
-                        break;
+
                 }
             }
         }
@@ -155,6 +150,12 @@ public class PlayScreenInputHandler implements InputProcessor {
         keysPressed.add(keycode);
         keyPresses++;
 
+        if (keycode == Input.Keys.ESCAPE) {
+            playScreen.pauseDialog.showStage();
+            keysPressed.remove(Input.Keys.ESCAPE);
+
+        }
+
         return true; // Return true to indicate that the input event was handled
     }
 
@@ -173,16 +174,19 @@ public class PlayScreenInputHandler implements InputProcessor {
         }
 
         // Stop reviving animation when R key is released
-        if (keycode == Input.Keys.R) {
+        if (keycode == Input.Keys.R && isCloseToDeadPlayer(playScreen.player.getX(), playScreen.player.getY())) {
             playScreen.player.setIsReviving(false);
 
             long revivingDuration = TimeUtils.timeSinceNanos(revivingStartTime);
             if (revivingDuration >= 1_000_000_000L) {
                 MyGDXGame.client.sendTCP(new RevivePlayer(closeDeadPlayer.getUuid()));
-                revivingStartTime = 0;
                 closeDeadPlayer.setIsDead(false);
                 closeDeadPlayer.setIsFirstDeath(false);
             }
+
+            revivingStartTime = 0;
+        } else if (keycode == Input.Keys.R) {
+            playScreen.player.setIsReviving(false);
         }
 
         // Reset horizontal velocity when D or A key is released
@@ -220,7 +224,7 @@ public class PlayScreenInputHandler implements InputProcessor {
      */
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (button == Input.Buttons.LEFT && !playScreen.player.isInShell()) {
+        if (button == Input.Buttons.LEFT && !playScreen.player.isInShell() && !playScreen.player.getIsReviving()) {
             Items selectedItem = playScreen.hud.getHighlightedItem();
 
             if (TimeUtils.timeSinceNanos(lastShotTime) >= SHOOT_COOLDOWN_NANOS && selectedItem.equals(Items.BLASTER)) {
@@ -286,22 +290,17 @@ public class PlayScreenInputHandler implements InputProcessor {
      * @return true if player is close, otherwise false
      */
     private boolean isCloseToCrystal(float playerX, float playerY) {
-        float miningRange = 30f;
+        float miningRange = 0.7f;
 
-        // Convert player's position to screen coordinates
-        Vector3 playerPos = new Vector3(playerX, playerY, 0);
-        PlayScreen.gameCam.project(playerPos);
-
+        // Convert player's position to Box2D coordinates
+        Vector2 playerPos = new Vector2(playerX, playerY);
 
         for (Crystal crystal : PlayScreen.crystals) {
-            // Convert crystal position to screen coordinates
-            Vector3 crystalPos = new Vector3(crystal.getX() / MyGDXGame.PPM, crystal.getY() / MyGDXGame.PPM, 0);
-            PlayScreen.gameCam.project(crystalPos);
+            // Get crystal position directly in Box2D coordinates
+            Vector2 crystalPos = new Vector2(crystal.getX() / MyGDXGame.PPM, crystal.getY() / MyGDXGame.PPM);
 
-//            System.out.println("player x: " + playerPos.x + " player y: " + playerPos.y);
-//            System.out.println("crystal x: " + crystalPos.x + " crystal y: " + crystalPos.y);
             // Calculate the distance between the player and the crystal
-            float distance = Vector2.dst(playerPos.x, playerPos.y, crystalPos.x, crystalPos.y);
+            float distance = playerPos.dst(crystalPos);
             if (distance <= miningRange) {
                 closeCrystal = crystal;
                 return true;
@@ -317,39 +316,32 @@ public class PlayScreenInputHandler implements InputProcessor {
      * @return true if player is close, otherwise false
      */
     private boolean isCloseToDeadPlayer(float playerX, float playerY) {
-        float deadPlayerRange = 100f;
+        float deadPlayerRange = 0.7f;
 
-        // Convert player's position to screen coordinates
-        Vector3 playerPos = new Vector3(playerX, playerY, 0);
-        PlayScreen.gameCam.project(playerPos);
-
+        // Convert player's position to Box2D coordinates
+        Vector2 playerPos = new Vector2(playerX, playerY);
 
         for (Map.Entry<Integer, Set<OtherPlayer>> entry : MyGDXGame.playerDict.entrySet()) {
             for (OtherPlayer otherPlayer : entry.getValue()) {
                 if (!otherPlayer.isInShell()) continue;
 
-                Vector3 otherPlayerPos = new Vector3(otherPlayer.b2body.getPosition().x, otherPlayer.b2body.getPosition().y, 0);
-                PlayScreen.gameCam.project(otherPlayerPos);
+                // Get other player position directly in Box2D coordinates
+                Vector2 otherPlayerPos = new Vector2(otherPlayer.b2body.getPosition().x - otherPlayer.getWidth() / 2,
+                        otherPlayer.b2body.getPosition().y - otherPlayer.getHeight() / 2);
 
-//                System.out.println("player x: " + playerPos.x + " player y: " + playerPos.y);
-//                System.out.println("other player pos x: " + otherPlayerPos.x + " other player pos y: " + otherPlayerPos.y);
-
-                // Calculate the distance between the player and the crystal
-                float distance = Vector2.dst(playerPos.x, playerPos.y, otherPlayerPos.x, otherPlayerPos.y);
-
-//                System.out.println("distance: " + distance);
+                // Calculate the distance between the player and the other player
+                float distance = playerPos.dst(otherPlayerPos);
 
                 if (distance <= deadPlayerRange) {
                     closeDeadPlayer = otherPlayer;
                     playScreen.player.setIsReviving(true);
                     return true;
                 }
-
             }
         }
-
         return false;
     }
+
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         if (button == Input.Buttons.LEFT) {

@@ -59,7 +59,7 @@ public class Join extends ScreenAdapter {
         Label.LabelStyle labelForTable = new LabelForTable(80).getLabelStyle();
         Label enterWorldNameLabel = new Label("Enter world name (temporary)", labelForTable);
 
-        TextField.TextFieldStyle textFieldStyle = new TextFieldStyleForInput(50).getStyle();
+        TextField.TextFieldStyle textFieldStyle = new TextFieldStyleForInput(60).getStyle();
         ResizableTextField worldNameTextField = new ResizableTextField("", textFieldStyle, 500, 100);
 
         Label enterWorldCodeLabel = new Label("Enter the code", labelForTable);

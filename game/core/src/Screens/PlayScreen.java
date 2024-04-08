@@ -58,6 +58,7 @@ public class PlayScreen implements Screen {
     private float prevPosX = 0;
     private float prevPosY = 0;
     private int prevFrameIndex = 0;
+    private Boolean prevRunningRight = null;
 
     public float startPosX;
     public float startPosY;
@@ -228,7 +229,8 @@ public class PlayScreen implements Screen {
                 || prevPosY != gameCam.position.y
                 || player.prevState != player.currentState
                 || player.getCurrentFrameIndex() != prevFrameIndex
-                || player.getIsMining()) {
+                || player.getIsMining()
+                || prevRunningRight != player.runningRight) {
 
             client.sendTCP(new PlayerData(
                     gameCam.position.x,
@@ -244,6 +246,7 @@ public class PlayScreen implements Screen {
             prevPosY = gameCam.position.y;
             player.prevState = player.currentState;
             prevFrameIndex = player.getCurrentFrameIndex();
+            prevRunningRight = player.runningRight;
         }
 
         destroyedRobots.clear();
