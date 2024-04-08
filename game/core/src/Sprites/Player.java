@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -33,7 +34,11 @@ public class Player extends Sprite {
     // Enums for player state and direction
     public enum State {
         RUNNING,
-        STANDING
+        STANDING,
+        REVIVING,
+        MINING,
+        SHELL,
+        DEAD
     }
 
     public enum runDirection {
@@ -67,12 +72,11 @@ public class Player extends Sprite {
     public TextureRegion region;
     private int health;
     public boolean shouldBeDestroyed = false;
-    private String uuid;
+    private final String uuid;
     private boolean isMining = false;
     private boolean isReviving = false;
     private boolean isFirstDeath = true;
     private boolean isDead = false;
-    private PlayScreen playScreen;
     private int counter = 0;
     private final int timeForDeathAnimation = 5;
 
@@ -85,7 +89,6 @@ public class Player extends Sprite {
      */
     public Player(World world, PlayScreen screen) {
         super(screen.getPlayerAtlas().findRegion("player_spritesheet"));
-        this.playScreen = screen;
         this.world = world;
 
         currentState = State.STANDING;
@@ -180,32 +183,28 @@ public class Player extends Sprite {
         currentState = getState();
 
         // If the player is dead, and it's the first death, play the first three frames of playerShell
-        if (isDead && isFirstDeath) {
-            stateTimer += dt;
+        if (currentState == State.SHELL) {
+            flipRegionIfNeeded(dt, region);
+
             return playerShell.getKeyFrame(stateTimer, false);
-        } else if (isDead) {
+        } else if (currentState == State.DEAD) {
             counter++;
-            stateTimer += dt;
 
             if (counter > timeForDeathAnimation) {
                 shouldBeDestroyed = true;
             }
 
+            flipRegionIfNeeded(dt, region);
             return playerDeath.getKeyFrame(stateTimer, false);
-        }
+        } else if (currentState == State.REVIVING) {
+            flipRegionIfNeeded(dt, region);
 
-        if (isReviving) {
-            stateTimer = stateTimer + dt;
             return playerRevive.getKeyFrame(stateTimer,true);
-        }
-
-        if (isMining) {
-            stateTimer = stateTimer + dt;
+        } else if (currentState == State.MINING) {
+            flipRegionIfNeeded(dt, region);
             return playerMine.getKeyFrame(stateTimer, true);
-        }
-
-        // If we are standing, then there is no point in continuing and we can return playerStand
-        if (currentState == State.STANDING) {
+        } else if (currentState == State.STANDING) {
+            flipRegionIfNeeded(dt, region);
             return playerStand;
         }
 
@@ -235,23 +234,41 @@ public class Player extends Sprite {
                 region = playerStand;
                 break;
         }
+
+        flipRegionIfNeeded(dt, region);
+
+        return region;
+    }
+
+    /**
+     * Flips the given TextureRegion based on the player's state and direction.
+     *
+     * @param dt     The time elapsed since the last frame.
+     * @param region The TextureRegion to flip.
+     */
+    private void flipRegionIfNeeded(float dt, TextureRegion region) {
         // Start the animation from the start if currentState or currentDirection have changed
         stateTimer = (currentState == prevState && currentDirection == prevRunDirection) ? stateTimer + dt : 0;
 
-        // We will check if linear velocity indicates right or left movement and also check whether the region is already flipped
-        if (b2body.getLinearVelocity().x < 0 && !region.isFlipX()) {
-            region.flip(true, false);
-            runningRight = false;
-        } else if (b2body.getLinearVelocity().x > 0 && region.isFlipX()) {
-            region.flip(true, false);
-            runningRight = true;
+        if (currentState != State.RUNNING && currentState != State.STANDING) {
+            if ((!runningRight && !region.isFlipX()) || (runningRight && region.isFlipX())) {
+                region.flip(true, false);
+            }
+        } else {
+            // We will check if linear velocity indicates right or left movement and also check whether the region is already flipped
+            if (b2body.getLinearVelocity().x < -0.1 && !region.isFlipX()) {
+                region.flip(true, false);
+                runningRight = false;
+            } else if (b2body.getLinearVelocity().x > 0.1 && region.isFlipX()) {
+                region.flip(true, false);
+                runningRight = true;
+            }
         }
 
         prevState = currentState;
         prevRunDirection = currentDirection;
-
-        return region;
     }
+
 
     /**
      * Retrieves the current state of the player (standing or running) based on linear velocity.
@@ -263,7 +280,15 @@ public class Player extends Sprite {
         float velocityY = b2body.getLinearVelocity().y;
         float velocityThreshold = VELOCITY_THRESHOLD; // Added a velocity threshold as we want the standing texture to be rendered right away not when velocity reaches zero
 
-        if (Math.abs(velocityX) < velocityThreshold && Math.abs(velocityY) < velocityThreshold) {
+        if (isDead && isFirstDeath) {
+            return State.SHELL;
+        } else if (isDead) {
+            return State.DEAD;
+        } else if (isReviving) {
+            return State.REVIVING;
+        } else if (isMining) {
+            return State.MINING;
+        } else if (Math.abs(velocityX) < velocityThreshold && Math.abs(velocityY) < velocityThreshold) {
             return State.STANDING;
         }
 

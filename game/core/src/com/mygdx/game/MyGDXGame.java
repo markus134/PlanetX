@@ -41,7 +41,8 @@ import java.util.Set;
  */
 public class MyGDXGame extends Game {
     // Constants
-    private static final String SERVER_ADDRESS = "localHost";
+    // private static final String SERVER_ADDRESS = "193.40.255.19";
+    private static final String SERVER_ADDRESS = "localhost";
     private static final int SERVER_TCP_PORT = 8080;
     private static final int SERVER_UDP_PORT = 8081;
 
@@ -59,7 +60,7 @@ public class MyGDXGame extends Game {
     public static final float PPM = 100;
     public static Client client;
     private MenuScreen menu;
-    private List<Object> receivedPackets = new ArrayList<>();
+    private final List<Object> receivedPackets = new ArrayList<>();
     public static PlayScreen playScreen;
     public static Map<Integer, Set<OtherPlayer>> playerDict = new HashMap<>();
     public static HashMap<Integer, PlayerData> playerDataMap = new HashMap<>();

@@ -64,11 +64,11 @@ public class CreateMultiPlayerWorld extends ScreenAdapter {
         Label.LabelStyle labelForTable = new LabelForTable(80).getLabelStyle();
         Label enterWorldNameLabel = new Label("Enter world name", labelForTable);
 
-        TextField.TextFieldStyle textFieldStyle = new TextFieldStyleForInput(50).getStyle();
+        TextField.TextFieldStyle textFieldStyle = new TextFieldStyleForInput(60).getStyle();
         ResizableTextField worldNameTextField = new ResizableTextField("", textFieldStyle, 500, 100);
 
         Label enterNumberOfPlayersLabel = new Label("Enter number of players", labelForTable);
-        ResizableTextField numberOfPlayersTextField = new ResizableTextField("", textFieldStyle, 50, 100);
+        ResizableTextField numberOfPlayersTextField = new ResizableTextField("", textFieldStyle, 200, 100);
 
         TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
         TextButton backButton = new TextButton("Back", textButtonStyle);
