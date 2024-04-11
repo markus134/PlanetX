@@ -6,70 +6,33 @@ import Tools.B2WorldCreator;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
-import serializableObjects.PlayerData;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+public class Robot extends Opponent {
 
-public class Robot extends Sprite {
+    private static final float ROBOT_RADIUS = 16 / MyGDXGame.PPM;
+    private static final float ROBOT_HEIGHT = 64 / MyGDXGame.PPM;
+    private static final float ROBOT_WIDTH = 64 / MyGDXGame.PPM;
     private static final int FRAME_WIDTH = 48;
     private static final int FRAME_HEIGHT = 48;
-    private static final float ANIMATION_SPEED = 0.1f;
-    private static final float robot_RADIUS = 16 / MyGDXGame.PPM;
-    private static final float LINEAR_DAMPING = 4f;
-    private static final float robot_HEIGHT = 64 / MyGDXGame.PPM;
-    private static final float robot_WIDTH = 64 / MyGDXGame.PPM;
-    private static final float VELOCITY_THRESHOLD = 0.5f;
+
     private static final int MAX_HEALTH = 100;
 
-    // Enums for robot state and direction
-    public enum State {
-        STANDING
-    }
-
-    public enum runDirection {
-        UPPER,
-        RIGHT,
-        LOWER,
-        UP,
-        DOWN,
-        DEAD
-    }
-
-    public State currentState;
-    public State prevState;
-    public runDirection currentDirection;
-    public runDirection prevRunDirection;
     public World world;
-    public Body b2body;
     private Animation<TextureRegion> robotRunUpper;
     private Animation<TextureRegion> robotRun;
     private Animation<TextureRegion> robotRunLower;
     private Animation<TextureRegion> robotRunUp;
     private Animation<TextureRegion> robotRunDown;
     private Animation<TextureRegion> robotExplode;
-    public ArrayList<TextureRegion> robotAllFrames = new ArrayList<>();
-    private HashMap<TextureRegion, Integer> frameIndexMap = new HashMap<>();
-    public boolean runningRight;
-    private float stateTimer;
     public TextureRegion region;
-    private int health;
-    public boolean shouldBeDestroyed = false;
-    private String uuid;
-    private int counter = 0;
-    private final int timeForExplosion = 48;
     private final Sound explosion = Gdx.audio.newSound(Gdx.files.internal("WeaponSounds/explosion.mp3"));
     public static final int EXPLOSION_DAMAGE = 20;
+    private static final int timeForExplosion = 40;
+    private static final int mobId = 1;
+
 
     /**
      * First constructor for a robot that gets created in the center of the map
@@ -79,23 +42,13 @@ public class Robot extends Sprite {
      * @param screen
      */
     public Robot(World world, PlayScreen screen) {
-        super(screen.getRobotAtlas().findRegion("Robot"));
-        this.world = world;
-        currentState = State.STANDING;
-        currentDirection = runDirection.RIGHT;
-        stateTimer = 0;
-        runningRight = true;
+        super(screen.getRobotAtlas().findRegion("Robot"), world, screen, MAX_HEALTH, timeForExplosion);
+
 
         initializeAnimations();
-        defineRobot(screen.startPosX, screen.startPosY);
+        defineOpponent(screen.startPosX, screen.startPosY, ROBOT_RADIUS);
 
-        // Put all frames into a hashmap, so we wouldn't have to search the whole list everytime we want to get the current frame's index
-        for (int i = 0; i < robotAllFrames.size(); i++) {
-            frameIndexMap.put(robotAllFrames.get(i), i);
-        }
-
-        setBounds(0, 0, robot_WIDTH, robot_HEIGHT);
-        health = MAX_HEALTH;
+        setBounds(0, 0, ROBOT_WIDTH, ROBOT_HEIGHT);
     }
 
     /**
@@ -109,59 +62,30 @@ public class Robot extends Sprite {
      * @param posY
      */
     public Robot(World world, PlayScreen screen, float posX, float posY, int health, String uuid) {
-        super(screen.getRobotAtlas().findRegion("Robot"));
-        this.world = world;
-        currentState = State.STANDING;
-        currentDirection = runDirection.RIGHT;
-        stateTimer = 0;
-        runningRight = true;
+        super(screen.getRobotAtlas().findRegion("Robot"), world, screen, health, timeForExplosion);
+
+        setUuid(uuid);
 
         initializeAnimations();
-        defineRobot(posX * MyGDXGame.PPM, posY * MyGDXGame.PPM);
+        defineOpponent(posX * MyGDXGame.PPM, posY * MyGDXGame.PPM, ROBOT_RADIUS);
         region = robotRunUp.getKeyFrame(0, true);
         setRegion(region);
         b2body.setAwake(true);
 
-        // Put all frames into a hashmap, so we wouldn't have to search the whole list everytime we want to get the current frame's index
-        for (int i = 0; i < robotAllFrames.size(); i++) {
-            frameIndexMap.put(robotAllFrames.get(i), i);
-        }
 
-        setBounds(0, 0, robot_WIDTH, robot_HEIGHT);
-
-        this.health = health;
-        this.uuid = uuid;
+        setBounds(0, 0, ROBOT_WIDTH, ROBOT_HEIGHT);
     }
 
     /**
      * Initializes robot animations using sprite sheet regions.
      */
     private void initializeAnimations() {
-        robotRunUpper = createAnimation(0, 3, 1);
-        robotRunLower = createAnimation(0, 3, 2);
-        robotRun = createAnimation(0, 3, 0);
-        robotRunDown = createAnimation(0, 3, 3);
-        robotRunUp = createAnimation(0, 3, 4);
-        robotExplode = createAnimation(0, 3, 5);
-    }
-
-
-    /**
-     * Creates an animation from specified sprite sheet region parameters.
-     *
-     * @param startFrame The starting frame index in the sprite sheet.
-     * @param endFrame   The ending frame index in the sprite sheet.
-     * @param row        The row index in the sprite sheet.
-     * @return The created animation.
-     */
-    private Animation<TextureRegion> createAnimation(int startFrame, int endFrame, int row) {
-        Array<TextureRegion> frames = new Array<>();
-        for (int i = startFrame; i <= endFrame; i++) {
-            TextureRegion textureRegion = new TextureRegion(getTexture(), i * FRAME_WIDTH, row * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT);
-            frames.add(textureRegion);
-            robotAllFrames.add(textureRegion);
-        }
-        return new Animation<>(ANIMATION_SPEED, frames);
+        robotRun = createAnimation(0, 3, 0, Robot.FRAME_WIDTH, Robot.FRAME_HEIGHT);
+        robotRunUpper = createAnimation(0, 3, 1, Robot.FRAME_WIDTH, Robot.FRAME_HEIGHT);
+        robotRunLower = createAnimation(0, 3, 2, Robot.FRAME_WIDTH, Robot.FRAME_HEIGHT);
+        robotRunDown = createAnimation(0, 3, 3, Robot.FRAME_WIDTH, Robot.FRAME_HEIGHT);
+        robotRunUp = createAnimation(0, 3, 4, Robot.FRAME_WIDTH, Robot.FRAME_HEIGHT);
+        robotExplode = createAnimation(0, 3, 5, Robot.FRAME_WIDTH, Robot.FRAME_HEIGHT);
     }
 
     /**
@@ -176,7 +100,7 @@ public class Robot extends Sprite {
                 explosion.play(SettingsScreen.soundValue);
             }
             if (counter >= timeForExplosion) {
-                B2WorldCreator.robotsToDestroy.add(this);
+                B2WorldCreator.markOpponentAsDestroyed(this);
                 explosion.dispose();
             }
         } else {
@@ -186,47 +110,6 @@ public class Robot extends Sprite {
         region = getFrame(delta);
         setRegion(region);
         b2body.setAwake(true);
-    }
-
-    /**
-     * Seeks for the closest enemy and moves the body of the robot in that direction.
-     */
-    private void updatePosition() {
-        float shortestDistance = Float.MAX_VALUE;
-        float closestX = 0;
-        float closestY = 0;
-
-        float robotX = this.b2body.getPosition().x;
-        float robotY = this.b2body.getPosition().y;
-
-
-        for (PlayerData info : MyGDXGame.playerDataMap.values()) {
-            float playerX = info.getX();
-            float playerY = info.getY();
-
-            float deltaX = playerX - robotX;
-            float deltaY = playerY - robotY;
-
-            float actualDistance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-            if (actualDistance < shortestDistance) {
-                shortestDistance = actualDistance;
-                closestX = playerX;
-                closestY = playerY;
-            }
-        }
-        if (closestX > robotX) {
-            this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
-        } else {
-            this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
-        }
-        if (closestY > robotY) {
-            this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
-        } else {
-            this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
-        }
-
-
     }
 
     /**
@@ -281,110 +164,11 @@ public class Robot extends Sprite {
     }
 
     /**
-     * Retrieves the current running direction of the robot based on linear velocity.
-     *
-     * @return The current running direction of the robot (right side).
+     * Get mob id.
+     * @return mob id
      */
-    private runDirection getRunDirection() {
-        if (health <= 0) {
-            return runDirection.DEAD;
-        }
-        float velocityX = Math.abs(b2body.getLinearVelocity().x); // We only care for positive x here so for example if running direction is upper left, then we want to return upper right
-        float velocityY = b2body.getLinearVelocity().y;
-
-        if (velocityX > VELOCITY_THRESHOLD) {
-            if (velocityY > VELOCITY_THRESHOLD) return runDirection.UPPER;
-            else if (velocityY < -VELOCITY_THRESHOLD) return runDirection.LOWER;
-            else return runDirection.RIGHT;
-        } else {
-            if (velocityY > 0) return runDirection.UP;
-            else if (velocityY < 0) return runDirection.DOWN;
-            else return null; // We should never reach this point hopefully as it means that the robot isn't running
-        }
+    public int getMobId() {
+        return mobId;
     }
 
-    /**
-     * Defines the robot's Box2D body and fixture.
-     */
-    public void defineRobot(float startX, float startY) {
-        BodyDef bdef = new BodyDef();
-        bdef.position.set(startX / MyGDXGame.PPM, startY / MyGDXGame.PPM);
-        bdef.type = BodyDef.BodyType.DynamicBody;
-        b2body = world.createBody(bdef);
-
-        FixtureDef fdef = new FixtureDef();
-        CircleShape shape = new CircleShape();
-        shape.setRadius(robot_RADIUS);
-
-        fdef.shape = shape;
-        fdef.filter.categoryBits = MyGDXGame.OPPONENT_CATEGORY;
-        fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.WORLD_CATEGORY | MyGDXGame.PLAYER_CATEGORY;
-        b2body.createFixture(fdef);
-
-        b2body.setUserData(this);
-
-        // Set linear damping to simulate friction
-        b2body.setLinearDamping(LINEAR_DAMPING);
-    }
-
-    /**
-     * Getter method
-     *
-     * @return x
-     */
-    @Override
-    public float getX() {
-        return this.b2body.getPosition().x;
-    }
-
-    /**
-     * Getter method
-     *
-     * @return y
-     */
-    @Override
-    public float getY() {
-        return this.b2body.getPosition().y;
-    }
-
-    /**
-     * Getter method
-     *
-     * @return health
-     */
-    public int getHealth() {
-        return health;
-    }
-
-    /**
-     * Reduces the robot's health by the specified amount.
-     *
-     * @param damage The amount of damage to apply.
-     */
-    public void takeDamage(int damage) {
-        health -= damage;
-
-        if (health <= 0 && counter >= timeForExplosion) {
-            shouldBeDestroyed = true;
-            counter = 0;
-        }
-    }
-
-    /**
-     * Setter method
-     *
-     * @param UUID
-     */
-    public void setUuid(String UUID) {
-        this.uuid = UUID;
-    }
-
-    /**
-     * Getter method
-     *
-     * @return uuid
-     */
-    public String getUuid() {
-        return uuid;
-    }
 }

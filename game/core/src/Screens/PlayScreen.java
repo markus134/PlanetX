@@ -3,11 +3,12 @@ package Screens;
 import Bullets.Bullet;
 import Bullets.BulletManager;
 import InputHandlers.PlayScreenInputHandler;
-import Scenes.DeathScene;
-import Scenes.ExitToMainMenu;
-import crystals.Crystal;
+import Opponents.Boss;
+import Opponents.Opponent;
 import Opponents.Robot;
+import Scenes.DeathScene;
 import Scenes.Debug;
+import Scenes.ExitToMainMenu;
 import Scenes.HUD;
 import Sprites.OtherPlayer;
 import Sprites.Player;
@@ -27,10 +28,11 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
+import crystals.Crystal;
+import serializableObjects.OpponentData;
+import serializableObjects.OpponentDataMap;
 import serializableObjects.PlayerData;
 import serializableObjects.PlayerLeavesTheWorld;
-import serializableObjects.RobotData;
-import serializableObjects.RobotDataMap;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,17 +46,18 @@ import static com.mygdx.game.MyGDXGame.client;
 
 
 public class PlayScreen implements Screen {
-    private MyGDXGame game;
+    private final MyGDXGame game;
     public static OrthographicCamera gameCam = new OrthographicCamera();
-    private Viewport gamePort;
-    private TiledMap map;
+    private final Viewport gamePort;
+    private final TiledMap map;
     private TmxMapLoader mapLoader = new TmxMapLoader();
-    private OrthogonalTiledMapRenderer renderer;
+    private final OrthogonalTiledMapRenderer renderer;
     public World world;
-    private Box2DDebugRenderer b2dr;
+    private final Box2DDebugRenderer b2dr;
     public Player player;
     private final TextureAtlas playerAtlas = new TextureAtlas("player/player_spritesheet.atlas");
     private final TextureAtlas robotAtlas = new TextureAtlas("Opponents/Robot.atlas");
+    private final TextureAtlas bossAtlas = new TextureAtlas("Opponents/boss.atlas");
     private float prevPosX = 0;
     private float prevPosY = 0;
     private int prevFrameIndex = 0;
@@ -65,21 +68,23 @@ public class PlayScreen implements Screen {
     private Debug debug;
     public HUD hud;
     public BulletManager bulletManager;
-    public static List<String> robotIds = new ArrayList<>();
-    public static HashMap<String, Robot> robots = new HashMap<>();
-    public static RobotDataMap robotDataMap;
-    private PlayScreenInputHandler handler;
-    private B2WorldCreator b2WorldCreator;
-    public static Set<String> destroyedRobots = new HashSet<>();
-    public static Set<String> allDestroyedRobots = new HashSet<>();
+    public static List<String> opponentIds = new ArrayList<>();
+    public static HashMap<String, Opponent> opponents = new HashMap<>();
+    public static OpponentDataMap opponentDataMap;
+    private final PlayScreenInputHandler handler;
+    private final B2WorldCreator b2WorldCreator;
+    public static Set<String> destroyedOpponents = new HashSet<>();
+    public static Set<String> allDestroyedOpponents = new HashSet<>();
     public static Set<String> allDestroyedPlayers = new HashSet<>();
-    private Music music;
+    private final Music music;
     public String worldUUID;
     public static List<Crystal> crystals = new ArrayList<>();
     public final ExitToMainMenu pauseDialog;
     private final MenuScreen menuScreen;
     public final DeathScene deathScene;
     private int deathSceneCounter = 0;
+    private static final int ROBOT_ID = 1;
+    private static final int BOSS_ID = 2;
 
     /**
      * Constructor for the PlayScreen.
@@ -91,7 +96,7 @@ public class PlayScreen implements Screen {
         this.menuScreen = menu;
         this.game = game;
         this.worldUUID = worldUUID;
-        robotDataMap = new RobotDataMap(worldUUID);
+        opponentDataMap = new OpponentDataMap(worldUUID);
         gamePort = new FitViewport(MyGDXGame.V_WIDTH / MyGDXGame.PPM, MyGDXGame.V_HEIGHT / MyGDXGame.PPM, gameCam);
 
         map = mapLoader.load("level/test_map.tmx");
@@ -150,6 +155,10 @@ public class PlayScreen implements Screen {
         return robotAtlas;
     }
 
+    public TextureAtlas getBossAtlas() {
+        return bossAtlas;
+    }
+
 
     /**
      * Updates the game logic.
@@ -161,34 +170,42 @@ public class PlayScreen implements Screen {
 
         player.update(dt);
 
-        // updating robots and adding info to the robotDataMap, which is sent to the server
-        for (Map.Entry<String, Robot> entry : robots.entrySet()) {
-            Robot robot = entry.getValue();
-            robotDataMap.put(entry.getKey(),
-                    new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid()));
-            robot.update(dt);
+        // updating opponents and adding info to the opponentDataMap, which is sent to the server
+        for (Map.Entry<String, Opponent> entry : opponents.entrySet()) {
+            Opponent opponent = entry.getValue();
+
+
+            opponentDataMap.put(entry.getKey(),
+                    new OpponentData(opponent.getX(), opponent.getY(), opponent.getHealth(), opponent.getUuid(), opponent.getMobId()));
+
+            if (opponent instanceof Robot) {
+                ((Robot) opponent).update(dt);
+            } else if (opponent instanceof Boss) {
+                ((Boss) opponent).update(dt);
+            }
+
         }
 
         bulletManager.update(dt);
-        b2WorldCreator.destroyDeadRobots();
+        b2WorldCreator.destroyDeadOpponents();
         b2WorldCreator.destroyDeadPlayers();
 
-        client.sendTCP(robotDataMap);
+        client.sendTCP(opponentDataMap);
 
-        for (String id : destroyedRobots) {
-            if (robotDataMap.getMap().containsKey(id)) {
+        for (String id : destroyedOpponents) {
+            if (opponentDataMap.getMap().containsKey(id)) {
 
-                float x = robotDataMap.getMap().get(id).getX();
-                float y = robotDataMap.getMap().get(id).getY();
+                float x = opponentDataMap.getMap().get(id).getX();
+                float y = opponentDataMap.getMap().get(id).getY();
 
                 if (Math.abs(player.getX() - x) < 1f &&
                         Math.abs(player.getY() - y) < 1f) {
                     player.takeDamage(Robot.EXPLOSION_DAMAGE);
                 }
 
-                robots.remove(id);
-                robotIds.remove(id);
-                robotDataMap.remove(id);
+                opponents.remove(id);
+                opponentIds.remove(id);
+                opponentDataMap.remove(id);
             }
         }
 
@@ -199,22 +216,33 @@ public class PlayScreen implements Screen {
             }
         }
 
-        // robotDataMap is constantly being updated by all client instances
-        // this block of code makes new instances of the robot class if it is a robot with a new ID
-        HashMap<String, RobotData> map = robotDataMap.getMap();
-        for (Map.Entry<String, RobotData> entry : map.entrySet()) {
+        // opponentDataMap is constantly being updated by all client instances
+        // this block of code makes new instances of the robot or boss if it is an opponent with a new ID
+        HashMap<String, OpponentData> map = opponentDataMap.getMap();
+        for (Map.Entry<String, OpponentData> entry : map.entrySet()) {
             String key = entry.getKey();
-            if (!robotIds.contains(key) && !destroyedRobots.contains(key) && entry.getValue().getHealth() != 0) {
-                Robot robot = new Robot(world,
-                        this,
-                        entry.getValue().getX(),
-                        entry.getValue().getY(),
-                        entry.getValue().getHealth(),
-                        entry.getValue().getUuid());
+            if (!opponentIds.contains(key) && !destroyedOpponents.contains(key) && entry.getValue().getHealth() != 0) {
+                if (entry.getValue().getMob() == ROBOT_ID) {
+                    Robot robot = new Robot(world,
+                            this,
+                            entry.getValue().getX(),
+                            entry.getValue().getY(),
+                            entry.getValue().getHealth(),
+                            entry.getValue().getUuid());
 
-                robots.put(key, robot);
-                robotIds.add(key);
+                    opponents.put(key, robot);
+                } else if (entry.getValue().getMob() == BOSS_ID) {
+                    Boss boss = new Boss(world,
+                            this,
+                            entry.getValue().getX(),
+                            entry.getValue().getY(),
+                            entry.getValue().getHealth(),
+                            entry.getValue().getUuid());
 
+                    opponents.put(key, boss);
+                }
+
+                opponentIds.add(key);
             }
         }
 
@@ -249,7 +277,7 @@ public class PlayScreen implements Screen {
             prevRunningRight = player.runningRight;
         }
 
-        destroyedRobots.clear();
+        destroyedOpponents.clear();
     }
 
     /**
@@ -283,13 +311,14 @@ public class PlayScreen implements Screen {
             crystal.draw(game.batch);
         }
 
-        player.draw(game.batch); // Draw the player after rendering the physics world
 
-        // draws all robots
-        for (Map.Entry<String, Robot> entry : robots.entrySet()) {
-            Robot robot = entry.getValue();
-            robot.draw(game.batch);
+        // draws all opponents
+        for (Map.Entry<String, Opponent> entry : opponents.entrySet()) {
+            Opponent opponent = entry.getValue();
+            opponent.draw(game.batch);
         }
+
+        player.draw(game.batch); // Draw the player after rendering the physics world
 
         // Draw the other players within the game
         for (Map.Entry<Integer, Set<OtherPlayer>> entry : MyGDXGame.playerDict.entrySet()) {
@@ -382,6 +411,7 @@ public class PlayScreen implements Screen {
         b2dr.dispose();
         playerAtlas.dispose();
         robotAtlas.dispose();
+        bossAtlas.dispose();
         deathScene.dispose();
         pauseDialog.dispose();
     }

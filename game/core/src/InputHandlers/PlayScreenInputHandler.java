@@ -2,6 +2,7 @@ package InputHandlers;
 
 import Bullets.Bullet;
 import Items.Items;
+import Opponents.Boss;
 import Opponents.Robot;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
@@ -14,17 +15,17 @@ import com.mygdx.game.MyGDXGame;
 import crystals.Crystal;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
+import serializableObjects.OpponentData;
 import serializableObjects.RevivePlayer;
-import serializableObjects.RobotData;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static Screens.PlayScreen.robotDataMap;
-import static Screens.PlayScreen.robotIds;
-import static Screens.PlayScreen.robots;
+import static Screens.PlayScreen.opponentDataMap;
+import static Screens.PlayScreen.opponentIds;
+import static Screens.PlayScreen.opponents;
 
 public class PlayScreenInputHandler implements InputProcessor {
     public Set<Integer> keysPressed = new HashSet<>();
@@ -102,6 +103,13 @@ public class PlayScreenInputHandler implements InputProcessor {
                             isFirstClick = false;
                         }
                         break;
+                    case Input.Keys.N:
+                        if (isFirstClick) {
+                            generateBoss();
+                            System.out.println("generated boss");
+                            isFirstClick = false;
+                        }
+                        break;
                     case Input.Keys.R:
                         System.out.println("Clicked r, reviving: " + playScreen.player.getIsReviving());
                         if (!playScreen.player.getIsReviving() && isCloseToDeadPlayer(playScreen.player.getX(), playScreen.player.getY())) {
@@ -123,11 +131,27 @@ public class PlayScreenInputHandler implements InputProcessor {
         String uniqueID = UUID.randomUUID().toString();
         robot.setUuid(uniqueID);
 
-        robotIds.add(uniqueID);
-        robots.put(uniqueID, robot);
-        robotDataMap.put(uniqueID, new RobotData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid()));
+        opponentIds.add(uniqueID);
+        opponents.put(uniqueID, robot);
+        opponentDataMap.put(uniqueID, new OpponentData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid(), robot.getMobId()));
 
-        MyGDXGame.client.sendTCP(robotDataMap);
+        MyGDXGame.client.sendTCP(opponentDataMap);
+    }
+
+    /**
+     * Generates robots when the button is clicked.
+     */
+    private void generateBoss() {
+
+        Boss boss = new Boss(playScreen.world, playScreen);
+        String uniqueID = UUID.randomUUID().toString();
+        boss.setUuid(uniqueID);
+
+        opponentIds.add(uniqueID);
+        opponents.put(uniqueID, boss);
+        opponentDataMap.put(uniqueID, new OpponentData(boss.getX(), boss.getY(), boss.getHealth(), boss.getUuid(), boss.getMobId()));
+
+        MyGDXGame.client.sendTCP(opponentDataMap);
     }
 
     /**
@@ -169,7 +193,7 @@ public class PlayScreenInputHandler implements InputProcessor {
     public boolean keyUp(int keycode) {
         keysPressed.remove(keycode);
 
-        if (keycode == Input.Keys.B) {
+        if (keycode == Input.Keys.B || keycode == Input.Keys.N) {
             isFirstClick = true;
         }
 
@@ -279,7 +303,7 @@ public class PlayScreenInputHandler implements InputProcessor {
                 velocityY,
                 x,
                 y,
-                robotDataMap.getWorldUUID()
+                opponentDataMap.getWorldUUID()
         ));
     }
 

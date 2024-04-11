@@ -14,7 +14,6 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -194,18 +193,25 @@ public class Player extends Sprite {
                 shouldBeDestroyed = true;
             }
 
-            flipRegionIfNeeded(dt, region);
-            return playerDeath.getKeyFrame(stateTimer, false);
-        } else if (currentState == State.REVIVING) {
-            flipRegionIfNeeded(dt, region);
+            TextureRegion textureRegion = playerDeath.getKeyFrame(stateTimer, false);
+            flipRegionIfNeeded(dt, textureRegion);
 
-            return playerRevive.getKeyFrame(stateTimer,true);
+            return textureRegion;
+        } else if (currentState == State.REVIVING) {
+            TextureRegion textureRegion = playerRevive.getKeyFrame(stateTimer, true);
+            flipRegionIfNeeded(dt, textureRegion);
+
+            return textureRegion;
         } else if (currentState == State.MINING) {
-            flipRegionIfNeeded(dt, region);
-            return playerMine.getKeyFrame(stateTimer, true);
+            TextureRegion textureRegion = playerMine.getKeyFrame(stateTimer, true);
+            flipRegionIfNeeded(dt, textureRegion);
+
+            return textureRegion;
         } else if (currentState == State.STANDING) {
-            flipRegionIfNeeded(dt, region);
-            return playerStand;
+            TextureRegion textureRegion = playerStand;
+            flipRegionIfNeeded(dt, textureRegion);
+
+            return textureRegion;
         }
 
         currentDirection = getRunDirection();
