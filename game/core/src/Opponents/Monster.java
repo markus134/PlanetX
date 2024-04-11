@@ -25,15 +25,12 @@ public class Monster extends Opponent {
     private Animation<TextureRegion> monsterSouth;
     private Animation<TextureRegion> monsterNorth;
     private Animation<TextureRegion> monsterDeath;
-
-
     public TextureRegion region;
     private static final int timeForDeath = 40;
     private static final int mobId = 3;
     private static final float DAMAGE_DISTANCE_THRESHOLD = 1.0f;
     private static final float ATTACK_DURATION = 0.8f;
     private static final int ATTACK_DAMAGE = 10;
-
     private PlayerData closestPlayer;
 
 
