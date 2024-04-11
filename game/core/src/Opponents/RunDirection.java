@@ -1,6 +1,6 @@
 package Opponents;
 
-public enum runDirection {
+public enum RunDirection {
     UPPER,
     RIGHT,
     LOWER,

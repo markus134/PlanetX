@@ -1,7 +1,8 @@
 package Tools;
 
 import Bullets.Bullet;
-import crystals.Crystal;
+import Opponents.Boss;
+import Opponents.Opponent;
 import Opponents.Robot;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
@@ -21,12 +22,14 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.game.MyGDXGame;
+import crystals.Crystal;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public class B2WorldCreator {
-    public static Set<Robot> robotsToDestroy = new HashSet<>();
+    private static final Set<Opponent> opponentsToDestroy = new HashSet<>();
+    public static Set<Boss> bossesToDestroy = new HashSet<>();
     public static Set<OtherPlayer> playersToDestroy = new HashSet<>();
     private World world;
     private static final int CRYSTALS_LAYER_INDEX = 4;
@@ -142,12 +145,12 @@ public class B2WorldCreator {
             Bullet bullet = (Bullet) (fixtureA.getBody().getUserData() instanceof Bullet ? fixtureA.getBody().getUserData() : fixtureB.getBody().getUserData());
             bullet.setShouldDestroy();
 
-            // Check if the other fixture is a robot and apply damage
-            Fixture robotFixture = (fixtureA.getBody().getUserData() instanceof Robot) ? fixtureA : (fixtureB.getBody().getUserData() instanceof Robot) ? fixtureB : null;
+            // Check if the other fixture is an opponent and apply damage
+            Fixture opponentFixture = (fixtureA.getBody().getUserData() instanceof Opponent) ? fixtureA : (fixtureB.getBody().getUserData() instanceof Robot) ? fixtureB : null;
 
-            if (robotFixture != null) {
-                Robot robot = (Robot) robotFixture.getBody().getUserData();
-                robot.takeDamage(Bullet.DAMAGE);
+            if (opponentFixture != null) {
+                Opponent opponent = (Opponent) opponentFixture.getBody().getUserData();
+                opponent.takeDamage(Bullet.DAMAGE);
             }
 
             // Check if the other fixture is another player and apply damage
@@ -170,21 +173,21 @@ public class B2WorldCreator {
     }
 
     /**
-     * Removes the killed robots
+     * Removes the killed opponents
      */
-    public void destroyDeadRobots() {
-        // Destroy robots marked for destruction
-        for (Robot robot : robotsToDestroy) {
-            world.destroyBody(robot.b2body);
+    public void destroyDeadOpponents() {
+        // Destroy opponents marked for destruction
+        for (Opponent opponent : opponentsToDestroy) {
+            world.destroyBody(opponent.getBody());
 
-            String uniqueId = robot.getUuid();
+            String uniqueId = opponent.getUuid();
 
-            PlayScreen.robots.remove(uniqueId);
-            PlayScreen.destroyedRobots.add(uniqueId);
-            PlayScreen.allDestroyedRobots.add(uniqueId);
+            PlayScreen.opponents.remove(uniqueId);
+            PlayScreen.destroyedOpponents.add(uniqueId);
+            PlayScreen.allDestroyedOpponents.add(uniqueId);
         }
 
-        robotsToDestroy.clear();
+        opponentsToDestroy.clear();
     }
 
     /**
@@ -202,5 +205,9 @@ public class B2WorldCreator {
         }
 
         playersToDestroy.clear();
+    }
+
+    public static void markOpponentAsDestroyed(Opponent opponent) {
+        opponentsToDestroy.add(opponent);
     }
 }

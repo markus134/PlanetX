@@ -1,6 +1,6 @@
 package Opponents;
 
-public enum STATE {
+public enum State {
     STANDING,
     ATTACK_TOP,
     RUNNING, DEAD, ATTACK_BOTTOM

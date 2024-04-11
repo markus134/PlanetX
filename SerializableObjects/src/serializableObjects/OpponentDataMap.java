@@ -2,19 +2,19 @@ package serializableObjects;
 
 import java.util.HashMap;
 
-public class RobotDataMap {
-    private HashMap<String, RobotData> map;
+public class OpponentDataMap {
+    private HashMap<String, OpponentData> map;
     private String worldUUID;
 
     /**
      * Constructor
      */
-    public RobotDataMap(String worldUUID) {
-        map = new HashMap<String, RobotData>();
+    public OpponentDataMap(String worldUUID) {
+        map = new HashMap<>();
         this.worldUUID = worldUUID;
     }
 
-    public RobotDataMap() {
+    public OpponentDataMap() {
         map = new HashMap<>();
         worldUUID = "";
     }
@@ -24,7 +24,7 @@ public class RobotDataMap {
      *
      * @return map
      */
-    public HashMap<String, RobotData> getMap() {
+    public HashMap<String, OpponentData> getMap() {
         return this.map;
     }
 
@@ -34,7 +34,7 @@ public class RobotDataMap {
      * @param key
      * @param value
      */
-    public void put(String key, RobotData value) {
+    public void put(String key, OpponentData value) {
         this.map.put(key, value);
     }
 

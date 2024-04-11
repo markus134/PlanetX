@@ -1,11 +1,10 @@
 package wfc;
 
-import java.util.ArrayList;
+import com.badlogic.gdx.graphics.Texture;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-
-import com.badlogic.gdx.graphics.Texture;
 
 /**
  * Create Tile objects from (file) input.

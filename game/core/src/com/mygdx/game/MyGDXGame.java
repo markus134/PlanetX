@@ -21,11 +21,11 @@ import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.AskIfSessionIsFull;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
+import serializableObjects.OpponentData;
+import serializableObjects.OpponentDataMap;
 import serializableObjects.PlayerData;
 import serializableObjects.PlayerLeavesTheWorld;
 import serializableObjects.RevivePlayer;
-import serializableObjects.RobotData;
-import serializableObjects.RobotDataMap;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,6 +64,7 @@ public class MyGDXGame extends Game {
     public static PlayScreen playScreen;
     public static Map<Integer, Set<OtherPlayer>> playerDict = new HashMap<>();
     public static HashMap<Integer, PlayerData> playerDataMap = new HashMap<>();
+    public static HashMap<String, OtherPlayer> playerHashMapByUuid = new HashMap<>();
     public AskIfSessionIsFull serverReply;
 
     /**
@@ -117,12 +118,12 @@ public class MyGDXGame extends Game {
      * @param kryo The Kryo instance to register classes with.
      */
     private void registerClasses(Kryo kryo) {
-        kryo.register(RobotData.class, 15);
+        kryo.register(OpponentData.class, 15);
         kryo.register(PlayerData.class);
         kryo.register(Integer.class);
         kryo.register(BulletData.class, 17);
         kryo.register(HashMap.class);
-        kryo.register(RobotDataMap.class);
+        kryo.register(OpponentDataMap.class);
         kryo.register(String.class);
         kryo.register(AddSinglePlayerWorld.class);
         kryo.register(AddMultiPlayerWorld.class);
@@ -179,8 +180,8 @@ public class MyGDXGame extends Game {
         for (Object object : packetsCopy) {
             if (object instanceof BulletData) {
                 handleBulletData((BulletData) object);
-            } else if (object instanceof RobotDataMap) {
-                handleRobotData((RobotDataMap) object);
+            } else if (object instanceof OpponentDataMap) {
+                handleOpponentData((OpponentDataMap) object);
             } else if (object instanceof CrystalToRemove) {
                 handleCrystalData((CrystalToRemove) object);
             } else if (object instanceof RevivePlayer) {
@@ -209,16 +210,16 @@ public class MyGDXGame extends Game {
     }
 
     /**
-     * Handles robot data received from the server.
+     * Handles opponent data received from the server.
      *
-     * @param robotDataMap The robot data map received.
+     * @param opponentDataMap The opponent data map received.
      */
-    private void handleRobotData(RobotDataMap robotDataMap) {
-        robotDataMap.getMap().entrySet().removeIf(entry ->
-                PlayScreen.allDestroyedRobots.contains(entry.getKey())
+    private void handleOpponentData(OpponentDataMap opponentDataMap) {
+        opponentDataMap.getMap().entrySet().removeIf(entry ->
+                PlayScreen.allDestroyedOpponents.contains(entry.getKey())
         );
 
-        PlayScreen.robotDataMap = robotDataMap;
+        PlayScreen.opponentDataMap = opponentDataMap;
     }
 
     /**
@@ -274,6 +275,8 @@ public class MyGDXGame extends Game {
             otherPlayers.add(otherPlayer);
 
             playerDict.put(id, otherPlayers);
+
+            playerHashMapByUuid.put(playerId, otherPlayer);
             otherPlayer.update(otherPlayerPosX, otherPlayerPosY, frameIndex, runningRight);
         }
     }
