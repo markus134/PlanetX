@@ -27,7 +27,7 @@ public class Boss extends Opponent {
     private TextureRegion region;
     private final PlayScreen playScreen;
 
-    private static final int timeForExplosion = 100;
+    private static final int timeForDeath = 100;
     private static final float PLAYER_PROXIMITY_THRESHOLD = 1.3f;
     private static final float VELOCITY_THRESHOLD = 0.8f;
     private static final int mobId = 2;
@@ -43,7 +43,7 @@ public class Boss extends Opponent {
      * @param screen
      */
     public Boss(World world, PlayScreen screen) {
-        super(screen.getBossAtlas().findRegion("boss"), world, screen, MAX_HEALTH, timeForExplosion);
+        super(screen.getBossAtlas().findRegion("boss"), world, screen, MAX_HEALTH, timeForDeath);
 
         this.playScreen = screen;
         initializeAnimations();
@@ -67,7 +67,7 @@ public class Boss extends Opponent {
      * @param posY
      */
     public Boss(World world, PlayScreen screen, float posX, float posY, int health, String uuid) {
-        super(screen.getBossAtlas().findRegion("boss"), world, screen, health, timeForExplosion);
+        super(screen.getBossAtlas().findRegion("boss"), world, screen, health, timeForDeath);
 
         this.playScreen = screen;
         setUuid(uuid);
@@ -104,7 +104,7 @@ public class Boss extends Opponent {
     public void update(float delta) {
         if (health <= 0) {
             counter++;
-            if (counter >= timeForExplosion) {
+            if (counter >= timeForDeath) {
                 B2WorldCreator.markOpponentAsDestroyed(this);
             }
         } else {

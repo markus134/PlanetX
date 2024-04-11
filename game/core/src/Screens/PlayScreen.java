@@ -4,6 +4,7 @@ import Bullets.Bullet;
 import Bullets.BulletManager;
 import InputHandlers.PlayScreenInputHandler;
 import Opponents.Boss;
+import Opponents.Monster;
 import Opponents.Opponent;
 import Opponents.Robot;
 import Scenes.DeathScene;
@@ -58,6 +59,7 @@ public class PlayScreen implements Screen {
     private final TextureAtlas playerAtlas = new TextureAtlas("player/player_spritesheet.atlas");
     private final TextureAtlas robotAtlas = new TextureAtlas("Opponents/Robot.atlas");
     private final TextureAtlas bossAtlas = new TextureAtlas("Opponents/boss.atlas");
+    private final TextureAtlas monsterAtlas = new TextureAtlas("Opponents/monster.atlas");
     private float prevPosX = 0;
     private float prevPosY = 0;
     private int prevFrameIndex = 0;
@@ -85,6 +87,7 @@ public class PlayScreen implements Screen {
     private int deathSceneCounter = 0;
     private static final int ROBOT_ID = 1;
     private static final int BOSS_ID = 2;
+    private static final int MONSTER_ID = 3;
 
     /**
      * Constructor for the PlayScreen.
@@ -158,6 +161,7 @@ public class PlayScreen implements Screen {
     public TextureAtlas getBossAtlas() {
         return bossAtlas;
     }
+    public TextureAtlas getMonsterAtlas() { return monsterAtlas; }
 
 
     /**
@@ -182,6 +186,8 @@ public class PlayScreen implements Screen {
                 ((Robot) opponent).update(dt);
             } else if (opponent instanceof Boss) {
                 ((Boss) opponent).update(dt);
+            } else if (opponent instanceof  Monster) {
+                ((Monster) opponent).update(dt);
             }
 
         }
@@ -194,13 +200,14 @@ public class PlayScreen implements Screen {
 
         for (String id : destroyedOpponents) {
             if (opponentDataMap.getMap().containsKey(id)) {
+                if (opponentDataMap.getMap().get(id).getMob() == ROBOT_ID) {
+                    float x = opponentDataMap.getMap().get(id).getX();
+                    float y = opponentDataMap.getMap().get(id).getY();
 
-                float x = opponentDataMap.getMap().get(id).getX();
-                float y = opponentDataMap.getMap().get(id).getY();
-
-                if (Math.abs(player.getX() - x) < 1f &&
-                        Math.abs(player.getY() - y) < 1f) {
-                    player.takeDamage(Robot.EXPLOSION_DAMAGE);
+                    if (Math.abs(player.getX() - x) < 1f &&
+                            Math.abs(player.getY() - y) < 1f) {
+                        player.takeDamage(Robot.EXPLOSION_DAMAGE);
+                    }
                 }
 
                 opponents.remove(id);
@@ -240,6 +247,15 @@ public class PlayScreen implements Screen {
                             entry.getValue().getUuid());
 
                     opponents.put(key, boss);
+                } else if (entry.getValue().getMob() == MONSTER_ID) {
+                    Monster monster = new Monster(world,
+                            this,
+                            entry.getValue().getX(),
+                            entry.getValue().getY(),
+                            entry.getValue().getHealth(),
+                            entry.getValue().getUuid());
+
+                    opponents.put(key, monster);
                 }
 
                 opponentIds.add(key);
@@ -412,6 +428,7 @@ public class PlayScreen implements Screen {
         playerAtlas.dispose();
         robotAtlas.dispose();
         bossAtlas.dispose();
+        monsterAtlas.dispose();
         deathScene.dispose();
         pauseDialog.dispose();
     }

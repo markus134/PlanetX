@@ -11,11 +11,12 @@ import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.AskIfSessionIsFull;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
+import serializableObjects.OpponentData;
+import serializableObjects.OpponentDataMap;
 import serializableObjects.PlayerData;
 import serializableObjects.PlayerLeavesTheWorld;
 import serializableObjects.RevivePlayer;
-import serializableObjects.RobotData;
-import serializableObjects.RobotDataMap;
+
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -29,7 +30,7 @@ public class GameServer {
     private final Server server;
     private final Map<String, Session> worlds = new HashMap<>();
     private final Map<String, Map<Integer, Object>> playerDatas = new HashMap<>();
-    private final Map<String, RobotDataMap> robotDatas = new HashMap<>();
+    private final Map<String, OpponentDataMap> opponentDatas = new HashMap<>();
     private final Map<String, Set<CrystalToRemove>> removedCrystalsByWorld = new HashMap<>();
 
     /**
@@ -40,12 +41,12 @@ public class GameServer {
 
         //registering classes
         Kryo kryo = server.getKryo();
-        kryo.register(RobotData.class, 15);
+        kryo.register(OpponentData.class, 15);
         kryo.register(PlayerData.class);
         kryo.register(Integer.class);
         kryo.register(BulletData.class, 17);
         kryo.register(HashMap.class);
-        kryo.register(RobotDataMap.class);
+        kryo.register(OpponentDataMap.class);
         kryo.register(String.class);
         kryo.register(AddSinglePlayerWorld.class);
         kryo.register(AddMultiPlayerWorld.class);
@@ -103,8 +104,8 @@ public class GameServer {
                     if (object instanceof BulletData) {
                         updateBulletData(connection, (BulletData) object);
                     }
-                    if (object instanceof RobotDataMap) {
-                        updateRobotData((RobotDataMap) object);
+                    if (object instanceof OpponentDataMap) {
+                        updateOpponentData((OpponentDataMap) object);
                     }
 
 
@@ -126,7 +127,7 @@ public class GameServer {
                     if (worlds.get(worldUUID).isEmpty()) {
                         worlds.remove(worldUUID);
                         playerDatas.remove(worldUUID);
-                        robotDatas.remove(worldUUID);
+                        opponentDatas.remove(worldUUID);
                         removedCrystalsByWorld.remove(worldUUID);
                     }
                 }
@@ -181,7 +182,7 @@ public class GameServer {
 
         worlds.put(e.getWorldUUID(), session);
         playerDatas.put(e.getWorldUUID(), new HashMap<>());
-        robotDatas.put(e.getWorldUUID(), new RobotDataMap(e.getWorldUUID()));
+        opponentDatas.put(e.getWorldUUID(), new OpponentDataMap(e.getWorldUUID()));
         removedCrystalsByWorld.put(e.getWorldUUID(), new HashSet<>());
     }
 
@@ -201,7 +202,7 @@ public class GameServer {
 
             worlds.put(worldUUID, session);
             playerDatas.put(worldUUID, new HashMap<>());
-            robotDatas.put(worldUUID, new RobotDataMap(e.getWorldUUID()));
+            opponentDatas.put(worldUUID, new OpponentDataMap(e.getWorldUUID()));
             removedCrystalsByWorld.put(worldUUID, new HashSet<>());
         } else {
             Session session = worlds.get(worldUUID);
@@ -259,21 +260,21 @@ public class GameServer {
     }
 
     /**
-     * Updates robot data received from clients and broadcasts it to all other clients in the same world.
+     * Updates opponent data received from clients and broadcasts it to all other clients in the same world.
      *
-     * @param data The RobotDataMap object representing the updated robot data.
+     * @param data The OpponentDataMap object representing the updated opponent data.
      */
-    private void updateRobotData(RobotDataMap data) {
+    private void updateOpponentData(OpponentDataMap data) {
         String worldUUID = data.getWorldUUID();
-        HashMap<String, RobotData> map = data.getMap();
+        HashMap<String, OpponentData> map = data.getMap();
 
-        RobotDataMap robotDataMap = robotDatas.get(worldUUID);
-        for (Map.Entry<String, RobotData> entry : map.entrySet()) {
-            robotDataMap.put(entry.getKey(), entry.getValue());
+        OpponentDataMap opponentDataMap = opponentDatas.get(worldUUID);
+        for (Map.Entry<String, OpponentData> entry : map.entrySet()) {
+            opponentDataMap.put(entry.getKey(), entry.getValue());
         }
 
         for (Connection con : worlds.get(worldUUID).getPlayers()) {
-            con.sendTCP(robotDataMap);
+            con.sendTCP(opponentDataMap);
         }
     }
 

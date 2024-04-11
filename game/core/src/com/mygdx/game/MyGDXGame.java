@@ -231,7 +231,7 @@ public class MyGDXGame extends Game {
 
         Set<Integer> keys = playerDataMap.keySet();
         ArrayList<Integer> allConnectionIDs = new ArrayList<>(keys);
-        System.out.println(allConnectionIDs);
+        //System.out.println(allConnectionIDs);
 
         // Update existing players or create new ones
         for (Integer id : allConnectionIDs) {
