@@ -3,6 +3,7 @@ package InputHandlers;
 import Bullets.Bullet;
 import Items.Items;
 import Opponents.Boss;
+import Opponents.Monster;
 import Opponents.Robot;
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
@@ -106,7 +107,12 @@ public class PlayScreenInputHandler implements InputProcessor {
                     case Input.Keys.N:
                         if (isFirstClick) {
                             generateBoss();
-                            System.out.println("generated boss");
+                            isFirstClick = false;
+                        }
+                        break;
+                    case Input.Keys.M:
+                        if (isFirstClick) {
+                            generateMonster();
                             isFirstClick = false;
                         }
                         break;
@@ -142,7 +148,6 @@ public class PlayScreenInputHandler implements InputProcessor {
      * Generates robots when the button is clicked.
      */
     private void generateBoss() {
-
         Boss boss = new Boss(playScreen.world, playScreen);
         String uniqueID = UUID.randomUUID().toString();
         boss.setUuid(uniqueID);
@@ -150,6 +155,21 @@ public class PlayScreenInputHandler implements InputProcessor {
         opponentIds.add(uniqueID);
         opponents.put(uniqueID, boss);
         opponentDataMap.put(uniqueID, new OpponentData(boss.getX(), boss.getY(), boss.getHealth(), boss.getUuid(), boss.getMobId()));
+
+        MyGDXGame.client.sendTCP(opponentDataMap);
+    }
+
+    /**
+     * Generates robots when the button is clicked.
+     */
+    private void generateMonster() {
+        Monster monster = new Monster(playScreen.world, playScreen);
+        String uniqueID = UUID.randomUUID().toString();
+        monster.setUuid(uniqueID);
+
+        opponentIds.add(uniqueID);
+        opponents.put(uniqueID, monster);
+        opponentDataMap.put(uniqueID, new OpponentData(monster.getX(), monster.getY(), monster.getHealth(), monster.getUuid(), monster.getMobId()));
 
         MyGDXGame.client.sendTCP(opponentDataMap);
     }
@@ -193,7 +213,7 @@ public class PlayScreenInputHandler implements InputProcessor {
     public boolean keyUp(int keycode) {
         keysPressed.remove(keycode);
 
-        if (keycode == Input.Keys.B || keycode == Input.Keys.N) {
+        if (keycode == Input.Keys.B || keycode == Input.Keys.N || keycode == Input.Keys.M) {
             isFirstClick = true;
         }
 

@@ -372,8 +372,6 @@ public class Player extends Sprite {
         health = 20;
         isDead = false;
         isFirstDeath = false;
-
-
     }
 
     /**
