@@ -29,9 +29,8 @@ import java.util.Set;
 
 public class B2WorldCreator {
     private static final Set<Opponent> opponentsToDestroy = new HashSet<>();
-    public static Set<Boss> bossesToDestroy = new HashSet<>();
     public static Set<OtherPlayer> playersToDestroy = new HashSet<>();
-    private World world;
+    private final World world;
     private static final int CRYSTALS_LAYER_INDEX = 4;
     private static final int START_POSITION_LAYER_INDEX = 5;
     private static final int WALLS_LAYER_INDEX = 6;
