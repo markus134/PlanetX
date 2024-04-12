@@ -139,7 +139,7 @@ public class PlayScreenInputHandler implements InputProcessor {
 
         opponentIds.add(uniqueID);
         opponents.put(uniqueID, robot);
-        opponentDataMap.put(uniqueID, new OpponentData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid(), robot.getMobId()));
+        opponentDataMap.put(uniqueID, new OpponentData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid(), robot.getMobId(), robot.getSpawnTime()));
 
         MyGDXGame.client.sendTCP(opponentDataMap);
     }
@@ -154,7 +154,7 @@ public class PlayScreenInputHandler implements InputProcessor {
 
         opponentIds.add(uniqueID);
         opponents.put(uniqueID, boss);
-        opponentDataMap.put(uniqueID, new OpponentData(boss.getX(), boss.getY(), boss.getHealth(), boss.getUuid(), boss.getMobId()));
+        opponentDataMap.put(uniqueID, new OpponentData(boss.getX(), boss.getY(), boss.getHealth(), boss.getUuid(), boss.getMobId(), boss.getSpawnTime()));
 
         MyGDXGame.client.sendTCP(opponentDataMap);
     }
@@ -169,7 +169,7 @@ public class PlayScreenInputHandler implements InputProcessor {
 
         opponentIds.add(uniqueID);
         opponents.put(uniqueID, monster);
-        opponentDataMap.put(uniqueID, new OpponentData(monster.getX(), monster.getY(), monster.getHealth(), monster.getUuid(), monster.getMobId()));
+        opponentDataMap.put(uniqueID, new OpponentData(monster.getX(), monster.getY(), monster.getHealth(), monster.getUuid(), monster.getMobId(), monster.getSpawnTime()));
 
         MyGDXGame.client.sendTCP(opponentDataMap);
     }

@@ -8,6 +8,7 @@ public class OpponentData implements Serializable {
     private int health;
     private String uuid;
     private int mob;
+    private final long mobSpawnTime;
 
     /**
      * Constructor for the object
@@ -18,12 +19,13 @@ public class OpponentData implements Serializable {
      * @param uuid
      * @param mob
      */
-    public OpponentData(float x, float y, int health, String uuid, int mob) {
+    public OpponentData(float x, float y, int health, String uuid, int mob, long mobSpawnTime) {
         this.x = x;
         this.y = y;
         this.health = health;
         this.uuid = uuid;
         this.mob = mob;
+        this.mobSpawnTime = mobSpawnTime;
     }
 
     /**
@@ -33,6 +35,7 @@ public class OpponentData implements Serializable {
         this.x = 0;
         this.y = 0;
         this.health = 100;
+        this.mobSpawnTime = 0;
     }
 
     /**
@@ -73,5 +76,9 @@ public class OpponentData implements Serializable {
 
     public int getMob() {
         return mob;
+    }
+
+    public long getMobSpawnTime() {
+        return mobSpawnTime;
     }
 }
