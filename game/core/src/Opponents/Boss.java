@@ -34,7 +34,6 @@ public class Boss extends Opponent {
     private static final int mobId = 2;
     private static final int ATTACK_DAMAGE = 20;
     private static final float ATTACK_DURATION = 0.8f;
-    private static final float TELEPORT_DISTANCE = 10; // Adjust this value as needed
     private static final int TELEPORT_INTERVAL = 15; // Teleport interval in seconds
     private PlayerData closestPlayer;
     private boolean teleporting = false;
