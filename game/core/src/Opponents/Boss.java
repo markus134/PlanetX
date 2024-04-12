@@ -6,6 +6,7 @@ import Tools.B2WorldCreator;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Timer;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.PlayerData;
 
@@ -33,7 +34,10 @@ public class Boss extends Opponent {
     private static final int mobId = 2;
     private static final int ATTACK_DAMAGE = 20;
     private static final float ATTACK_DURATION = 0.8f;
+    private static final int TELEPORT_INTERVAL = 15; // Teleport interval in seconds
     private PlayerData closestPlayer;
+    private boolean teleporting = false;
+
 
     /**
      * First constructor for a boss that gets created in the center of the map
@@ -54,6 +58,7 @@ public class Boss extends Opponent {
 
         setBounds(0, 0, BOSS_WIDTH, BOSS_HEIGHT);
 
+        startTeleportTimer();
     }
 
     /**
@@ -66,11 +71,13 @@ public class Boss extends Opponent {
      * @param posX
      * @param posY
      */
-    public Boss(World world, PlayScreen screen, float posX, float posY, int health, String uuid) {
+    public Boss(World world, PlayScreen screen, float posX, float posY, int health, String uuid, long bossSpawnTime) {
         super(screen.getBossAtlas().findRegion("boss"), world, screen, health, timeForDeath);
 
         this.playScreen = screen;
         setUuid(uuid);
+
+        setSpawnTime(bossSpawnTime);
 
         initializeAnimations();
         defineOpponent(posX * MyGDXGame.PPM, posY * MyGDXGame.PPM, BOSS_RADIUS);
@@ -80,7 +87,7 @@ public class Boss extends Opponent {
 
         setBounds(0, 0, BOSS_WIDTH, BOSS_HEIGHT);
 
-
+        startTeleportTimer();
     }
 
     /**
@@ -173,6 +180,12 @@ public class Boss extends Opponent {
             flipRegionIfNeeded(dt, textureRegion);
 
             return textureRegion;
+
+        } else if (teleporting) {
+            // Use bossSkill animation while teleporting
+            TextureRegion textureRegion = bossSkill.getKeyFrame(stateTimer, true);
+            flipRegionIfNeeded(dt, textureRegion);
+            return textureRegion;
         } else if (currentState == State.DEAD) {
             // Handle dead state animation
             TextureRegion textureRegion = bossDeath.getKeyFrame(stateTimer, true);
@@ -247,29 +260,9 @@ public class Boss extends Opponent {
      * @return true if some player is close, otherwise false
      */
     private boolean playerIsClose() {
-        // Get the position of the boss
-        float bossX = b2body.getPosition().x;
-        float bossY = b2body.getPosition().y;
+        float shortestDistance = calculateClosestPlayer();
 
-        // Initialize variables to keep track of closest player
-        float shortestDistance = Float.MAX_VALUE;
-
-        // Iterate over all players to find the closest one
-        for (PlayerData info : MyGDXGame.playerDataMap.values()) {
-            float playerX = info.getX();
-            float playerY = info.getY();
-
-            float deltaX = playerX - bossX;
-            float deltaY = playerY - bossY;
-
-            float actualDistance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-            if (actualDistance < shortestDistance) {
-                shortestDistance = actualDistance;
-                closestPlayer = info;
-            }
-        }
-
+        System.out.println(shortestDistance);
         // Check if the distance to the closest player is less than the threshold
         return shortestDistance < PLAYER_PROXIMITY_THRESHOLD;
     }
@@ -288,6 +281,86 @@ public class Boss extends Opponent {
 
         // Check if player is above the boss
         return playerY > bossY;
+    }
+
+    /**
+     * Starts a timer to teleport the boss to the closest player every 15 seconds.
+     */
+    public void startTeleportTimer() {
+        // Calculate the time elapsed since the boss was spawned. This is done to avoid synchronization issues.
+        float timeElapsed = (System.currentTimeMillis() - getSpawnTime()) / 1000f;
+
+        // Calculate the remaining time before the next teleport event
+        float remainingTime = TELEPORT_INTERVAL - (timeElapsed % TELEPORT_INTERVAL);
+
+        // Start the teleport timer with the adjusted start time
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                teleportToClosestPlayer();
+            }
+        }, remainingTime, TELEPORT_INTERVAL);
+    }
+
+
+    /**
+     * Teleports the boss to the closest player.
+     */
+    private void teleportToClosestPlayer() {
+        calculateClosestPlayer();
+
+        if (closestPlayer != null) {
+            // Set teleporting to true so we could start the animation
+            teleporting = true;
+
+            // Add a bit of time to so animation could run its course before we teleport
+            Timer.schedule(new Timer.Task() {
+                @Override
+                public void run() {
+                    // Teleport to player's position
+                    b2body.setTransform(closestPlayer.getX(), closestPlayer.getY(), 0);
+                    Timer.schedule(new Timer.Task() {
+                        @Override
+                        public void run() {
+                            teleporting = false;
+                        }
+                    }, 0.2f);
+                }
+            }, 0.8f);
+        }
+    }
+
+    /**
+     * Finds the closest alive player to the boss.
+     */
+    private float calculateClosestPlayer() {
+        closestPlayer = null;
+
+        // Get the position of the boss
+        float bossX = b2body.getPosition().x;
+        float bossY = b2body.getPosition().y;
+
+        // Initialize variables to keep track of closest player
+        float shortestDistance = Float.MAX_VALUE;
+
+        // Iterate over all players to find the closest one
+        for (PlayerData info : MyGDXGame.playerDataMap.values()) {
+            if (info.getHealth() <= 0) continue;
+            float playerX = info.getX();
+            float playerY = info.getY();
+
+            float deltaX = playerX - bossX;
+            float deltaY = playerY - bossY;
+
+            float actualDistance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            if (actualDistance < shortestDistance) {
+                shortestDistance = actualDistance;
+                closestPlayer = info;
+            }
+        }
+
+        return shortestDistance;
     }
 
     /**

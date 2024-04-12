@@ -180,7 +180,7 @@ public class PlayScreen implements Screen {
 
 
             opponentDataMap.put(entry.getKey(),
-                    new OpponentData(opponent.getX(), opponent.getY(), opponent.getHealth(), opponent.getUuid(), opponent.getMobId()));
+                    new OpponentData(opponent.getX(), opponent.getY(), opponent.getHealth(), opponent.getUuid(), opponent.getMobId(), opponent.getSpawnTime()));
 
             if (opponent instanceof Robot) {
                 ((Robot) opponent).update(dt);
@@ -244,7 +244,8 @@ public class PlayScreen implements Screen {
                             entry.getValue().getX(),
                             entry.getValue().getY(),
                             entry.getValue().getHealth(),
-                            entry.getValue().getUuid());
+                            entry.getValue().getUuid(),
+                            entry.getValue().getMobSpawnTime());
 
                     opponents.put(key, boss);
                 } else if (entry.getValue().getMob() == MONSTER_ID) {

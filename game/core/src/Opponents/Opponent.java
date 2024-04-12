@@ -37,6 +37,9 @@ public abstract class Opponent extends Sprite {
     protected boolean runningRight;
     protected float stateTimer;
 
+    protected long spawnTime;
+
+
     public Opponent(TextureAtlas.AtlasRegion atlas, World world, PlayScreen screen, int health, int timeForExplosion) {
         super(atlas);
 
@@ -49,6 +52,7 @@ public abstract class Opponent extends Sprite {
         currentDirection = RunDirection.RIGHT;
         stateTimer = 0;
         runningRight = true;
+        spawnTime = System.currentTimeMillis();
     }
 
     /**
@@ -98,6 +102,10 @@ public abstract class Opponent extends Sprite {
                 closestY = playerY;
             }
         }
+
+        // If we haven't found any player then don't go anywhere
+        if (shortestDistance == Float.MAX_VALUE) return;
+
         if (Math.abs(closestX - opponentX) > 0.1) {
             if (closestX > opponentX) {
                 this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
@@ -233,6 +241,14 @@ public abstract class Opponent extends Sprite {
      */
     public int getMobId() {
         return 0;
+    }
+
+    public long getSpawnTime() {
+        return spawnTime;
+    }
+
+    public void setSpawnTime(long spawnTime) {
+        this.spawnTime = spawnTime;
     }
 
 
