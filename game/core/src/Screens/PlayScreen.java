@@ -102,7 +102,7 @@ public class PlayScreen implements Screen {
         opponentDataMap = new OpponentDataMap(worldUUID);
         gamePort = new FitViewport(MyGDXGame.V_WIDTH / MyGDXGame.PPM, MyGDXGame.V_HEIGHT / MyGDXGame.PPM, gameCam);
 
-        map = mapLoader.load("level/test_map.tmx");
+        map = mapLoader.load("level/map.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1 / MyGDXGame.PPM);
         gameCam.position.set(gamePort.getWorldWidth() / 2, gamePort.getWorldHeight() / 2, 0);
 
