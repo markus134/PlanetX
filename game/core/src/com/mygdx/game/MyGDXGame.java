@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import Bullets.Bullet;
+import Opponents.Opponent;
 import Screens.MenuScreen;
 import Screens.PlayScreen;
 import Screens.SettingsScreen;
@@ -58,14 +59,15 @@ public class MyGDXGame extends Game {
     public static final int V_WIDTH = 1920;
     public static final int V_HEIGHT = 1080;
     public static final float PPM = 100;
-    public static Client client;
+    public Client client;
     private MenuScreen menu;
     private final List<Object> receivedPackets = new ArrayList<>();
-    public static PlayScreen playScreen;
-    public static Map<Integer, Set<OtherPlayer>> playerDict = new HashMap<>();
-    public static HashMap<Integer, PlayerData> playerDataMap = new HashMap<>();
-    public static HashMap<String, OtherPlayer> playerHashMapByUuid = new HashMap<>();
+    public PlayScreen playScreen;
+    public Map<Integer, Set<OtherPlayer>> playerDict = new HashMap<>();
+    public HashMap<Integer, PlayerData> playerDataMap = new HashMap<>();
+    public HashMap<String, OtherPlayer> playerHashMapByUuid = new HashMap<>();
     public AskIfSessionIsFull serverReply;
+    public static HashMap<String, PlayScreen> worldUuidToScreen = new HashMap<>();
 
     /**
      * Initializes the game, creates music object and menu.
@@ -106,7 +108,22 @@ public class MyGDXGame extends Game {
      * Creates the playScreen.
      */
     public void createScreen(String worldUUID, int numberOfPlayers) {
-        playScreen = new PlayScreen(this, worldUUID, menu);
+        if (worldUuidToScreen.containsKey(worldUUID)) {
+            playScreen = worldUuidToScreen.get(worldUUID);
+
+            if (numberOfPlayers == 0) {
+                for (Map.Entry<String, Opponent> entry : playScreen.opponents.entrySet()) {
+                    Opponent opponent = entry.getValue();
+                    playScreen.world.destroyBody(opponent.getBody());
+                }
+
+                playScreen.opponents.clear();
+                playScreen.opponentDataMap.getMap().clear();
+                playScreen.opponentIds.clear();
+            }
+        } else {
+            playScreen = new PlayScreen(this, worldUUID, menu);
+        }
 
         if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID));
         if (numberOfPlayers == 0) client.sendTCP(new AddMultiPlayerWorld(worldUUID));
@@ -216,10 +233,10 @@ public class MyGDXGame extends Game {
      */
     private void handleOpponentData(OpponentDataMap opponentDataMap) {
         opponentDataMap.getMap().entrySet().removeIf(entry ->
-                PlayScreen.allDestroyedOpponents.contains(entry.getKey())
+                playScreen.allDestroyedOpponents.contains(entry.getKey())
         );
 
-        PlayScreen.opponentDataMap = opponentDataMap;
+        playScreen.opponentDataMap = opponentDataMap;
     }
 
     /**
@@ -245,7 +262,7 @@ public class MyGDXGame extends Game {
     }
 
     private void handleCrystalData(CrystalToRemove crystal) {
-        PlayScreen.crystals.remove(Crystal.getCrystalById(crystal.getId()));
+        playScreen.crystals.remove(Crystal.getCrystalById(crystal.getId()));
     }
 
     /**

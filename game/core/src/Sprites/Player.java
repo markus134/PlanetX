@@ -133,6 +133,7 @@ public class Player extends Sprite {
      * @param yForce
      */
     public void move(float xForce, float yForce) {
+        System.out.println("move " + xForce + " " + yForce);
         b2body.applyLinearImpulse(new Vector2(xForce, yForce), b2body.getWorldCenter(), true);
     }
 

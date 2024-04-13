@@ -16,7 +16,7 @@ import java.io.IOException;
 public class ExitToMainMenu implements Disposable {
 
     public final Stage stage;
-    private Dialog pauseDialog;
+    private final Dialog pauseDialog;
     private boolean toShow = false;
 
     /**

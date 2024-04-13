@@ -43,11 +43,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.mygdx.game.MyGDXGame.client;
 
 
 public class PlayScreen implements Screen {
-    private final MyGDXGame game;
+    public final MyGDXGame game;
     public static OrthographicCamera gameCam = new OrthographicCamera();
     private final Viewport gamePort;
     private final TiledMap map;
@@ -70,17 +69,17 @@ public class PlayScreen implements Screen {
     private Debug debug;
     public HUD hud;
     public BulletManager bulletManager;
-    public static List<String> opponentIds = new ArrayList<>();
-    public static HashMap<String, Opponent> opponents = new HashMap<>();
-    public static OpponentDataMap opponentDataMap;
+    public List<String> opponentIds = new ArrayList<>();
+    public HashMap<String, Opponent> opponents = new HashMap<>();
+    public OpponentDataMap opponentDataMap;
     private final PlayScreenInputHandler handler;
     private final B2WorldCreator b2WorldCreator;
-    public static Set<String> destroyedOpponents = new HashSet<>();
-    public static Set<String> allDestroyedOpponents = new HashSet<>();
-    public static Set<String> allDestroyedPlayers = new HashSet<>();
+    public Set<String> destroyedOpponents = new HashSet<>();
+    public Set<String> allDestroyedOpponents = new HashSet<>();
+    public Set<String> allDestroyedPlayers = new HashSet<>();
     private final Music music;
     public String worldUUID;
-    public static List<Crystal> crystals = new ArrayList<>();
+    public List<Crystal> crystals = new ArrayList<>();
     public final ExitToMainMenu pauseDialog;
     private final MenuScreen menuScreen;
     public final DeathScene deathScene;
@@ -126,6 +125,8 @@ public class PlayScreen implements Screen {
         music.setLooping(true);
         music.setVolume(SettingsScreen.musicValue);
         music.play();
+
+        MyGDXGame.worldUuidToScreen.put(worldUUID, this);
     }
 
     public void changeInputToHandler(){
@@ -196,7 +197,7 @@ public class PlayScreen implements Screen {
         b2WorldCreator.destroyDeadOpponents();
         b2WorldCreator.destroyDeadPlayers();
 
-        client.sendTCP(opponentDataMap);
+        game.client.sendTCP(opponentDataMap);
 
         for (String id : destroyedOpponents) {
             if (opponentDataMap.getMap().containsKey(id)) {
@@ -228,40 +229,38 @@ public class PlayScreen implements Screen {
         HashMap<String, OpponentData> map = opponentDataMap.getMap();
         for (Map.Entry<String, OpponentData> entry : map.entrySet()) {
             String key = entry.getKey();
-            if (!opponentIds.contains(key) && !destroyedOpponents.contains(key) && entry.getValue().getHealth() != 0) {
-                if (entry.getValue().getMob() == ROBOT_ID) {
-                    Robot robot = new Robot(world,
-                            this,
-                            entry.getValue().getX(),
-                            entry.getValue().getY(),
-                            entry.getValue().getHealth(),
-                            entry.getValue().getUuid());
+            OpponentData opponentData = entry.getValue();
 
-                    opponents.put(key, robot);
-                } else if (entry.getValue().getMob() == BOSS_ID) {
-                    Boss boss = new Boss(world,
-                            this,
-                            entry.getValue().getX(),
-                            entry.getValue().getY(),
-                            entry.getValue().getHealth(),
-                            entry.getValue().getUuid(),
-                            entry.getValue().getMobSpawnTime());
-
-                    opponents.put(key, boss);
-                } else if (entry.getValue().getMob() == MONSTER_ID) {
-                    Monster monster = new Monster(world,
-                            this,
-                            entry.getValue().getX(),
-                            entry.getValue().getY(),
-                            entry.getValue().getHealth(),
-                            entry.getValue().getUuid());
-
-                    opponents.put(key, monster);
-                }
-
-                opponentIds.add(key);
+            // Skip if opponent already exists or has been destroyed, or if health is 0
+            if (opponentIds.contains(key) || destroyedOpponents.contains(key) || opponentData.getHealth() == 0) {
+                continue;
             }
+
+            // Instantiate the appropriate opponent type based on mob ID
+            Opponent opponent;
+            switch (opponentData.getMob()) {
+                case ROBOT_ID:
+                    opponent = new Robot(world, this, opponentData.getX(), opponentData.getY(),
+                            opponentData.getHealth(), opponentData.getUuid());
+                    break;
+                case BOSS_ID:
+                    opponent = new Boss(world, this, opponentData.getX(), opponentData.getY(),
+                            opponentData.getHealth(), opponentData.getUuid(), opponentData.getMobSpawnTime());
+                    break;
+                case MONSTER_ID:
+                    opponent = new Monster(world, this, opponentData.getX(), opponentData.getY(),
+                            opponentData.getHealth(), opponentData.getUuid());
+                    break;
+                default:
+                    // Handle unexpected mob ID
+                    continue;
+            }
+
+            // Add the opponent to the opponents map and mark its ID as processed
+            opponents.put(key, opponent);
+            opponentIds.add(key);
         }
+
 
         gameCam.position.x = player.b2body.getPosition().x;
         gameCam.position.y = player.b2body.getPosition().y;
@@ -277,7 +276,7 @@ public class PlayScreen implements Screen {
                 || player.getIsMining()
                 || prevRunningRight != player.runningRight) {
 
-            client.sendTCP(new PlayerData(
+            game.client.sendTCP(new PlayerData(
                     gameCam.position.x,
                     gameCam.position.y,
                     player.getCurrentFrameIndex(),
@@ -338,7 +337,7 @@ public class PlayScreen implements Screen {
         player.draw(game.batch); // Draw the player after rendering the physics world
 
         // Draw the other players within the game
-        for (Map.Entry<Integer, Set<OtherPlayer>> entry : MyGDXGame.playerDict.entrySet()) {
+        for (Map.Entry<Integer, Set<OtherPlayer>> entry : game.playerDict.entrySet()) {
             for (OtherPlayer otherPlayer : entry.getValue()) {
                 otherPlayer.draw(game.batch);
             }
@@ -400,11 +399,12 @@ public class PlayScreen implements Screen {
      * Changes player's screen to the main menu screen if the player dies
      */
     public void goToMenuWhenPlayerIsDead() throws IOException {
-        world.destroyBody(player.b2body);
-        MyGDXGame.playerDict.clear();
-//        game.dispose();
+        //world.destroyBody(player.b2body);
+        // game.playerDict.clear();
+        // game.dispose();
+
         music.dispose();
-        client.sendTCP(new PlayerLeavesTheWorld(worldUUID));
+        game.client.sendTCP(new PlayerLeavesTheWorld(worldUUID));
 
         // currently we have not yet decided what to do when the player dies
         // bcs the dead players go back to the main menu, it is logical to

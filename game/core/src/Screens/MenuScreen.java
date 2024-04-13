@@ -20,7 +20,6 @@ import com.mygdx.game.MyGDXGame;
 
 import java.io.IOException;
 
-import static com.mygdx.game.MyGDXGame.client;
 
 public class MenuScreen extends ScreenAdapter {
     private Stage stage;
@@ -91,9 +90,9 @@ public class MenuScreen extends ScreenAdapter {
             public void clicked(InputEvent event, float x, float y) {
 
                 // this block terminates connection with the server
-                client.close();
+                game.client.close();
                 try {
-                    client.dispose();
+                    game.client.dispose();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

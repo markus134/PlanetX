@@ -85,7 +85,7 @@ public abstract class Opponent extends Sprite {
         float opponentY = this.b2body.getPosition().y;
 
 
-        for (PlayerData info : MyGDXGame.playerDataMap.values()) {
+        for (PlayerData info : playScreen.game.playerDataMap.values()) {
             if (info.getHealth() <= 0) continue; // Don't try to go towards dead players
 
             float playerX = info.getX();
@@ -102,6 +102,7 @@ public abstract class Opponent extends Sprite {
                 closestY = playerY;
             }
         }
+
 
         // If we haven't found any player then don't go anywhere
         if (shortestDistance == Float.MAX_VALUE) return;

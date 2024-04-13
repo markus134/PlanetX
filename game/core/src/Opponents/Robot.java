@@ -44,6 +44,8 @@ public class Robot extends Opponent {
     public Robot(World world, PlayScreen screen) {
         super(screen.getRobotAtlas().findRegion("Robot"), world, screen, MAX_HEALTH, timeForExplosion);
 
+        System.out.println("spawning robot 1");
+
 
         initializeAnimations();
         defineOpponent(screen.startPosX, screen.startPosY, ROBOT_RADIUS);
@@ -63,6 +65,8 @@ public class Robot extends Opponent {
      */
     public Robot(World world, PlayScreen screen, float posX, float posY, int health, String uuid) {
         super(screen.getRobotAtlas().findRegion("Robot"), world, screen, health, timeForExplosion);
+
+        System.out.println("spawning robot 2");
 
         setUuid(uuid);
 

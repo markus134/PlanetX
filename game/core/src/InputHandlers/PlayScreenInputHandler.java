@@ -25,10 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static Screens.PlayScreen.opponentDataMap;
-import static Screens.PlayScreen.opponentIds;
-import static Screens.PlayScreen.opponents;
-
 public class PlayScreenInputHandler implements InputProcessor {
     public Set<Integer> keysPressed = new HashSet<>();
     public int keyPresses = 0;
@@ -138,11 +134,11 @@ public class PlayScreenInputHandler implements InputProcessor {
         String uniqueID = UUID.randomUUID().toString();
         robot.setUuid(uniqueID);
 
-        opponentIds.add(uniqueID);
-        opponents.put(uniqueID, robot);
-        opponentDataMap.put(uniqueID, new OpponentData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid(), robot.getMobId(), robot.getSpawnTime()));
+        playScreen.opponentIds.add(uniqueID);
+        playScreen.opponents.put(uniqueID, robot);
+        playScreen.opponentDataMap.put(uniqueID, new OpponentData(robot.getX(), robot.getY(), robot.getHealth(), robot.getUuid(), robot.getMobId(), robot.getSpawnTime()));
 
-        MyGDXGame.client.sendTCP(opponentDataMap);
+        playScreen.game.client.sendTCP(playScreen.opponentDataMap);
     }
 
     /**
@@ -153,11 +149,11 @@ public class PlayScreenInputHandler implements InputProcessor {
         String uniqueID = UUID.randomUUID().toString();
         boss.setUuid(uniqueID);
 
-        opponentIds.add(uniqueID);
-        opponents.put(uniqueID, boss);
-        opponentDataMap.put(uniqueID, new OpponentData(boss.getX(), boss.getY(), boss.getHealth(), boss.getUuid(), boss.getMobId(), boss.getSpawnTime()));
+        playScreen.opponentIds.add(uniqueID);
+        playScreen.opponents.put(uniqueID, boss);
+        playScreen.opponentDataMap.put(uniqueID, new OpponentData(boss.getX(), boss.getY(), boss.getHealth(), boss.getUuid(), boss.getMobId(), boss.getSpawnTime()));
 
-        MyGDXGame.client.sendTCP(opponentDataMap);
+        playScreen.game.client.sendTCP(playScreen.opponentDataMap);
     }
 
     /**
@@ -168,11 +164,11 @@ public class PlayScreenInputHandler implements InputProcessor {
         String uniqueID = UUID.randomUUID().toString();
         monster.setUuid(uniqueID);
 
-        opponentIds.add(uniqueID);
-        opponents.put(uniqueID, monster);
-        opponentDataMap.put(uniqueID, new OpponentData(monster.getX(), monster.getY(), monster.getHealth(), monster.getUuid(), monster.getMobId(), monster.getSpawnTime()));
+        playScreen.opponentIds.add(uniqueID);
+        playScreen.opponents.put(uniqueID, monster);
+        playScreen.opponentDataMap.put(uniqueID, new OpponentData(monster.getX(), monster.getY(), monster.getHealth(), monster.getUuid(), monster.getMobId(), monster.getSpawnTime()));
 
-        MyGDXGame.client.sendTCP(opponentDataMap);
+        playScreen.game.client.sendTCP(playScreen.opponentDataMap);
     }
 
     /**
@@ -224,7 +220,7 @@ public class PlayScreenInputHandler implements InputProcessor {
 
             long revivingDuration = TimeUtils.timeSinceNanos(revivingStartTime);
             if (revivingDuration >= 1_000_000_000L) {
-                MyGDXGame.client.sendTCP(new RevivePlayer(closeDeadPlayer.getUuid()));
+                playScreen.game.client.sendTCP(new RevivePlayer(closeDeadPlayer.getUuid()));
                 closeDeadPlayer.setIsDead(false);
                 closeDeadPlayer.setIsFirstDeath(false);
             }
@@ -325,12 +321,12 @@ public class PlayScreenInputHandler implements InputProcessor {
         playScreen.player.setLastShotTime(lastShotTime);
         playScreen.player.setLastShotAngle(angleDegrees);
 
-        MyGDXGame.client.sendTCP(new BulletData(
+        playScreen.game.client.sendTCP(new BulletData(
                 velocityX,
                 velocityY,
                 x,
                 y,
-                opponentDataMap.getWorldUUID()
+                playScreen.opponentDataMap.getWorldUUID()
         ));
 
     }
@@ -347,7 +343,7 @@ public class PlayScreenInputHandler implements InputProcessor {
         // Convert player's position to Box2D coordinates
         Vector2 playerPos = new Vector2(playerX, playerY);
 
-        for (Crystal crystal : PlayScreen.crystals) {
+        for (Crystal crystal : playScreen.crystals) {
             // Get crystal position directly in Box2D coordinates
             Vector2 crystalPos = new Vector2(crystal.getX() / MyGDXGame.PPM, crystal.getY() / MyGDXGame.PPM);
 
@@ -373,7 +369,7 @@ public class PlayScreenInputHandler implements InputProcessor {
         // Convert player's position to Box2D coordinates
         Vector2 playerPos = new Vector2(playerX, playerY);
 
-        for (Map.Entry<Integer, Set<OtherPlayer>> entry : MyGDXGame.playerDict.entrySet()) {
+        for (Map.Entry<Integer, Set<OtherPlayer>> entry : playScreen.game.playerDict.entrySet()) {
             for (OtherPlayer otherPlayer : entry.getValue()) {
                 if (!otherPlayer.isInShell()) continue;
 
@@ -403,9 +399,9 @@ public class PlayScreenInputHandler implements InputProcessor {
                 if (isCloseToCrystal(playScreen.player.getX(), playScreen.player.getY())) {
                     long miningDuration = TimeUtils.timeSinceNanos(miningStartTime); // Calculate the duration of mining
                     if (miningDuration >= 1_000_000_000L) { // If mining duration is >= 1 second
-                        PlayScreen.crystals.remove(closeCrystal);
+                        playScreen.crystals.remove(closeCrystal);
 
-                        MyGDXGame.client.sendTCP(new CrystalToRemove(closeCrystal.getId()));
+                        playScreen.game.client.sendTCP(new CrystalToRemove(closeCrystal.getId()));
                         miningStartTime = 0;
                         playScreen.hud.addItemToNextFreeSlot(Items.CRYSTAL);
                     }

@@ -163,8 +163,8 @@ public class Boss extends Opponent {
                 // Cause damage to the closest player
                 String closestPlayerUuid = closestPlayer.getUuid();
 
-                if (MyGDXGame.playerHashMapByUuid.containsKey(closestPlayerUuid)) {
-                    OtherPlayer otherPlayer = MyGDXGame.playerHashMapByUuid.get(closestPlayerUuid);
+                if (playScreen.game.playerHashMapByUuid.containsKey(closestPlayerUuid)) {
+                    OtherPlayer otherPlayer =  playScreen.game.playerHashMapByUuid.get(closestPlayerUuid);
 
                     otherPlayer.takeDamage(ATTACK_DAMAGE);
                 } else {
@@ -344,7 +344,7 @@ public class Boss extends Opponent {
         float shortestDistance = Float.MAX_VALUE;
 
         // Iterate over all players to find the closest one
-        for (PlayerData info : MyGDXGame.playerDataMap.values()) {
+        for (PlayerData info : playScreen.game.playerDataMap.values()) {
             if (info.getHealth() <= 0) continue;
             float playerX = info.getX();
             float playerY = info.getY();
