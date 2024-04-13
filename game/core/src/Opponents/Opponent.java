@@ -236,12 +236,10 @@ public abstract class Opponent extends Sprite {
     }
 
     /**
-     * Return mob id. This is used to differentiate different mobs. All child classes should override this method.
+     * Return mob id. This is used to differentiate different mobs.
      * @return mob id
      */
-    public int getMobId() {
-        return 0;
-    }
+    public abstract int getMobId();
 
     public long getSpawnTime() {
         return spawnTime;

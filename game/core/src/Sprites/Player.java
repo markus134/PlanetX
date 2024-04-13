@@ -1,9 +1,11 @@
 package Sprites;
 
+import Items.Items;
 import Screens.PlayScreen;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -11,6 +13,7 @@ import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.mygdx.game.MyGDXGame;
 
 import java.util.ArrayList;
@@ -64,6 +67,11 @@ public class Player extends Sprite {
     private Animation<TextureRegion> playerDeath;
     private Animation<TextureRegion> playerRevive;
     private Animation<TextureRegion> playerShell;
+    private Animation<TextureRegion> playerRunUpperGun;
+    private Animation<TextureRegion> playerRunGun;
+    private Animation<TextureRegion> playerRunLowerGun;
+    private Animation<TextureRegion> playerRunUpGun;
+    private Animation<TextureRegion> playerRunDownGun;
     public ArrayList<TextureRegion> playerAllFrames = new ArrayList<>();
     private final HashMap<TextureRegion, Integer> frameIndexMap = new HashMap<>();
     public boolean runningRight;
@@ -78,6 +86,9 @@ public class Player extends Sprite {
     private boolean isDead = false;
     private int counter = 0;
     private final int timeForDeathAnimation = 5;
+    private PlayScreen playScreen;
+    private long lastShotTime = 0;
+    private float lastShotAngle = 0;
 
 
     /**
@@ -88,7 +99,9 @@ public class Player extends Sprite {
      */
     public Player(World world, PlayScreen screen) {
         super(screen.getPlayerAtlas().findRegion("player_spritesheet"));
+
         this.world = world;
+        this.playScreen = screen;
 
         currentState = State.STANDING;
         currentDirection = runDirection.RIGHT;
@@ -137,6 +150,12 @@ public class Player extends Sprite {
         playerDeath = createAnimation(0, 4, 7);
         playerRevive = createAnimation(0, 4, 8);
         playerShell = createAnimation(0, 4, 9);
+
+        playerRunGun = createAnimation(0, 5, 10);
+        playerRunUpperGun = createAnimation(0, 3, 11);
+        playerRunLowerGun = createAnimation(0, 3, 12);
+        playerRunUpGun = createAnimation(0, 3, 13);
+        playerRunDownGun = createAnimation(0, 3, 14);
     }
 
     public int getCurrentFrameIndex() {
@@ -181,73 +200,128 @@ public class Player extends Sprite {
     public TextureRegion getFrame(float dt) {
         currentState = getState();
 
-        // If the player is dead, and it's the first death, play the first three frames of playerShell
-        if (currentState == State.SHELL) {
-            flipRegionIfNeeded(dt, region);
+        // Check if highlighted inventory item is a gun
+        boolean hasGun = playScreen.hud.getHighlightedItem().equals(Items.BLASTER);
 
-            return playerShell.getKeyFrame(stateTimer, false);
-        } else if (currentState == State.DEAD) {
-            counter++;
-
-            if (counter > timeForDeathAnimation) {
-                shouldBeDestroyed = true;
-            }
-
-            TextureRegion textureRegion = playerDeath.getKeyFrame(stateTimer, false);
-            flipRegionIfNeeded(dt, textureRegion);
-
-            return textureRegion;
-        } else if (currentState == State.REVIVING) {
-            TextureRegion textureRegion = playerRevive.getKeyFrame(stateTimer, true);
-            flipRegionIfNeeded(dt, textureRegion);
-
-            return textureRegion;
-        } else if (currentState == State.MINING) {
-            TextureRegion textureRegion = playerMine.getKeyFrame(stateTimer, true);
-            flipRegionIfNeeded(dt, textureRegion);
-
-            return textureRegion;
-        } else if (currentState == State.STANDING) {
-            TextureRegion textureRegion = playerStand;
-            flipRegionIfNeeded(dt, textureRegion);
-
-            return textureRegion;
+        // Handle special states
+        switch (currentState) {
+            case SHELL:
+                return handleShellState(dt);
+            case DEAD:
+                return handleDeadState(dt);
+            case REVIVING:
+                return handleRevivingState(dt);
+            case MINING:
+                return handleMiningState(dt);
+            case STANDING:
+                return handleStandingState(dt);
+            default:
+                currentDirection = getRunDirection();
+                return handleRunningState(dt, hasGun);
         }
+    }
 
-        currentDirection = getRunDirection();
+    /**
+     * Handles the SHELL state animation.
+     *
+     * @param dt The time elapsed since the last frame.
+     * @return The current animation frame for the SHELL state.
+     */
+    private TextureRegion handleShellState(float dt) {
+        flipRegionIfNeeded(dt, region);
+        return playerShell.getKeyFrame(stateTimer, false);
+    }
 
+    /**
+     * Handles the DEAD state animation.
+     *
+     * @param dt The time elapsed since the last frame.
+     * @return The current animation frame for the DEAD state.
+     */
+    private TextureRegion handleDeadState(float dt) {
+        counter++;
+        if (counter > timeForDeathAnimation) {
+            shouldBeDestroyed = true;
+        }
+        TextureRegion textureRegion = playerDeath.getKeyFrame(stateTimer, false);
+        flipRegionIfNeeded(dt, textureRegion);
+        return textureRegion;
+    }
+
+    /**
+     * Handles the REVIVING state animation.
+     *
+     * @param dt The time elapsed since the last frame.
+     * @return The current animation frame for the REVIVING state.
+     */
+    private TextureRegion handleRevivingState(float dt) {
+        TextureRegion textureRegion = playerRevive.getKeyFrame(stateTimer, true);
+        flipRegionIfNeeded(dt, textureRegion);
+        return textureRegion;
+    }
+
+    /**
+     * Handles the MINING state animation.
+     *
+     * @param dt The time elapsed since the last frame.
+     * @return The current animation frame for the MINING state.
+     */
+    private TextureRegion handleMiningState(float dt) {
+        TextureRegion textureRegion = playerMine.getKeyFrame(stateTimer, true);
+        flipRegionIfNeeded(dt, textureRegion);
+        return textureRegion;
+    }
+
+    /**
+     * Handles the STANDING state animation.
+     *
+     * @param dt The time elapsed since the last frame.
+     * @return The current animation frame for the STANDING state.
+     */
+    private TextureRegion handleStandingState(float dt) {
+        TextureRegion textureRegion = playerStand;
+        flipRegionIfNeeded(dt, textureRegion);
+        return textureRegion;
+    }
+
+    /**
+     * Handles the animation for running states (UPPER, RIGHT, LOWER, UP, DOWN).
+     *
+     * @param dt     The time elapsed since the last frame.
+     * @param hasGun A boolean indicating whether the player has a gun.
+     * @return The current animation frame for the running state.
+     */
+    private TextureRegion handleRunningState(float dt, boolean hasGun) {
         TextureRegion region;
-
-        // We will only check the right side directions. If it's left, then we can flip the region
-        // The UPPER and LOWER mean upper right and lower right respectively (maybe change the names)
         switch (currentDirection) {
             case UPPER:
-                region = playerRunUpper.getKeyFrame(stateTimer, true);
+                region = hasGun ? playerRunUpperGun.getKeyFrame(stateTimer, true) : playerRunUpper.getKeyFrame(stateTimer, true);
                 break;
             case RIGHT:
-                region = playerRun.getKeyFrame(stateTimer, true);
+                region = hasGun ? playerRunGun.getKeyFrame(stateTimer, true) : playerRun.getKeyFrame(stateTimer, true);
                 break;
             case LOWER:
-                region = playerRunLower.getKeyFrame(stateTimer, true);
+                region = hasGun ? playerRunLowerGun.getKeyFrame(stateTimer, true) : playerRunLower.getKeyFrame(stateTimer, true);
                 break;
             case UP:
-                region = playerRunUp.getKeyFrame(stateTimer, true);
+                region = hasGun ? playerRunUpGun.getKeyFrame(stateTimer, true) : playerRunUp.getKeyFrame(stateTimer, true);
                 break;
             case DOWN:
-                region = playerRunDown.getKeyFrame(stateTimer, true);
+                region = hasGun ? playerRunDownGun.getKeyFrame(stateTimer, true) : playerRunDown.getKeyFrame(stateTimer, true);
                 break;
             default:
                 region = playerStand;
                 break;
         }
-
         flipRegionIfNeeded(dt, region);
-
         return region;
     }
 
+
+
+
     /**
-     * Flips the given TextureRegion based on the player's state and direction.
+     * Flips the given TextureRegion based on the player's state, direction, and last shot angle.
      *
      * @param dt     The time elapsed since the last frame.
      * @param region The TextureRegion to flip.
@@ -256,15 +330,22 @@ public class Player extends Sprite {
         // Start the animation from the start if currentState or currentDirection have changed
         stateTimer = (currentState == prevState && currentDirection == prevRunDirection) ? stateTimer + dt : 0;
 
-        if (currentState != State.RUNNING && currentState != State.STANDING) {
-            if ((!runningRight && !region.isFlipX()) || (runningRight && region.isFlipX())) {
-                region.flip(true, false);
-            }
-        } else {
+        boolean isRecentShot = recentlyShot();
+
+        if (isRecentShot) {
+            runningRight = lastShotAngle <= 90 && lastShotAngle >= -90;
+        }
+
+        if ((!runningRight && !region.isFlipX()) || (runningRight && region.isFlipX())) {
+            region.flip(true, false);
+        }
+
+        if (!isRecentShot) {
             // We will check if linear velocity indicates right or left movement and also check whether the region is already flipped
             if (b2body.getLinearVelocity().x < -0.1 && !region.isFlipX()) {
                 region.flip(true, false);
                 runningRight = false;
+
             } else if (b2body.getLinearVelocity().x > 0.1 && region.isFlipX()) {
                 region.flip(true, false);
                 runningRight = true;
@@ -274,6 +355,7 @@ public class Player extends Sprite {
         prevState = currentState;
         prevRunDirection = currentDirection;
     }
+
 
 
     /**
@@ -302,22 +384,39 @@ public class Player extends Sprite {
     }
 
     /**
-     * Retrieves the current running direction of the player based on linear velocity.
+     * Retrieves the current running direction of the player based on linear velocity and last shot angle
+     * if the last shot occurred less than 1 second ago.
      *
-     * @return The current running direction of the player (right side).
+     * @return The current running direction of the player.
      */
     private runDirection getRunDirection() {
-        float velocityX = Math.abs(b2body.getLinearVelocity().x); // We only care for positive x here so for example if running direction is upper left, then we want to return upper right
+        float velocityX = Math.abs(b2body.getLinearVelocity().x);
         float velocityY = b2body.getLinearVelocity().y;
 
-        if (velocityX > 0) {
-            if (velocityY > 0) return runDirection.UPPER;
-            else if (velocityY < 0) return runDirection.LOWER;
-            else return runDirection.RIGHT;
+        if (recentlyShot()) {
+            float lastShotAngle = getLastShotAngle();
+
+            if (lastShotAngle > 67.5 && lastShotAngle <= 112.5)
+                return runDirection.UP;
+            else if ((lastShotAngle > 22.5 && lastShotAngle <= 67.5) || (lastShotAngle > 112.5 && lastShotAngle <= 157.5)) {
+                return runDirection.UPPER;
+            } else if ((lastShotAngle > -22.5 && lastShotAngle <= 22.5) || (lastShotAngle < -157.5 || lastShotAngle > 157.5)) {
+                return runDirection.RIGHT;
+            } else if ((lastShotAngle > -67.5 && lastShotAngle <= -22.5) || (lastShotAngle < -112.5 && lastShotAngle >= -157.5)) {
+                return runDirection.LOWER;
+            } else {
+                return runDirection.DOWN;
+            }
         } else {
-            if (velocityY > 0) return runDirection.UP;
-            else if (velocityY < 0) return runDirection.DOWN;
-            else return null; // We should never reach this point hopefully as it means that the player isn't running
+            if (velocityX > 0) {
+                if (velocityY > 0) return runDirection.UPPER;
+                else if (velocityY < 0) return runDirection.LOWER;
+                else return runDirection.RIGHT;
+            } else {
+                if (velocityY > 0) return runDirection.UP;
+                else if (velocityY < 0) return runDirection.DOWN;
+                else return null; // We should never reach this point hopefully as it means that the player isn't running
+            }
         }
     }
 
@@ -401,5 +500,33 @@ public class Player extends Sprite {
 
     public boolean isInShell() {
         return isFirstDeath && isDead;
+    }
+
+    public long getLastShotTime() {
+        return lastShotTime;
+    }
+
+    public void setLastShotTime(long lastShotTime) {
+        this.lastShotTime = lastShotTime;
+    }
+
+    public float getLastShotAngle() {
+        return lastShotAngle;
+    }
+
+    public void setLastShotAngle(float lastShotAngle) {
+        this.lastShotAngle = lastShotAngle;
+    }
+
+    /**
+     * Check if we have recently shot a bullet.
+     * Recent in this case means less than 0.5s ago.
+     * @return true if player has recently shot, otherwise false
+     */
+    public boolean recentlyShot() {
+        long currentTime = TimeUtils.nanoTime();
+        long lastShotTime = getLastShotTime();
+
+        return (currentTime - lastShotTime) < 500_000_000L; // 0.5 second in nanoseconds
     }
 }

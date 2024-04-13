@@ -9,6 +9,7 @@ import Screens.PlayScreen;
 import Sprites.OtherPlayer;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -276,15 +277,12 @@ public class PlayScreenInputHandler implements InputProcessor {
             } else if (selectedItem.equals(Items.DRILL)) {
                 if (isCloseToCrystal(playScreen.player.getX(), playScreen.player.getY())) {
                     miningStartTime = TimeUtils.nanoTime();
-//                    System.out.println("close to crystal");
                 }
                 playScreen.player.setIsMining(true);
             } else if (selectedItem.equals(Items.CRYSTAL)) {
                 playScreen.player.recoverHealth(20);
                 playScreen.hud.removeHighlightedItem();
             }
-        } else if (button == Input.Buttons.RIGHT) {
-//            System.out.println("right click");
         }
 
         return true;
@@ -305,6 +303,12 @@ public class PlayScreenInputHandler implements InputProcessor {
         Vector2 direction = new Vector2(touchPoint.x - x, touchPoint.y - y);
         direction.nor(); // Normalize the direction vector
 
+        // Calculate angle in radians
+        float angle = MathUtils.atan2(direction.y, direction.x);
+
+        // Convert radians to degrees
+        float angleDegrees = MathUtils.radiansToDegrees * angle;
+
         x += direction.x * (PLAYER_RADIUS + BULLET_OFFSET);
         y += direction.y * (PLAYER_RADIUS + BULLET_OFFSET);
 
@@ -318,6 +322,9 @@ public class PlayScreenInputHandler implements InputProcessor {
         // Update the time of the last shot
         lastShotTime = currentTime;
 
+        playScreen.player.setLastShotTime(lastShotTime);
+        playScreen.player.setLastShotAngle(angleDegrees);
+
         MyGDXGame.client.sendTCP(new BulletData(
                 velocityX,
                 velocityY,
@@ -325,6 +332,7 @@ public class PlayScreenInputHandler implements InputProcessor {
                 y,
                 opponentDataMap.getWorldUUID()
         ));
+
     }
 
     /**
