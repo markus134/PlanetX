@@ -2,29 +2,26 @@ Generate the map using simplex noise.
 
 [x] - Figuring out what the hell am I even supposed to do. (7h 30m)
 [x] - Render colors to the screen. (2h)
-[ ] - Reimplement the GameScreen class with no collision.
-[ ] - Add a chunk system.
-[ ] - Render chunks on the screen.
-[ ] - Find out how to generate simple colors using Simplex noise.
-[ ] - Find out how to render box2d objects.
-[ ] - Render box2d objects to the screen. Add collision.
-[ ] - Add a seed system.
-[ ] - Render the current chunk and three chunks around the player.
-[ ] - Have the current chunk be visible. The outer three be gray. Further than that be black.
-[ ] - Add a way to easily do pathfinding.
+[x] - Find out how to generate simple colors using Simplex noise. (2h 30m)
+[x] - Add a seed system. (30m)
+[x] - Reimplement the GameScreen class with no collision? (30m)
+[x] - Add a chunk system. (30m)
+[x] - Render chunks to the screen. (10m)
+[x] - Find out how to render box2d objects. (20m)
+[x] - Render box2d objects to the screen. Add collision. (4h)
+[x] - Render the current chunk and three chunks around the player. (45m)
+[x] - Add a way to easily do pathfinding. (5m)
+[ ] - Add the current tileset to the map.
 [ ] - Add a way to manipulate the world (destroy and place tiles).
 [ ] - Save the map.
 [ ] - Load generated chunks from memory. Load new chunks with a noise algorithm.
-[ ] - Add the current tileset to the map.
 [ ] - Add a way to manipulate the output.
 [ ] - Prettify the map (grass, moss, etc.)
 [ ] - Show the map preview on game screen.
 [ ] - Add a way to predefine the world width and height in chunks.
+[ ] - Have the current chunk be visible. The outer three be gray. Further than that be black.
 
 [ ] - Add ores.
 [ ] - Add portals.
 [ ] - Add structures.
 [ ] - Add water. (swim?)
-
---- NOTES ---
-Generate ground first.

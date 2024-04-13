@@ -1,6 +1,6 @@
 package map;
 
-import tile.Tile;
+import map.tile.Tile;
 
 /**
  * Each chunk is defined as an area spanning x by y tiles.
@@ -79,7 +79,7 @@ public class Chunk {
     * @param type Type of the tile.
     */
     public void setTile(int x, int y, int type) {
-        tileArray[y][x] = type;
+        tileArray[y][x] = Tile.TILES[type];
     }
 
    /**

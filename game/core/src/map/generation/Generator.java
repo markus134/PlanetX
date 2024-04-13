@@ -6,7 +6,7 @@ import util.OpenSimplexNoise;
 
 import java.util.Random;
 
-public class Generator {
+public abstract class Generator {
 
     protected CustomWorld world;
     protected Chunk chunk;
@@ -16,7 +16,8 @@ public class Generator {
    /**
     * Create a generator object.
     *
-    * @param world World object to generate for.
+    * @param world World to generate in.
+    * @param chunk Chunk to generate in.
     */
     public Generator(CustomWorld world, Chunk chunk) {
         this.world = world;
@@ -28,8 +29,6 @@ public class Generator {
    /**
     * Generate the world.
     */
-    public abstract void generate() {
-        TerrainGenerator(chunk);
-    }
+    public abstract void generate();
 }
 
