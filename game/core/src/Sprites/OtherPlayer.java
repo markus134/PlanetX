@@ -77,6 +77,13 @@ public class OtherPlayer extends Sprite {
         addFrames(0, 4, 7);
         addFrames(0, 4, 8);
         addFrames(0, 4, 9);
+
+        addFrames(0, 5, 10);
+        addFrames(0, 3, 11);
+        addFrames(0, 3, 12);
+        addFrames(0, 3, 13);
+        addFrames(0, 3, 14);
+
     }
 
     /**
@@ -99,8 +106,6 @@ public class OtherPlayer extends Sprite {
      * Updates the player's position and sets the appropriate animation frame.
      */
     public void update(float posX, float posY, int frame_index, boolean runningRight) {
-        System.out.println(String.format("Other player running right: %b", runningRight));
-
         if (frame_index != -1) {
             b2body.setTransform(posX, posY, 0); // Set the box2d body at the right place
             setPosition(posX - getWidth() / 2, posY - getHeight() / 2); // Set the texture pos at the right place
