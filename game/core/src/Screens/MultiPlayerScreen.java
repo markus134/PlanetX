@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.mygdx.game.MyGDXGame.client;
 
 public class MultiPlayerScreen extends ScreenAdapter {
     private final MenuScreen menuScreen;
@@ -203,14 +202,14 @@ public class MultiPlayerScreen extends ScreenAdapter {
         connectButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                client.sendTCP(new AskIfSessionIsFull(multiPlayerWorlds.get(chosenWorld)));
+                game.client.sendTCP(new AskIfSessionIsFull(multiPlayerWorlds.get(chosenWorld)));
                 while (game.serverReply == null) {
                     // waiting for the reply
                     System.out.println("waiting");
                 }
                 if (chosenWorld != null && !game.serverReply.isFull()) {
                     game.createScreen(multiPlayerWorlds.get(chosenWorld), 0);
-                    game.setScreen(MyGDXGame.playScreen);
+                    game.setScreen(game.playScreen);
                     music.dispose();
                 } else {
                     game.setScreen(handleFullWorld);

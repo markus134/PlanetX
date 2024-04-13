@@ -34,6 +34,7 @@ public class B2WorldCreator {
     private static final int CRYSTALS_LAYER_INDEX = 4;
     private static final int START_POSITION_LAYER_INDEX = 5;
     private static final int WALLS_LAYER_INDEX = 6;
+    private PlayScreen playScreen;
 
     /**
      * Constructor
@@ -44,6 +45,7 @@ public class B2WorldCreator {
      */
     public B2WorldCreator(World world, TiledMap map, PlayScreen playScreen) {
         this.world = world;
+        this.playScreen = playScreen;
 
         setStartPosition(map, playScreen);
         createWalls(map);
@@ -100,7 +102,7 @@ public class B2WorldCreator {
             float x = rectangle.getX();
             float y = rectangle.getY();
 
-            PlayScreen.crystals.add(new Crystal(x, y));
+            playScreen.crystals.add(new Crystal(x, y));
         }
     }
 
@@ -181,9 +183,9 @@ public class B2WorldCreator {
 
             String uniqueId = opponent.getUuid();
 
-            PlayScreen.opponents.remove(uniqueId);
-            PlayScreen.destroyedOpponents.add(uniqueId);
-            PlayScreen.allDestroyedOpponents.add(uniqueId);
+            playScreen.opponents.remove(uniqueId);
+            playScreen.destroyedOpponents.add(uniqueId);
+            playScreen.allDestroyedOpponents.add(uniqueId);
         }
 
         opponentsToDestroy.clear();
@@ -198,9 +200,9 @@ public class B2WorldCreator {
             System.out.println("Destroying player");
             world.destroyBody(player.b2body);
 
-            MyGDXGame.playerDict.remove(player.getId());
-            MyGDXGame.playerDataMap.remove(player.getId());
-            PlayScreen.allDestroyedPlayers.add(player.getUuid());
+            playScreen.game.playerDict.remove(player.getId());
+            playScreen.game.playerDataMap.remove(player.getId());
+            playScreen.allDestroyedPlayers.add(player.getUuid());
         }
 
         playersToDestroy.clear();

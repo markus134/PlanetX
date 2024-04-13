@@ -13,12 +13,11 @@ import com.mygdx.game.MyGDXGame;
 
 import java.io.IOException;
 
-import static Screens.PlayScreen.allDestroyedPlayers;
 
 public class DeathScene implements Disposable {
 
     public final Stage stage;
-    private Dialog deathScene;
+    private final Dialog deathScene;
     private boolean toShow = false;
 
     /**
@@ -36,7 +35,7 @@ public class DeathScene implements Disposable {
             protected void result(Object object) {
                 if (object.equals(true)) {
                     try {
-                        allDestroyedPlayers.add(player.getUuid());
+                        playScreen.allDestroyedPlayers.add(player.getUuid());
                         playScreen.goToMenuWhenPlayerIsDead();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
