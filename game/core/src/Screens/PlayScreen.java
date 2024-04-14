@@ -423,9 +423,6 @@ public class PlayScreen implements Screen {
         music.dispose();
         game.client.sendTCP(new PlayerLeavesTheWorld(worldUUID));
 
-        // currently we have not yet decided what to do when the player dies
-        // bcs the dead players go back to the main menu, it is logical to
-        // remove their connection with the server
 //        MyGDXGame.client.close();
 //        MyGDXGame.client.dispose();
 
