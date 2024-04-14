@@ -135,6 +135,12 @@ public class GameServer {
         });
     }
 
+    /**
+     * Handles the situation when the player leaves the world
+     *
+     * @param connection connection
+     * @param message    has the worldID in it
+     */
     public void handlePlayerLeavesTheWorld(Connection connection, PlayerLeavesTheWorld message) {
         String worldID = message.getWorldID();
         Session session = worlds.get(worldID);
@@ -143,6 +149,12 @@ public class GameServer {
         playerDatas.get(worldID).remove(connection.getID());
     }
 
+    /**
+     * Asks the server whether the player can join a world
+     *
+     * @param connection connection
+     * @param request    that asks if the world is full
+     */
     public void handleAskIfSessionIsFull(Connection connection, AskIfSessionIsFull request) {
         String worldID = request.getWorldID();
         System.out.println("Sending a reply");
@@ -206,19 +218,7 @@ public class GameServer {
             removedCrystalsByWorld.put(worldUUID, new HashSet<>());
         } else {
             Session session = worlds.get(worldUUID);
-            if (session.isFull()) {
-                // sending one packet is not enough
-                // bcs we already send a lot of packets
-                // if we just send one, it might get discarded
-                // or lost in the process. That is why we are
-                // sending 60. It is an arbitrary number
-
-                for (int i = 0; i < 60; i++) {
-                    connection.sendTCP("LOL");
-                }
-            } else {
-                session.addPlayer(connection);
-            }
+            session.addPlayer(connection);
         }
 
         sendRemovedCrystalsToNewConnection(connection);
