@@ -2,6 +2,7 @@ package Tools;
 
 import Bullets.Bullet;
 import Opponents.Boss;
+import Opponents.Monster;
 import Opponents.Opponent;
 import Opponents.Robot;
 import Screens.PlayScreen;
@@ -23,9 +24,14 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.game.MyGDXGame;
 import crystals.Crystal;
+import serializableObjects.OpponentData;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 public class B2WorldCreator {
     private static final Set<Opponent> opponentsToDestroy = new HashSet<>();
@@ -34,6 +40,8 @@ public class B2WorldCreator {
     private static final int CRYSTALS_LAYER_INDEX = 4;
     private static final int START_POSITION_LAYER_INDEX = 5;
     private static final int WALLS_LAYER_INDEX = 6;
+    private static final int OPPONENT_SPAWN_LAYER_INDEX = 7;
+    private final List<Rectangle> opponentSpawnPoints = new ArrayList<>();
     private PlayScreen playScreen;
 
     /**
@@ -51,6 +59,57 @@ public class B2WorldCreator {
         createWalls(map);
         createCrystals(map);
         setContactListener();
+        setOpponentSpawnPoints(map);
+    }
+
+    private void setOpponentSpawnPoints(TiledMap map) {
+        for (MapObject object : map.getLayers().get(OPPONENT_SPAWN_LAYER_INDEX).getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rectangle = ((RectangleMapObject) object).getRectangle();
+            opponentSpawnPoints.add(rectangle);
+        }
+    }
+
+    public void spawnMob() {
+        // select a possible spawnPoint
+        int maxSpawnPointID = opponentSpawnPoints.size();
+        int spawnPointID = new Random().nextInt(maxSpawnPointID);
+
+        Rectangle spawn = opponentSpawnPoints.get(spawnPointID);
+        float x = spawn.getX() / MyGDXGame.PPM;
+        float y = spawn.getY() / MyGDXGame.PPM;
+
+        // 0, 1, 2, 3 - robot, 4, 5, 6, 7 - monster, 8, 9 - boss
+        int whatMobToSpawn = new Random().nextInt(10);
+        String uniqueID = UUID.randomUUID().toString();
+        Opponent opponent;
+
+        List<Integer> arr1 = new ArrayList<>(List.of(0, 1, 2, 3));
+        List<Integer> arr2 = new ArrayList<>(List.of(4, 5, 6, 7));
+
+        if (arr1.contains(whatMobToSpawn)) {
+            System.out.println("robot");
+            opponent = new Robot(world, playScreen, x, y, Robot.MAX_HEALTH, uniqueID);
+        } else if (arr2.contains(whatMobToSpawn)) {
+            System.out.println("monster");
+            opponent = new Monster(world, playScreen, x, y, Monster.MAX_HEALTH, uniqueID);
+        } else {
+            System.out.println("boss");
+            opponent = new Boss(world, playScreen, x, y, Boss.MAX_HEALTH, uniqueID, System.currentTimeMillis());
+        }
+
+        playScreen.opponentIds.add(uniqueID);
+        playScreen.opponents.put(uniqueID, opponent);
+        playScreen.opponentDataMap.put(
+                uniqueID,
+                new OpponentData(
+                        opponent.getX(),
+                        opponent.getY(),
+                        opponent.getHealth(),
+                        opponent.getUuid(),
+                        opponent.getMobId(),
+                        opponent.getSpawnTime()));
+
+        playScreen.game.client.sendTCP(playScreen.opponentDataMap);
     }
 
     /**

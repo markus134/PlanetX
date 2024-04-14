@@ -73,7 +73,7 @@ public class CreateSinglePlayerWorld extends ScreenAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 String worldName = worldNameTextField.getText();
-                if (!SinglePlayerScreen.singlePlayerWorlds.containsKey(worldName)) {
+                if (!SinglePlayerScreen.singlePlayerWorlds.containsKey(worldName) && !worldName.isBlank()) {
                     SinglePlayerScreen.singlePlayerWorlds.put(worldName, UUID.randomUUID().toString());
                     game.setScreen(singlePlayerScreen);
                 } else {

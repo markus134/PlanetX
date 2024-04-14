@@ -15,7 +15,7 @@ public class Boss extends Opponent {
     private static final float BOSS_RADIUS = 50 / MyGDXGame.PPM;
     private static final float BOSS_HEIGHT = 300 / MyGDXGame.PPM;
     private static final float BOSS_WIDTH = 300 / MyGDXGame.PPM;
-    private static final int MAX_HEALTH = 300;
+    public static final int MAX_HEALTH = 300;
     private static final int FRAME_WIDTH = 100;
     private static final int FRAME_HEIGHT = 100;
     private Animation<TextureRegion> bossEastAndSouthEast;
