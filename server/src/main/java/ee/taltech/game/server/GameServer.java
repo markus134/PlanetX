@@ -84,8 +84,8 @@ public class GameServer {
                         handleRemovedCrystal(connection, (CrystalToRemove) object);
                     }
 
-                    if (object instanceof RevivePlayer) {
-                        server.sendToAllExceptTCP(connection.getID(), object);
+                    if (object instanceof RevivePlayer data) {
+                        handleRevivePlayer(connection, data);
                     }
 
                     // new singlePlayer world is created
@@ -136,6 +136,22 @@ public class GameServer {
     }
 
     /**
+     * Handles revive data
+     * @param connection of the player
+     * @param data reviveData
+     */
+    public void handleRevivePlayer(Connection connection, RevivePlayer data) {
+        String worldID = getWorldUUIDForConnection(connection);
+        if (worldID != null) {
+            for (Connection con : worlds.get(worldID).getPlayers()) {
+                if (!con.equals(connection)) {
+                    con.sendTCP(data);
+                }
+            }
+        }
+    }
+
+    /**
      * Handles the situation when the player leaves the world
      *
      * @param connection connection
@@ -178,7 +194,11 @@ public class GameServer {
         String worldUUID = getWorldUUIDForConnection(connection);
         if (worldUUID != null) {
             removedCrystalsByWorld.get(worldUUID).add(crystal);
-            server.sendToAllExceptTCP(connection.getID(), crystal);
+            for (Connection con : worlds.get(worldUUID).getPlayers()) {
+                if (!con.equals(connection)) {
+                    con.sendTCP(crystal);
+                }
+            }
         }
     }
 
