@@ -18,7 +18,7 @@ public class Robot extends Opponent {
     private static final int FRAME_WIDTH = 48;
     private static final int FRAME_HEIGHT = 48;
 
-    private static final int MAX_HEALTH = 100;
+    public static final int MAX_HEALTH = 100;
 
     public World world;
     private Animation<TextureRegion> robotRunUpper;

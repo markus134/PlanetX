@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="200" height="200" tilewidth="32" tileheight="32" infinite="0" nextlayerid="14" nextobjectid="47">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="200" height="200" tilewidth="32" tileheight="32" infinite="0" nextlayerid="15" nextobjectid="99">
  <tileset firstgid="1" source="MainLev2.0.tsx"/>
  <layer id="1" name="room outlines" width="200" height="200">
   <data encoding="csv">
@@ -817,7 +817,7 @@
 328,172,278,328,326,72,123,18,328,325,22,222,23,74,276,173,223,175,125,275,71,324,172,122,226,124,123,21,122,326,227,325,224,173,172,73,222,123,277,71,124,275,120,226,171,277,277,176,73,324,277,173,20,122,326,21,326,223,171,121,324,120,123,277,175,70,223,23,227,224,176,74,70,70,171,21,73,21,20,276,278,22,173,69,222,325,120,226,125,122,223,23,23,19,22,324,174,175,171,275,70,22,123,72,125,71,329,19,21,120,124,225,324,122,122,327,274,122,174,227,125,121,226,328,122,70,223,71,223,328,326,223,329,328,277,174,74,121,123,123,325,324,70,278,20,122,277,225,19,325,123,275,274,123,69,174,121,21,328,173,275,226,227,329,121,121,171,120,225,71,20,172,72,171,275,278,326,174,327,223,222,71,227,276,223,21,175,18,74,173,72,22,274,276,74,227,274,120,274,226
 </data>
  </layer>
- <objectgroup id="4" name="crystals">
+ <objectgroup id="4" name="crystals" visible="0">
   <object id="41" x="3076.92" y="3104.9">
    <point/>
   </object>
@@ -2409,5 +2409,91 @@
   <object id="1401" x="4032" y="4192" width="32" height="32"/>
   <object id="1402" x="4064" y="4192" width="32" height="32"/>
   <object id="1403" x="2368" y="4224" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="14" name="opponent spawnpoints">
+  <object id="71" x="2660.32" y="3288.89">
+   <point/>
+  </object>
+  <object id="72" x="4050.79" y="355.556">
+   <point/>
+  </object>
+  <object id="73" x="4628.57" y="653.968">
+   <point/>
+  </object>
+  <object id="74" x="5212.7" y="450.794">
+   <point/>
+  </object>
+  <object id="75" x="5542.86" y="838.095">
+   <point/>
+  </object>
+  <object id="76" x="4380.95" y="1111.11">
+   <point/>
+  </object>
+  <object id="77" x="3644.44" y="1282.54">
+   <point/>
+  </object>
+  <object id="78" x="3352.38" y="1587.3">
+   <point/>
+  </object>
+  <object id="79" x="3238.1" y="2063.49">
+   <point/>
+  </object>
+  <object id="80" x="2920.63" y="2419.05">
+   <point/>
+  </object>
+  <object id="81" x="2476.19" y="2152.38">
+   <point/>
+  </object>
+  <object id="82" x="2571.43" y="1765.08">
+   <point/>
+  </object>
+  <object id="83" x="3911.11" y="2158.73">
+   <point/>
+  </object>
+  <object id="84" x="4361.9" y="2158.73">
+   <point/>
+  </object>
+  <object id="85" x="5117.46" y="2146.03">
+   <point/>
+  </object>
+  <object id="86" x="5625.4" y="2209.52">
+   <point/>
+  </object>
+  <object id="87" x="5834.92" y="1523.81">
+   <point/>
+  </object>
+  <object id="88" x="5815.87" y="2704.76">
+   <point/>
+  </object>
+  <object id="89" x="5441.27" y="2952.38">
+   <point/>
+  </object>
+  <object id="90" x="4768.25" y="2965.08">
+   <point/>
+  </object>
+  <object id="91" x="5034.92" y="3511.11">
+   <point/>
+  </object>
+  <object id="92" x="5282.54" y="3974.6">
+   <point/>
+  </object>
+  <object id="93" x="4565.08" y="3707.94">
+   <point/>
+  </object>
+  <object id="94" x="4139.68" y="3904.76">
+   <point/>
+  </object>
+  <object id="95" x="3365.08" y="3904.76">
+   <point/>
+  </object>
+  <object id="96" x="2355.56" y="4057.14">
+   <point/>
+  </object>
+  <object id="97" x="2438.1" y="3549.21">
+   <point/>
+  </object>
+  <object id="98" x="2209.52" y="2926.98">
+   <point/>
+  </object>
  </objectgroup>
 </map>

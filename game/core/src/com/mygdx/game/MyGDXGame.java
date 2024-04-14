@@ -42,7 +42,7 @@ import java.util.Set;
  */
 public class MyGDXGame extends Game {
     // Constants
-    // private static final String SERVER_ADDRESS = "193.40.255.19";
+//     private static final String SERVER_ADDRESS = "193.40.255.19";
     private static final String SERVER_ADDRESS = "localhost";
     private static final int SERVER_TCP_PORT = 8080;
     private static final int SERVER_UDP_PORT = 8081;

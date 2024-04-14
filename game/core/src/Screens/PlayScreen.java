@@ -87,6 +87,12 @@ public class PlayScreen implements Screen {
     private static final int ROBOT_ID = 1;
     private static final int BOSS_ID = 2;
     private static final int MONSTER_ID = 3;
+    private static final int MOB_SPAWN_INTERVAL = 5; // a mob is spawned each 5 seconds
+    private int mobSpawnIntervalCounter = 0;
+    private static final int MOB_PER_PLAYER = 10; // 10 mobs per player
+    private static final int TIME_FOR_PLAYERS_TO_CHILL_AT_THE_BEGINNING = 30; // players have 30 seconds at
+    // the beginning when no mobs are spawned
+    private int chillTimeCounter = 0;
 
     /**
      * Constructor for the PlayScreen.
@@ -291,6 +297,17 @@ public class PlayScreen implements Screen {
             player.prevState = player.currentState;
             prevFrameIndex = player.getCurrentFrameIndex();
             prevRunningRight = player.runningRight;
+        }
+
+        if (TIME_FOR_PLAYERS_TO_CHILL_AT_THE_BEGINNING * 60 > chillTimeCounter) {
+            chillTimeCounter++;
+        } else {
+            if (mobSpawnIntervalCounter >= MOB_SPAWN_INTERVAL * 60
+                    && opponentIds.size() <= MOB_PER_PLAYER * (game.playerDict.size() + 1)) {
+                b2WorldCreator.spawnMob();
+                mobSpawnIntervalCounter = 0;
+            }
+            mobSpawnIntervalCounter++;
         }
 
         destroyedOpponents.clear();
