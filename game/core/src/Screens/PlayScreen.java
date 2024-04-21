@@ -37,6 +37,7 @@ import serializableObjects.PlayerLeavesTheWorld;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -446,5 +447,18 @@ public class PlayScreen implements Screen {
         monsterAtlas.dispose();
         deathScene.dispose();
         pauseDialog.dispose();
+    }
+
+    public static void main(String[] args) {
+        Set<String> set1 = new HashSet<>(Arrays.asList("a"));
+        Set<String> set2 = new HashSet<>(Arrays.asList("b", "c", "d", "e"));
+
+        Set<String> removed = new HashSet<>(set1);
+        removed.removeAll(set2); // removed = ["a"]
+
+        set1.addAll(set2); // set1 = ["b", "c", "d", "e"]
+
+        System.out.println("Modified set1: " + set1);
+        System.out.println("Removed elements: " + removed);
     }
 }

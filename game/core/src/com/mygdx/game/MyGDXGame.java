@@ -3,8 +3,10 @@ package com.mygdx.game;
 import Bullets.Bullet;
 import Opponents.Opponent;
 import Screens.MenuScreen;
+import Screens.MultiPlayerScreen;
 import Screens.PlayScreen;
 import Screens.SettingsScreen;
+import Screens.SinglePlayerScreen;
 import Sprites.OtherPlayer;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -29,12 +31,16 @@ import serializableObjects.PlayerLeavesTheWorld;
 import serializableObjects.RevivePlayer;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 
 /**
@@ -42,8 +48,8 @@ import java.util.Set;
  */
 public class MyGDXGame extends Game {
     // Constants
-     private static final String SERVER_ADDRESS = "193.40.255.19";
-//    private static final String SERVER_ADDRESS = "localhost";
+//     private static final String SERVER_ADDRESS = "193.40.255.19";
+    private static final String SERVER_ADDRESS = "localhost";
     private static final int SERVER_TCP_PORT = 8080;
     private static final int SERVER_UDP_PORT = 8081;
 
@@ -68,6 +74,7 @@ public class MyGDXGame extends Game {
     public HashMap<String, OtherPlayer> playerHashMapByUuid = new HashMap<>();
     public AskIfSessionIsFull serverReply;
     public static HashMap<String, PlayScreen> worldUuidToScreen = new HashMap<>();
+    public String playerUUID;
 
     /**
      * Initializes the game, creates music object and menu.
@@ -76,6 +83,11 @@ public class MyGDXGame extends Game {
     public void create() {
         batch = new SpriteBatch();
         initializeMenu();
+        try {
+            createFileWithUUID();
+        } catch (IOException e) {
+            throw new RuntimeException("Error creating a file with the unique id");
+        }
     }
 
     /**
@@ -125,8 +137,8 @@ public class MyGDXGame extends Game {
             playScreen = new PlayScreen(this, worldUUID, menu);
         }
 
-        if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID));
-        if (numberOfPlayers == 0) client.sendTCP(new AddMultiPlayerWorld(worldUUID));
+        if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID, playerUUID, SinglePlayerScreen.singlePlayerWorlds));
+        if (numberOfPlayers == 0) client.sendTCP(new AddMultiPlayerWorld(worldUUID, playerUUID, MultiPlayerScreen.multiPlayerWorlds));
     }
 
     /**
@@ -314,6 +326,27 @@ public class MyGDXGame extends Game {
             }
             return false;
         });
+    }
+
+    private void createFileWithUUID() throws IOException {
+        String homeDir = System.getProperty("user.home");
+        Path path = Paths.get(homeDir, ".PlanetX", ".config", ".uniqueID", ".uuid.txt");
+
+        if (Files.exists(path)) {
+            this.playerUUID = Files.readString(path);
+        } else {
+            try {
+                String uuid = UUID.randomUUID().toString();
+                Files.createDirectories(path.getParent());
+                Files.createFile(path);
+                Files.write(path, uuid.getBytes());
+
+                this.playerUUID = Files.readString(path);
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     /**

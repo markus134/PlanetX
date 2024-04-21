@@ -1,23 +1,33 @@
 package serializableObjects;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AddSinglePlayerWorld {
 
-    private String worldUUID;
+    private final String worldUUID;
+    private final String playerID;
+    private final Map<String, String> singlePlayerWorlds;
 
     /**
      * Empty constructor
      */
     public AddSinglePlayerWorld() {
         this.worldUUID = "";
+        this.playerID = "";
+        this.singlePlayerWorlds = new HashMap<>();
     }
 
     /**
      * Constructor
      *
-     * @param uuid world unique id
+     * @param worldUUID world unique id
+     * @param playerID  player unique id
      */
-    public AddSinglePlayerWorld(String uuid) {
-        this.worldUUID = uuid;
+    public AddSinglePlayerWorld(String worldUUID, String playerID, Map<String, String> singlePlayerWorlds) {
+        this.worldUUID = worldUUID;
+        this.playerID = playerID;
+        this.singlePlayerWorlds = singlePlayerWorlds;
     }
 
     /**
@@ -27,5 +37,22 @@ public class AddSinglePlayerWorld {
      */
     public String getWorldUUID() {
         return worldUUID;
+    }
+
+    /**
+     * Gets the id of the player
+     *
+     * @return string
+     */
+    public String getPlayerID() {
+        return playerID;
+    }
+
+    /**
+     * Gets the singleplayer worlds
+     * @return map
+     */
+    public Map<String, String> getSinglePlayerWorlds() {
+        return singlePlayerWorlds;
     }
 }

@@ -32,6 +32,9 @@ public class GameServer {
     private final Map<String, Map<Integer, Object>> playerDatas = new HashMap<>();
     private final Map<String, OpponentDataMap> opponentDatas = new HashMap<>();
     private final Map<String, Set<CrystalToRemove>> removedCrystalsByWorld = new HashMap<>();
+    private final Map<String, Map<String, String>> playerIDToSinglePlayerWorldNames = new HashMap<>();
+    // playerID, world name, world id
+    private final Map<String, Map<String, String>> playerIDToMultiPlayerWorldNames = new HashMap<>();
 
     /**
      * Constructor for GameServer. Initializes the KryoNet server and binds it to the specified ports.
@@ -88,12 +91,10 @@ public class GameServer {
                         handleRevivePlayer(connection, data);
                     }
 
-                    // new singlePlayer world is created
                     if (object instanceof AddSinglePlayerWorld) {
                         createSinglePlayerWorld(connection, (AddSinglePlayerWorld) object);
                     }
 
-                    // new multiPlayer world is created
                     if (object instanceof AddMultiPlayerWorld) {
                         createMultiPlayerWorld(connection, (AddMultiPlayerWorld) object);
                     }
@@ -107,8 +108,6 @@ public class GameServer {
                     if (object instanceof OpponentDataMap) {
                         updateOpponentData((OpponentDataMap) object);
                     }
-
-
                 }
             }
 
@@ -209,13 +208,30 @@ public class GameServer {
      * @param e          The AddSinglePlayerWorld object indicating the request to create a single-player world.
      */
     private void createSinglePlayerWorld(Connection connection, AddSinglePlayerWorld e) {
-        Session session = new Session(1);
-        session.addPlayer(connection);
+        String worldUUID = e.getWorldUUID();
+        String playerID = e.getPlayerID();
 
-        worlds.put(e.getWorldUUID(), session);
-        playerDatas.put(e.getWorldUUID(), new HashMap<>());
-        opponentDatas.put(e.getWorldUUID(), new OpponentDataMap(e.getWorldUUID()));
-        removedCrystalsByWorld.put(e.getWorldUUID(), new HashSet<>());
+        Map<String, String> previousSinglePlayerWorlds = playerIDToSinglePlayerWorldNames.get(playerID);
+        Map<String, String> newSinglePlayerWorlds = e.getSinglePlayerWorlds();
+
+        if (previousSinglePlayerWorlds == null) {
+            playerIDToSinglePlayerWorldNames.put(playerID, e.getSinglePlayerWorlds());
+        } else {
+
+        }
+
+        if (!worlds.containsKey(worldUUID)) {
+            Session session = new Session(1);
+            session.addPlayer(connection);
+
+            worlds.put(worldUUID, session);
+            playerDatas.put(worldUUID, new HashMap<>());
+            opponentDatas.put(worldUUID, new OpponentDataMap(e.getWorldUUID()));
+            removedCrystalsByWorld.put(worldUUID, new HashSet<>());
+        } else {
+            Session session = worlds.get(worldUUID);
+            session.addPlayer(connection);
+        }
     }
 
     /**
