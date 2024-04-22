@@ -11,10 +11,12 @@ import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.AskIfSessionIsFull;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
+import serializableObjects.GetSinglePlayerWorldNames;
 import serializableObjects.OpponentData;
 import serializableObjects.OpponentDataMap;
 import serializableObjects.PlayerData;
 import serializableObjects.PlayerLeavesTheWorld;
+import serializableObjects.RemoveSinglePlayerWorld;
 import serializableObjects.RevivePlayer;
 
 
@@ -57,6 +59,8 @@ public class GameServer {
         kryo.register(RevivePlayer.class);
         kryo.register(AskIfSessionIsFull.class);
         kryo.register(PlayerLeavesTheWorld.class);
+        kryo.register(GetSinglePlayerWorldNames.class);
+        kryo.register(RemoveSinglePlayerWorld.class);
 
         server.start();
         try {
@@ -74,6 +78,15 @@ public class GameServer {
              */
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
+
+                    if (object instanceof RemoveSinglePlayerWorld request) {
+                        System.out.println("Received a remove-world request");
+                        handleRemoveSinglePlayerWorld(connection, request);
+                    }
+
+                    if (object instanceof GetSinglePlayerWorldNames request) {
+                        handleGetSinglePlayerWorldNames(connection, request);
+                    }
 
                     if (object instanceof PlayerLeavesTheWorld message) {
                         handlePlayerLeavesTheWorld(connection, message);
@@ -121,17 +134,33 @@ public class GameServer {
                 System.out.println("Player disconnected: " + connection.getID());
 
                 String worldUUID = removeDisconnectedPlayer(connection);
-
-                if (!worldUUID.equals("crazy")) {
-                    if (worlds.get(worldUUID).isEmpty()) {
-                        worlds.remove(worldUUID);
-                        playerDatas.remove(worldUUID);
-                        opponentDatas.remove(worldUUID);
-                        removedCrystalsByWorld.remove(worldUUID);
-                    }
-                }
             }
         });
+    }
+
+    public void handleRemoveSinglePlayerWorld(Connection connection, RemoveSinglePlayerWorld message) {
+        System.out.println("removing the world");
+        String playerID = message.getPlayerID();
+        String worldID = message.getWorldID();
+        String worldName = message.getWorldName();
+
+        worlds.remove(worldID);
+        playerDatas.remove(worldID);
+        opponentDatas.remove(worldID);
+        removedCrystalsByWorld.remove(worldID);
+
+        if (playerIDToSinglePlayerWorldNames.containsKey(playerID)){
+            System.out.println("Removing here as well");
+            Map<String, String> newMap = playerIDToSinglePlayerWorldNames.get(playerID);
+            newMap.remove(worldName);
+            playerIDToSinglePlayerWorldNames.put(playerID, newMap);
+        }
+    }
+
+    public void handleGetSinglePlayerWorldNames(Connection connection, GetSinglePlayerWorldNames request) {
+        request.setWorldNamesAndIDs(playerIDToSinglePlayerWorldNames.get(request.getPlayerID()));
+        System.out.println("The server is sending " + playerIDToSinglePlayerWorldNames.get(request.getPlayerID()));
+        connection.sendTCP(request);
     }
 
     /**
@@ -211,14 +240,7 @@ public class GameServer {
         String worldUUID = e.getWorldUUID();
         String playerID = e.getPlayerID();
 
-        Map<String, String> previousSinglePlayerWorlds = playerIDToSinglePlayerWorldNames.get(playerID);
-        Map<String, String> newSinglePlayerWorlds = e.getSinglePlayerWorlds();
-
-        if (previousSinglePlayerWorlds == null) {
-            playerIDToSinglePlayerWorldNames.put(playerID, e.getSinglePlayerWorlds());
-        } else {
-
-        }
+        playerIDToSinglePlayerWorldNames.put(playerID, e.getSinglePlayerWorlds());
 
         if (!worlds.containsKey(worldUUID)) {
             Session session = new Session(1);
