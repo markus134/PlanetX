@@ -24,11 +24,13 @@ import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.AskIfSessionIsFull;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
+import serializableObjects.GetMultiPlayerWorldNames;
 import serializableObjects.GetSinglePlayerWorldNames;
 import serializableObjects.OpponentData;
 import serializableObjects.OpponentDataMap;
 import serializableObjects.PlayerData;
 import serializableObjects.PlayerLeavesTheWorld;
+import serializableObjects.RemoveMultiPlayerWorld;
 import serializableObjects.RemoveSinglePlayerWorld;
 import serializableObjects.RevivePlayer;
 
@@ -91,6 +93,7 @@ public class MyGDXGame extends Game {
             throw new RuntimeException("Error creating a file with the unique id");
         }
         getSinglePlayerWorlds();
+        getMultiPlayerWorlds();
     }
 
     /**
@@ -165,6 +168,8 @@ public class MyGDXGame extends Game {
         kryo.register(PlayerLeavesTheWorld.class);
         kryo.register(GetSinglePlayerWorldNames.class);
         kryo.register(RemoveSinglePlayerWorld.class);
+        kryo.register(GetMultiPlayerWorldNames.class);
+        kryo.register(RemoveMultiPlayerWorld.class);
     }
 
     /**
@@ -190,8 +195,9 @@ public class MyGDXGame extends Game {
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
                     if (object instanceof GetSinglePlayerWorldNames) {
-                        System.out.println("handling info");
                         handleGetSinglePlayerWorldNames((GetSinglePlayerWorldNames) object);
+                    } else if (object instanceof GetMultiPlayerWorldNames) {
+                        handleGetMultiPlayerWorldNames((GetMultiPlayerWorldNames) object);
                     } else if (object instanceof AskIfSessionIsFull) {
                         serverReply = (AskIfSessionIsFull) object;
                     } else {
@@ -238,7 +244,15 @@ public class MyGDXGame extends Game {
         } else {
             SinglePlayerScreen.singlePlayerWorlds = reply.getWorldNamesAndIDs();
         }
-        System.out.println("The new HashMap is the following" + SinglePlayerScreen.singlePlayerWorlds);
+    }
+
+    private void handleGetMultiPlayerWorldNames(GetMultiPlayerWorldNames reply) {
+        if (reply.getWorldNamesAndIDs() == null) {
+            MultiPlayerScreen.multiPlayerWorlds = new HashMap<>();
+        } else {
+            MultiPlayerScreen.multiPlayerWorlds = reply.getWorldNamesAndIDs();
+        }
+        menu.multiPlayerScreen.updateTableValuesAfterRemovingWorld();
     }
 
     /**
@@ -367,6 +381,10 @@ public class MyGDXGame extends Game {
 
     private void getSinglePlayerWorlds() {
         client.sendTCP(new GetSinglePlayerWorldNames(playerUUID));
+    }
+
+    private void getMultiPlayerWorlds() {
+        client.sendTCP(new GetMultiPlayerWorldNames(playerUUID));
     }
 
     /**
