@@ -23,7 +23,6 @@ public abstract class Opponent extends Sprite {
     private static final float VELOCITY_THRESHOLD = 0.5f;
     protected int health;
     private String uuid;
-    private final int timeForExplosion;
     protected int counter = 0;
 
     protected final ArrayList<TextureRegion> allFrames = new ArrayList<>();
@@ -40,13 +39,12 @@ public abstract class Opponent extends Sprite {
     protected long spawnTime;
 
 
-    public Opponent(TextureAtlas.AtlasRegion atlas, World world, PlayScreen screen, int health, int timeForExplosion) {
+    public Opponent(TextureAtlas.AtlasRegion atlas, World world, PlayScreen screen, int health) {
         super(atlas);
 
         this.world = world;
         this.playScreen = screen;
         this.health = health;
-        this.timeForExplosion = timeForExplosion;
 
         currentState = State.STANDING;
         currentDirection = RunDirection.RIGHT;
@@ -212,10 +210,6 @@ public abstract class Opponent extends Sprite {
      */
     public void takeDamage(int damage) {
         health -= damage;
-
-        if (health <= 0 && counter >= timeForExplosion) {
-            counter = 0;
-        }
     }
 
     /**

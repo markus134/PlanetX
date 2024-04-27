@@ -27,7 +27,7 @@ public class InventoryBar extends Actor {
     public final Table hotbarTable;
     private final Image[] slotImages;
     private final Image[] itemImages;
-    private Items[] items;
+    private final Items[] items;
     private int highlightedSlotIndex;
 
     /**

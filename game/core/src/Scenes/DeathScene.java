@@ -46,7 +46,7 @@ public class DeathScene implements Disposable {
         };
         deathScene.text("Game Over!");
         deathScene.button("Go to menu", true);
-        deathScene.center();
+        centerScene();
         deathScene.setMovable(false);
     }
 
@@ -54,6 +54,7 @@ public class DeathScene implements Disposable {
      * Show the popUp menu
      */
     public void showStage() {
+        System.out.println("showing");
         if (!deathScene.hasParent()) {
             stage.addActor(deathScene);
         }
@@ -69,6 +70,24 @@ public class DeathScene implements Disposable {
      */
     public boolean isToShow() {
         return toShow;
+    }
+
+    /**
+     * Center the scene. Made a separate method instead of using just doing pauseDialog.center() to avoid bugs
+     * with resizing
+     */
+    public void centerScene() {
+        float stageWidth = stage.getWidth();
+        float stageHeight = stage.getHeight();
+
+        float dialogWidth = deathScene.getWidth();
+        float dialogHeight = deathScene.getHeight();
+
+        // Center the dialog based on the stage dimensions
+        float posX = (stageWidth - dialogWidth) / 2;
+        float posY = (stageHeight - dialogHeight) / 2;
+
+        deathScene.setPosition(posX, posY);
     }
 
     /**

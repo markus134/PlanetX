@@ -38,16 +38,16 @@ public class SinglePlayerScreen extends ScreenAdapter {
     private final MyGDXGame game;
     private Stage stage;
     private Batch batch;
-    private Music music;
+    private final Music music;
     private BackGround backGround;
     public static Map<String, String> singlePlayerWorlds;
-    private CreateSinglePlayerWorld createMenu;
-    private Label.LabelStyle labelForTable = new LabelForTable(60).getLabelStyle();
-    private TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
+    private final CreateSinglePlayerWorld createMenu;
+    private final Label.LabelStyle labelForTable = new LabelForTable(60).getLabelStyle();
+    private final TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
     private Table displayTable;
     private TextButton newButton;
     private Table table;
-    private List<Container> containers = new ArrayList<>();
+    private final List<Container> containers = new ArrayList<>();
     private String chosenWorld;
     private Pixmap pixmapNormal;
     private Pixmap pixmapClicked;
@@ -129,7 +129,7 @@ public class SinglePlayerScreen extends ScreenAdapter {
                         }
                     });
 
-                    Container<Table> container = new Container<Table>();
+                    Container<Table> container = new Container<>();
                     containers.add(container);
 
                     Table rowTable = new Table();

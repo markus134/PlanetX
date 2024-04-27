@@ -1,6 +1,7 @@
 package Screens.ReusableElements;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -27,6 +28,7 @@ public class LabelStyle extends Label.LabelStyle {
         labelStyle = new Label.LabelStyle();
         labelStyle.font = font;
     }
+
 
     /**
      * Getter method.

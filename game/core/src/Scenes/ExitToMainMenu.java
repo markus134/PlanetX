@@ -50,7 +50,7 @@ public class ExitToMainMenu implements Disposable {
         pauseDialog.button("Yes", true);
         pauseDialog.button("No", false);
         pauseDialog.key(Input.Keys.ESCAPE, false);
-        pauseDialog.center();
+        centerDialog();
         pauseDialog.setMovable(false);
     }
 
@@ -73,6 +73,24 @@ public class ExitToMainMenu implements Disposable {
      */
     public boolean isToShow() {
         return toShow;
+    }
+
+    /**
+     * Center the dialog. Made a separate method instead of using just doing pauseDialog.center() to avoid bugs
+     * with resizing
+     */
+    public void centerDialog() {
+        float stageWidth = stage.getWidth();
+        float stageHeight = stage.getHeight();
+
+        float dialogWidth = pauseDialog.getWidth();
+        float dialogHeight = pauseDialog.getHeight();
+
+        // Center the dialog based on the stage dimensions
+        float posX = (stageWidth - dialogWidth) / 2;
+        float posY = (stageHeight - dialogHeight) / 2;
+
+        pauseDialog.setPosition(posX, posY);  // Update the dialog's position
     }
 
     /**

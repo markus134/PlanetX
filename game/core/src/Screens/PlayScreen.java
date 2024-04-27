@@ -179,9 +179,26 @@ public class PlayScreen implements Screen {
      */
     public void update(float dt) throws IOException {
         world.step(1 / 60f, 6, 2);
-
         player.update(dt);
 
+        updateOpponents(dt);
+
+        bulletManager.update(dt);
+
+        handleDestroyedOpponents();
+        handlePlayerDeath();
+        spawnNewOpponents();
+        updateGameCamera();
+        sendPlayerData();
+        handleMobSpawning();
+
+        destroyedOpponents.clear();
+    }
+
+    /**
+     * Updates opponents' logic and sends their data to the server.
+     */
+    private void updateOpponents(float dt) {
         // updating opponents and adding info to the opponentDataMap, which is sent to the server
         for (Map.Entry<String, Opponent> entry : opponents.entrySet()) {
             Opponent opponent = entry.getValue();
@@ -199,12 +216,14 @@ public class PlayScreen implements Screen {
             }
 
         }
+    }
 
-        bulletManager.update(dt);
+    /**
+     * Handles destroyed opponents, removing them from various data structures.
+     */
+    private void handleDestroyedOpponents() {
         b2WorldCreator.destroyDeadOpponents();
         b2WorldCreator.destroyDeadPlayers();
-
-        game.client.sendTCP(opponentDataMap);
 
         for (String id : destroyedOpponents) {
             if (opponentDataMap.getMap().containsKey(id)) {
@@ -224,65 +243,77 @@ public class PlayScreen implements Screen {
             }
         }
 
+        game.client.sendTCP(opponentDataMap);
+    }
+
+    /**
+     * Handles the player's death and triggers the death scene if needed.
+     */
+    private void handlePlayerDeath() {
         if (player.shouldBeDestroyed) {
             if (deathSceneCounter == 0) {
                 deathScene.showStage();
                 deathSceneCounter++;
             }
         }
+    }
 
-        // opponentDataMap is constantly being updated by all client instances
-        // this block of code makes new instances of the robot or boss if it is an opponent with a new ID
+    /**
+     * Spawns new opponents based on opponentDataMap if not already spawned.
+     */
+    private void spawnNewOpponents() {
         HashMap<String, OpponentData> map = opponentDataMap.getMap();
         for (Map.Entry<String, OpponentData> entry : map.entrySet()) {
             String key = entry.getKey();
             OpponentData opponentData = entry.getValue();
+            if (shouldSkipOpponent(opponentData, key)) continue;
 
-            // Skip if opponent already exists or has been destroyed, or if health is 0
-            if (opponentIds.contains(key) || destroyedOpponents.contains(key) || opponentData.getHealth() == 0) {
-                continue;
-            }
-
-            // Instantiate the appropriate opponent type based on mob ID
-            Opponent opponent;
-            switch (opponentData.getMob()) {
-                case ROBOT_ID:
-                    opponent = new Robot(world, this, opponentData.getX(), opponentData.getY(),
-                            opponentData.getHealth(), opponentData.getUuid());
-                    break;
-                case BOSS_ID:
-                    opponent = new Boss(world, this, opponentData.getX(), opponentData.getY(),
-                            opponentData.getHealth(), opponentData.getUuid(), opponentData.getMobSpawnTime());
-                    break;
-                case MONSTER_ID:
-                    opponent = new Monster(world, this, opponentData.getX(), opponentData.getY(),
-                            opponentData.getHealth(), opponentData.getUuid());
-                    break;
-                default:
-                    // Handle unexpected mob ID
-                    continue;
-            }
-
-            // Add the opponent to the opponents map and mark its ID as processed
+            Opponent opponent = createOpponent(opponentData);
             opponents.put(key, opponent);
             opponentIds.add(key);
         }
+    }
 
+    /**
+     * Determines whether an opponent should be skipped.
+     */
+    private boolean shouldSkipOpponent(OpponentData data, String key) {
+        return opponentIds.contains(key) ||
+                destroyedOpponents.contains(key) ||
+                data.getHealth() == 0;
+    }
 
+    /**
+     * Updates the game camera's position and view.
+     */
+    private void updateGameCamera() {
         gameCam.position.x = player.b2body.getPosition().x;
         gameCam.position.y = player.b2body.getPosition().y;
-
         gameCam.update();
         renderer.setView(gameCam);
+    }
 
-        // It is used to send the position of the player to the server
-        if (prevPosX != gameCam.position.x
-                || prevPosY != gameCam.position.y
-                || player.prevState != player.currentState
-                || player.getCurrentFrameIndex() != prevFrameIndex
-                || player.getIsMining()
-                || prevRunningRight != player.runningRight) {
+    /**
+     * Creates an opponent instance based on the mob ID.
+     */
+    private Opponent createOpponent(OpponentData data) {
+        switch (data.getMob()) {
+            case ROBOT_ID:
+                return new Robot(world, this, data.getX(), data.getY(), data.getHealth(), data.getUuid());
+            case BOSS_ID:
+                return new Boss(world, this, data.getX(), data.getY(), data.getHealth(), data.getUuid(), data.getMobSpawnTime());
+            case MONSTER_ID:
+                return new Monster(world, this, data.getX(), data.getY(), data.getHealth(), data.getUuid());
+            default:
+                throw new IllegalArgumentException("Unknown mob ID: " + data.getMob());
+        }
+    }
 
+    /**
+     * Sends player data to the server if position or state has changed.
+     */
+    private void sendPlayerData() {
+        if (hasPlayerDataChanged()) {
             game.client.sendTCP(new PlayerData(
                     gameCam.position.x,
                     gameCam.position.y,
@@ -293,25 +324,47 @@ public class PlayScreen implements Screen {
                     worldUUID
             ));
 
-            prevPosX = gameCam.position.x;
-            prevPosY = gameCam.position.y;
-            player.prevState = player.currentState;
-            prevFrameIndex = player.getCurrentFrameIndex();
-            prevRunningRight = player.runningRight;
+            updatePreviousPlayerData();
         }
+    }
 
+    /**
+     * Checks if the player data has changed.
+     */
+    private boolean hasPlayerDataChanged() {
+        return prevPosX != gameCam.position.x ||
+                prevPosY != gameCam.position.y ||
+                player.prevState != player.currentState ||
+                player.getCurrentFrameIndex() != prevFrameIndex ||
+                player.getIsMining() ||
+                prevRunningRight != player.runningRight;
+    }
+
+    /**
+     * Updates the previous player data for tracking changes.
+     */
+    private void updatePreviousPlayerData() {
+        prevPosX = gameCam.position.x;
+        prevPosY = gameCam.position.y;
+        player.prevState = player.currentState;
+        prevFrameIndex = player.getCurrentFrameIndex();
+        prevRunningRight = player.runningRight;
+    }
+
+    /**
+     * Handles the spawning of mobs if the time and conditions are met.
+     */
+    private void handleMobSpawning() {
         if (TIME_FOR_PLAYERS_TO_CHILL_AT_THE_BEGINNING * 60 > chillTimeCounter) {
             chillTimeCounter++;
         } else {
-            if (mobSpawnIntervalCounter >= MOB_SPAWN_INTERVAL * 60
-                    && opponentIds.size() <= MOB_PER_PLAYER * (game.playerDict.size() + 1)) {
+            if (mobSpawnIntervalCounter >= MOB_SPAWN_INTERVAL * 60 &&
+                    opponentIds.size() <= MOB_PER_PLAYER * (game.playerDict.size() + 1)) {
                 b2WorldCreator.spawnMob();
                 mobSpawnIntervalCounter = 0;
             }
             mobSpawnIntervalCounter++;
         }
-
-        destroyedOpponents.clear();
     }
 
     /**
@@ -397,6 +450,9 @@ public class PlayScreen implements Screen {
         hud.stage.getViewport().update(width, height, true);
         pauseDialog.stage.getViewport().update(width, height, true);
         deathScene.stage.getViewport().update(width, height, true);
+
+        pauseDialog.centerDialog();
+        deathScene.centerScene();
     }
 
     @Override

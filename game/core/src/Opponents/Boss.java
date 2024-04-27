@@ -47,7 +47,7 @@ public class Boss extends Opponent {
      * @param screen
      */
     public Boss(World world, PlayScreen screen) {
-        super(screen.getBossAtlas().findRegion("boss"), world, screen, MAX_HEALTH, timeForDeath);
+        super(screen.getBossAtlas().findRegion("boss"), world, screen, MAX_HEALTH);
 
         this.playScreen = screen;
         initializeAnimations();
@@ -72,7 +72,7 @@ public class Boss extends Opponent {
      * @param posY
      */
     public Boss(World world, PlayScreen screen, float posX, float posY, int health, String uuid, long bossSpawnTime) {
-        super(screen.getBossAtlas().findRegion("boss"), world, screen, health, timeForDeath);
+        super(screen.getBossAtlas().findRegion("boss"), world, screen, health);
 
         this.playScreen = screen;
         setUuid(uuid);

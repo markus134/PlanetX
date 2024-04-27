@@ -86,7 +86,7 @@ public class Player extends Sprite {
     private boolean isDead = false;
     private int counter = 0;
     private final int timeForDeathAnimation = 5;
-    private PlayScreen playScreen;
+    private final PlayScreen playScreen;
     private long lastShotTime = 0;
     private float lastShotAngle = 0;
 
@@ -133,7 +133,7 @@ public class Player extends Sprite {
      * @param yForce
      */
     public void move(float xForce, float yForce) {
-        System.out.println("move " + xForce + " " + yForce);
+        // System.out.println("move " + xForce + " " + yForce);
         b2body.applyLinearImpulse(new Vector2(xForce, yForce), b2body.getWorldCenter(), true);
     }
 
@@ -369,7 +369,7 @@ public class Player extends Sprite {
         float velocityY = b2body.getLinearVelocity().y;
         float velocityThreshold = VELOCITY_THRESHOLD; // Added a velocity threshold as we want the standing texture to be rendered right away not when velocity reaches zero
 
-        if (isDead && isFirstDeath) {
+        if (isDead && isFirstDeath && !playScreen.game.playerDict.isEmpty()) {
             return State.SHELL;
         } else if (isDead) {
             return State.DEAD;

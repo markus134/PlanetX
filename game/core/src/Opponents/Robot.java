@@ -42,7 +42,7 @@ public class Robot extends Opponent {
      * @param screen
      */
     public Robot(World world, PlayScreen screen) {
-        super(screen.getRobotAtlas().findRegion("Robot"), world, screen, MAX_HEALTH, timeForExplosion);
+        super(screen.getRobotAtlas().findRegion("Robot"), world, screen, MAX_HEALTH);
 
         System.out.println("spawning robot 1");
 
@@ -64,7 +64,7 @@ public class Robot extends Opponent {
      * @param posY
      */
     public Robot(World world, PlayScreen screen, float posX, float posY, int health, String uuid) {
-        super(screen.getRobotAtlas().findRegion("Robot"), world, screen, health, timeForExplosion);
+        super(screen.getRobotAtlas().findRegion("Robot"), world, screen, health);
 
         System.out.println("spawning robot 2");
 

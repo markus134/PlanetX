@@ -17,7 +17,6 @@ public class Monster extends Opponent {
     private static final float MONSTER_WIDTH = 100 / MyGDXGame.PPM;
     private static final int FRAME_WIDTH = 64;
     private static final int FRAME_HEIGHT = 64;
-
     public static final int MAX_HEALTH = 100;
 
     public World world;
@@ -25,7 +24,7 @@ public class Monster extends Opponent {
     private Animation<TextureRegion> monsterSouth;
     private Animation<TextureRegion> monsterNorth;
     private Animation<TextureRegion> monsterDeath;
-    public TextureRegion region;
+    private TextureRegion region;
     private static final int timeForDeath = 40;
     private static final int mobId = 3;
     private static final float DAMAGE_DISTANCE_THRESHOLD = 1.0f;
@@ -42,7 +41,7 @@ public class Monster extends Opponent {
      * @param screen
      */
     public Monster(World world, PlayScreen screen) {
-        super(screen.getMonsterAtlas().findRegion("monster"), world, screen, MAX_HEALTH, timeForDeath);
+        super(screen.getMonsterAtlas().findRegion("monster"), world, screen, MAX_HEALTH);
 
         initializeAnimations();
         defineOpponent(screen.startPosX, screen.startPosY, MONSTER_RADIUS);
@@ -61,7 +60,7 @@ public class Monster extends Opponent {
      * @param posY
      */
     public Monster(World world, PlayScreen screen, float posX, float posY, int health, String uuid) {
-        super(screen.getMonsterAtlas().findRegion("monster"), world, screen, health, timeForDeath);
+        super(screen.getMonsterAtlas().findRegion("monster"), world, screen, health);
 
         setUuid(uuid);
 
