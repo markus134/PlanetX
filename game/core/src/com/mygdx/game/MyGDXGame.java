@@ -92,6 +92,7 @@ public class MyGDXGame extends Game {
         } catch (IOException e) {
             throw new RuntimeException("Error creating a file with the unique id");
         }
+        System.out.println(playerUUID);
         getSinglePlayerWorlds();
         getMultiPlayerWorlds();
     }
@@ -200,6 +201,7 @@ public class MyGDXGame extends Game {
                         handleGetMultiPlayerWorldNames((GetMultiPlayerWorldNames) object);
                     } else if (object instanceof AskIfSessionIsFull) {
                         serverReply = (AskIfSessionIsFull) object;
+                        handleAskIfSessionIsFull();
                     } else {
                         receivedPackets.add(object); // Store received packet in a list, this is because render is only called 60 times a second
                     }
@@ -304,6 +306,11 @@ public class MyGDXGame extends Game {
         playScreen.crystals.remove(Crystal.getCrystalById(crystal.getId()));
     }
 
+    private void handleAskIfSessionIsFull() {
+        menu.multiPlayerScreen.waitingScreen.currentPlayers = serverReply.getCurrentAmountOfPlayers();
+        menu.multiPlayerScreen.waitingScreen.maxPlayers = serverReply.getMaxAmountOfPlayers();
+    }
+
     /**
      * Updates player data received from the server.
      *
@@ -360,6 +367,7 @@ public class MyGDXGame extends Game {
         Path path = Paths.get(homeDir, ".PlanetX", ".config", ".uniqueID", ".uuid.txt");
 
         if (Files.exists(path)) {
+            System.out.println(path);
             this.playerUUID = Files.readString(path);
         } else {
             try {
@@ -367,6 +375,7 @@ public class MyGDXGame extends Game {
                 Files.createDirectories(path.getParent());
                 Files.createFile(path);
                 Files.write(path, uuid.getBytes());
+                System.out.println(path);
 
                 this.playerUUID = Files.readString(path);
 

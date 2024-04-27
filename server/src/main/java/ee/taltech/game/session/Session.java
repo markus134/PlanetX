@@ -65,4 +65,8 @@ public class Session {
     public boolean isEmpty() {
         return players.isEmpty();
     }
+
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
 }

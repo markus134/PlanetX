@@ -245,9 +245,22 @@ public class GameServer {
 
         if (!worlds.containsKey(worldID)) {
             request.setFull(false);
+            request.setCurrentAmountOfPlayers(1);
+            int numberOfPlayers = Integer.parseInt(worldID.split(":")[1]);
+            request.setMaxAmountOfPlayers(numberOfPlayers);
         } else {
             Session session = worlds.get(worldID);
             request.setFull(session.isFull());
+            request.setCurrentAmountOfPlayers(session.getPlayers().size() + 1);
+            request.setMaxAmountOfPlayers(session.getMaxPlayers());
+        }
+
+        if (worldIDtoListOfPlayerIDs.containsKey(worldID)) {
+            for (String pID : worldIDtoListOfPlayerIDs.get(worldID)) {
+                if (playerIDtoConnection.containsKey(pID)) {
+                    playerIDtoConnection.get(pID).sendTCP(request);
+                }
+            }
         }
         connection.sendTCP(request);
     }
@@ -323,6 +336,9 @@ public class GameServer {
             session.addPlayer(connection);
             worldIDtoListOfPlayerIDs.get(worldUUID).add(playerID);
         }
+
+        System.out.println(worlds);
+        System.out.println(worlds.get(worldUUID).getPlayers());
 
         playerIDtoConnection.put(playerID, connection);
 

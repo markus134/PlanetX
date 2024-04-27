@@ -3,6 +3,8 @@ package serializableObjects;
 public class AskIfSessionIsFull {
     private String worldID;
     private boolean isFull;
+    private int currentAmountOfPlayers;
+    private int maxAmountOfPlayers;
 
     /**
      * Empty constructor
@@ -10,6 +12,8 @@ public class AskIfSessionIsFull {
     public AskIfSessionIsFull() {
         this.worldID = "";
         this.isFull = false;
+        this.currentAmountOfPlayers = 0;
+        this.maxAmountOfPlayers = 0;
     }
 
     /**
@@ -42,5 +46,21 @@ public class AskIfSessionIsFull {
      */
     public String getWorldID() {
         return worldID;
+    }
+
+    public int getCurrentAmountOfPlayers() {
+        return currentAmountOfPlayers;
+    }
+
+    public int getMaxAmountOfPlayers() {
+        return maxAmountOfPlayers;
+    }
+
+    public void setCurrentAmountOfPlayers(int currentAmountOfPlayers) {
+        this.currentAmountOfPlayers = currentAmountOfPlayers;
+    }
+
+    public void setMaxAmountOfPlayers(int maxAmountOfPlayers) {
+        this.maxAmountOfPlayers = maxAmountOfPlayers;
     }
 }
