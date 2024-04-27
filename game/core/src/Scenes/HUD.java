@@ -1,6 +1,7 @@
 package Scenes;
 
 import Items.Items;
+import Screens.PlayScreen;
 import Screens.ReusableElements.LabelStyle;
 import Sprites.Player;
 import com.badlogic.gdx.Gdx;
@@ -36,6 +37,7 @@ public class HUD implements Disposable {
     private InventoryBar inventoryBar;
     private WaveManager waveManager;
     private Label waveLabel;
+    private final PlayScreen playScreen;
 
     /**
      * Constructor for HUD class.
@@ -44,8 +46,9 @@ public class HUD implements Disposable {
      * @param sb     The SpriteBatch to render the HUD.
      * @param player The player object to monitor for health changes.
      */
-    public HUD(SpriteBatch sb, Player player) {
+    public HUD(SpriteBatch sb, Player player, PlayScreen playScreen) {
         this.player = player;
+        this.playScreen = playScreen;
 
         stage = new Stage(new ExtendViewport(MyGDXGame.V_WIDTH, MyGDXGame.V_HEIGHT), sb);
 
@@ -90,7 +93,7 @@ public class HUD implements Disposable {
     }
 
     private void initializeWaveDisplayer() {
-        waveManager = new WaveManager();
+        waveManager = new WaveManager(playScreen);
 
         // Create a label to display the current wave
         Label.LabelStyle labelStyle = new LabelStyle(50).getLabelStyle();
@@ -194,6 +197,10 @@ public class HUD implements Disposable {
 
     public int getCurrentWave() {
         return waveManager.getCurrentWave();
+    }
+
+    public boolean allWavesFinished() {
+        return waveManager.isFinalWave();
     }
 
     /**

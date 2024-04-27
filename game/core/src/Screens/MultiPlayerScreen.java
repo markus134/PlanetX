@@ -56,6 +56,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
     private Drawable drawableClicked;
     private NewOrJoin newOrJoin;
     private final HandleFullWorld handleFullWorld;
+    public final WaitingScreen waitingScreen;
 
     /**
      * Constructor
@@ -70,6 +71,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
         this.music = music;
         this.newOrJoin = new NewOrJoin(this, game);
         this.handleFullWorld = new HandleFullWorld(this, game);
+        this.waitingScreen = new WaitingScreen(game, music);
     }
 
     /**
@@ -215,10 +217,15 @@ public class MultiPlayerScreen extends ScreenAdapter {
                     // waiting for the reply
                     System.out.println("waiting");
                 }
+
                 if (chosenWorld != null && !game.serverReply.isFull()) {
                     game.createScreen(multiPlayerWorlds.get(chosenWorld), 0);
-                    game.setScreen(game.playScreen);
-                    music.dispose();
+
+                    game.setScreen(waitingScreen);
+                    //
+//                    game.setScreen(game.playScreen);
+                    //
+
                 } else {
                     game.setScreen(handleFullWorld);
                 }

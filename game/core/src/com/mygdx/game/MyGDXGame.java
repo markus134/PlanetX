@@ -8,6 +8,7 @@ import Screens.PlayScreen;
 import Screens.SettingsScreen;
 import Screens.SinglePlayerScreen;
 import Sprites.OtherPlayer;
+import Tools.UUIDFileManager;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
@@ -79,6 +80,7 @@ public class MyGDXGame extends Game {
     public AskIfSessionIsFull serverReply;
     public static HashMap<String, PlayScreen> worldUuidToScreen = new HashMap<>();
     public String playerUUID;
+    private UUIDFileManager uuidFileManager;
 
     /**
      * Initializes the game, creates music object and menu.
@@ -86,12 +88,20 @@ public class MyGDXGame extends Game {
     @Override
     public void create() {
         batch = new SpriteBatch();
+
+        try {
+            this.uuidFileManager = new UUIDFileManager();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         initializeMenu();
         try {
-            createFileWithUUID();
+            this.playerUUID = uuidFileManager.assignUUID();
+            System.out.println(playerUUID);
         } catch (IOException e) {
             throw new RuntimeException("Error creating a file with the unique id");
         }
+        System.out.println(playerUUID);
         getSinglePlayerWorlds();
         getMultiPlayerWorlds();
     }
@@ -200,6 +210,7 @@ public class MyGDXGame extends Game {
                         handleGetMultiPlayerWorldNames((GetMultiPlayerWorldNames) object);
                     } else if (object instanceof AskIfSessionIsFull) {
                         serverReply = (AskIfSessionIsFull) object;
+                        handleAskIfSessionIsFull();
                     } else {
                         receivedPackets.add(object); // Store received packet in a list, this is because render is only called 60 times a second
                     }
@@ -304,6 +315,11 @@ public class MyGDXGame extends Game {
         playScreen.crystals.remove(Crystal.getCrystalById(crystal.getId()));
     }
 
+    private void handleAskIfSessionIsFull() {
+        menu.multiPlayerScreen.waitingScreen.currentPlayers = serverReply.getCurrentAmountOfPlayers();
+        menu.multiPlayerScreen.waitingScreen.maxPlayers = serverReply.getMaxAmountOfPlayers();
+    }
+
     /**
      * Updates player data received from the server.
      *
@@ -355,30 +371,6 @@ public class MyGDXGame extends Game {
         });
     }
 
-    private void createFileWithUUID() throws IOException {
-        String homeDir = System.getProperty("user.home");
-        Path path = Paths.get(homeDir, ".PlanetX", ".config", ".uniqueID", ".uuid.txt");
-
-        if (Files.exists(path)) {
-            this.playerUUID = Files.readString(path);
-        } else {
-            try {
-                String uuid = UUID.randomUUID().toString();
-                Files.createDirectories(path.getParent());
-                Files.createFile(path);
-                Files.write(path, uuid.getBytes());
-
-                this.playerUUID = Files.readString(path);
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        if (playerUUID == null) {
-            System.out.println("Something is wrong");
-        }
-    }
-
     private void getSinglePlayerWorlds() {
         client.sendTCP(new GetSinglePlayerWorldNames(playerUUID));
     }
@@ -392,6 +384,13 @@ public class MyGDXGame extends Game {
      */
     @Override
     public void dispose() {
+        try {
+            uuidFileManager.releaseUUID(this.playerUUID);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        client.sendTCP(new PlayerLeavesTheWorld(playScreen.worldUUID));
         client.close();
         try {
             client.dispose();

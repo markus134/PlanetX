@@ -58,5 +58,6 @@ project(":core") {
         implementation group: 'com.esotericsoftware', name: 'kryonet', version: '2.22.0-RC1'
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+        implementation 'org.json:json:20240303'
     }
 }

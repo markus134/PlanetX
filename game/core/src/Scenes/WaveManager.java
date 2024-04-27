@@ -1,5 +1,6 @@
 package Scenes;
 
+import Screens.PlayScreen;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Timer;
 
@@ -9,7 +10,7 @@ import com.badlogic.gdx.utils.Timer;
  * Displays the current wave number.
  */
 public class WaveManager extends Actor {
-    public static final int TOTAL_WAVES = 5;  // Total number of waves
+    public static final int TOTAL_WAVES = 6;  // Total number of waves, last one isn't really a wave and is meant to end the game
     public static final float WAVE_DURATION = 60f;  // Duration of each wave in seconds
 
     private int currentWave;  // The current wave number (1-5)
@@ -20,7 +21,7 @@ public class WaveManager extends Actor {
      * Constructor for the WaveManager class.
      * Initializes the wave manager with the first wave.
      */
-    public WaveManager() {
+    public WaveManager(PlayScreen playScreen) {
         currentWave = 1;  // Start with the first wave
         timeInWave = 0;  // Reset the time
 
@@ -29,11 +30,13 @@ public class WaveManager extends Actor {
             @Override
             public void run() {
                 System.out.println(timeInWave);
-                timeInWave++;  // Increment the timer every second
+                if (!playScreen.opponents.isEmpty()) {
+                    timeInWave++;  // Increment the timer every second
 
-                // If the wave duration is reached, advance to the next wave
-                if (timeInWave >= WAVE_DURATION && currentWave < TOTAL_WAVES) {
-                    goToNextWave();  // Move to the next wave
+                    // If the wave duration is reached, advance to the next wave
+                    if (timeInWave >= WAVE_DURATION && currentWave < TOTAL_WAVES) {
+                        goToNextWave();  // Move to the next wave
+                    }
                 }
             }
         };

@@ -37,7 +37,6 @@ import serializableObjects.PlayerLeavesTheWorld;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -119,7 +118,7 @@ public class PlayScreen implements Screen {
         player = new Player(world, this);
 
         debug = new Debug(game.batch, player);
-        hud = new HUD(game.batch, player);
+        hud = new HUD(game.batch, player, this);
         pauseDialog = new ExitToMainMenu(game.batch, this);
         deathScene = new DeathScene(game.batch, this, this.player);
 
@@ -129,9 +128,6 @@ public class PlayScreen implements Screen {
         handler = new PlayScreenInputHandler(this);
 
         music = Gdx.audio.newMusic(Gdx.files.internal("Music/in-game.mp3"));
-        music.setLooping(true);
-        music.setVolume(SettingsScreen.musicValue);
-        music.play();
 
         MyGDXGame.worldUuidToScreen.put(worldUUID, this);
     }
@@ -146,6 +142,10 @@ public class PlayScreen implements Screen {
     @Override
     public void show() {
         changeInputToHandler();
+
+        music.setLooping(true);
+        music.setVolume(SettingsScreen.musicValue);
+        music.play();
     }
 
     /**
@@ -250,7 +250,7 @@ public class PlayScreen implements Screen {
      * Handles the player's death and triggers the death scene if needed.
      */
     private void handlePlayerDeath() {
-        if (player.shouldBeDestroyed) {
+        if (player.shouldBeDestroyed || hud.allWavesFinished()) {
             if (deathSceneCounter == 0) {
                 deathScene.showStage();
                 deathSceneCounter++;
@@ -503,18 +503,5 @@ public class PlayScreen implements Screen {
         monsterAtlas.dispose();
         deathScene.dispose();
         pauseDialog.dispose();
-    }
-
-    public static void main(String[] args) {
-        Set<String> set1 = new HashSet<>(Arrays.asList("a"));
-        Set<String> set2 = new HashSet<>(Arrays.asList("b", "c", "d", "e"));
-
-        Set<String> removed = new HashSet<>(set1);
-        removed.removeAll(set2); // removed = ["a"]
-
-        set1.addAll(set2); // set1 = ["b", "c", "d", "e"]
-
-        System.out.println("Modified set1: " + set1);
-        System.out.println("Removed elements: " + removed);
     }
 }
