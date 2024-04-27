@@ -37,7 +37,6 @@ import serializableObjects.PlayerLeavesTheWorld;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -129,9 +128,6 @@ public class PlayScreen implements Screen {
         handler = new PlayScreenInputHandler(this);
 
         music = Gdx.audio.newMusic(Gdx.files.internal("Music/in-game.mp3"));
-        music.setLooping(true);
-        music.setVolume(SettingsScreen.musicValue);
-        music.play();
 
         MyGDXGame.worldUuidToScreen.put(worldUUID, this);
     }
@@ -146,6 +142,10 @@ public class PlayScreen implements Screen {
     @Override
     public void show() {
         changeInputToHandler();
+
+        music.setLooping(true);
+        music.setVolume(SettingsScreen.musicValue);
+        music.play();
     }
 
     /**
@@ -300,6 +300,7 @@ public class PlayScreen implements Screen {
             prevRunningRight = player.runningRight;
         }
 
+        System.out.println(chillTimeCounter);
         if (TIME_FOR_PLAYERS_TO_CHILL_AT_THE_BEGINNING * 60 > chillTimeCounter) {
             chillTimeCounter++;
         } else {
@@ -447,18 +448,5 @@ public class PlayScreen implements Screen {
         monsterAtlas.dispose();
         deathScene.dispose();
         pauseDialog.dispose();
-    }
-
-    public static void main(String[] args) {
-        Set<String> set1 = new HashSet<>(Arrays.asList("a"));
-        Set<String> set2 = new HashSet<>(Arrays.asList("b", "c", "d", "e"));
-
-        Set<String> removed = new HashSet<>(set1);
-        removed.removeAll(set2); // removed = ["a"]
-
-        set1.addAll(set2); // set1 = ["b", "c", "d", "e"]
-
-        System.out.println("Modified set1: " + set1);
-        System.out.println("Removed elements: " + removed);
     }
 }
