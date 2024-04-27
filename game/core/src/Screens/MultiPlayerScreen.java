@@ -27,6 +27,7 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.AskIfSessionIsFull;
+import serializableObjects.RemoveMultiPlayerWorld;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -133,6 +134,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
                     public void clicked(InputEvent event, float x, float y) {
                         multiPlayerWorlds.remove(worldName);
                         updateDisplayTable();
+                        game.client.sendTCP(new RemoveMultiPlayerWorld(game.playerUUID, entry.getValue(), worldName));
                     }
                 });
                 TextButton copybutton = new TextButton("C", textButtonStyle);
@@ -172,6 +174,12 @@ public class MultiPlayerScreen extends ScreenAdapter {
                 displayTable.add(container).fillX();
                 displayTable.row();
             }
+        }
+    }
+
+    public void updateTableValuesAfterRemovingWorld() {
+        if (displayTable != null) {
+            updateDisplayTable();
         }
     }
 

@@ -11,14 +11,18 @@ import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.AskIfSessionIsFull;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
+import serializableObjects.GetMultiPlayerWorldNames;
+import serializableObjects.GetSinglePlayerWorldNames;
 import serializableObjects.OpponentData;
 import serializableObjects.OpponentDataMap;
 import serializableObjects.PlayerData;
 import serializableObjects.PlayerLeavesTheWorld;
+import serializableObjects.RemoveMultiPlayerWorld;
+import serializableObjects.RemoveSinglePlayerWorld;
 import serializableObjects.RevivePlayer;
 
-
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,9 +33,14 @@ public class GameServer {
 
     private final Server server;
     private final Map<String, Session> worlds = new HashMap<>();
+    private final Map<String, List<String>> worldIDtoListOfPlayerIDs = new HashMap<>();
+    private final Map<String, Connection> playerIDtoConnection = new HashMap<>();
     private final Map<String, Map<Integer, Object>> playerDatas = new HashMap<>();
     private final Map<String, OpponentDataMap> opponentDatas = new HashMap<>();
     private final Map<String, Set<CrystalToRemove>> removedCrystalsByWorld = new HashMap<>();
+    private final Map<String, Map<String, String>> playerIDToSinglePlayerWorldNames = new HashMap<>();
+    // playerID, world name, world id
+    private final Map<String, Map<String, String>> playerIDToMultiPlayerWorldNames = new HashMap<>();
 
     /**
      * Constructor for GameServer. Initializes the KryoNet server and binds it to the specified ports.
@@ -54,6 +63,10 @@ public class GameServer {
         kryo.register(RevivePlayer.class);
         kryo.register(AskIfSessionIsFull.class);
         kryo.register(PlayerLeavesTheWorld.class);
+        kryo.register(GetSinglePlayerWorldNames.class);
+        kryo.register(RemoveSinglePlayerWorld.class);
+        kryo.register(GetMultiPlayerWorldNames.class);
+        kryo.register(RemoveMultiPlayerWorld.class);
 
         server.start();
         try {
@@ -72,6 +85,22 @@ public class GameServer {
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
 
+                    if (object instanceof RemoveMultiPlayerWorld request) {
+                        handleRemoveMultiPlayerWorld(connection, request);
+                    }
+
+                    if (object instanceof GetMultiPlayerWorldNames request) {
+                        handleGetMultiPlayerWorldNames(connection, request);
+                    }
+
+                    if (object instanceof RemoveSinglePlayerWorld request) {
+                        handleRemoveSinglePlayerWorld(connection, request);
+                    }
+
+                    if (object instanceof GetSinglePlayerWorldNames request) {
+                        handleGetSinglePlayerWorldNames(connection, request);
+                    }
+
                     if (object instanceof PlayerLeavesTheWorld message) {
                         handlePlayerLeavesTheWorld(connection, message);
                     }
@@ -88,12 +117,10 @@ public class GameServer {
                         handleRevivePlayer(connection, data);
                     }
 
-                    // new singlePlayer world is created
                     if (object instanceof AddSinglePlayerWorld) {
                         createSinglePlayerWorld(connection, (AddSinglePlayerWorld) object);
                     }
 
-                    // new multiPlayer world is created
                     if (object instanceof AddMultiPlayerWorld) {
                         createMultiPlayerWorld(connection, (AddMultiPlayerWorld) object);
                     }
@@ -107,8 +134,6 @@ public class GameServer {
                     if (object instanceof OpponentDataMap) {
                         updateOpponentData((OpponentDataMap) object);
                     }
-
-
                 }
             }
 
@@ -121,18 +146,61 @@ public class GameServer {
             public void disconnected(Connection connection) {
                 System.out.println("Player disconnected: " + connection.getID());
 
-                String worldUUID = removeDisconnectedPlayer(connection);
-
-                if (!worldUUID.equals("crazy")) {
-                    if (worlds.get(worldUUID).isEmpty()) {
-                        worlds.remove(worldUUID);
-                        playerDatas.remove(worldUUID);
-                        opponentDatas.remove(worldUUID);
-                        removedCrystalsByWorld.remove(worldUUID);
+                for (Map.Entry<String, Connection> entry : playerIDtoConnection.entrySet()) {
+                    if (entry.getValue().equals(connection)) {
+                        playerIDtoConnection.remove(entry.getKey());
+                        break;
                     }
                 }
             }
         });
+    }
+
+    private void handleRemoveMultiPlayerWorld(Connection connection, RemoveMultiPlayerWorld message) {
+        String worldID = message.getWorldID();
+        String worldName = message.getWorldName();
+
+        worlds.remove(worldID);
+        playerDatas.remove(worldID);
+        opponentDatas.remove(worldID);
+        removedCrystalsByWorld.remove(worldID);
+
+        for (String pID : worldIDtoListOfPlayerIDs.get(worldID)) {
+            if (playerIDToMultiPlayerWorldNames.containsKey(pID)) {
+                playerIDToMultiPlayerWorldNames.get(pID).remove(worldName);
+
+                if (playerIDtoConnection.containsKey(pID)) {
+                    handleGetMultiPlayerWorldNames(playerIDtoConnection.get(pID), new GetMultiPlayerWorldNames(pID));
+                }
+            }
+        }
+
+        worldIDtoListOfPlayerIDs.remove(worldID);
+    }
+
+    private void handleRemoveSinglePlayerWorld(Connection connection, RemoveSinglePlayerWorld message) {
+        String playerID = message.getPlayerID();
+        String worldID = message.getWorldID();
+        String worldName = message.getWorldName();
+
+        worlds.remove(worldID);
+        playerDatas.remove(worldID);
+        opponentDatas.remove(worldID);
+        removedCrystalsByWorld.remove(worldID);
+
+        if (playerIDToSinglePlayerWorldNames.containsKey(playerID)){
+            playerIDToSinglePlayerWorldNames.get(playerID).remove(worldName);
+        }
+    }
+
+    private void handleGetSinglePlayerWorldNames(Connection connection, GetSinglePlayerWorldNames request) {
+        request.setWorldNamesAndIDs(playerIDToSinglePlayerWorldNames.get(request.getPlayerID()));
+        connection.sendTCP(request);
+    }
+
+    private void handleGetMultiPlayerWorldNames(Connection connection, GetMultiPlayerWorldNames request) {
+        request.setWorldNamesAndIDs(playerIDToMultiPlayerWorldNames.get(request.getPlayerID()));
+        connection.sendTCP(request);
     }
 
     /**
@@ -209,27 +277,13 @@ public class GameServer {
      * @param e          The AddSinglePlayerWorld object indicating the request to create a single-player world.
      */
     private void createSinglePlayerWorld(Connection connection, AddSinglePlayerWorld e) {
-        Session session = new Session(1);
-        session.addPlayer(connection);
-
-        worlds.put(e.getWorldUUID(), session);
-        playerDatas.put(e.getWorldUUID(), new HashMap<>());
-        opponentDatas.put(e.getWorldUUID(), new OpponentDataMap(e.getWorldUUID()));
-        removedCrystalsByWorld.put(e.getWorldUUID(), new HashSet<>());
-    }
-
-    /**
-     * Creates a multiplayer world when requested by a client.
-     *
-     * @param connection The connection object representing the client connection.
-     * @param e          The AddMultiPlayerWorld object indicating the request to create a multiplayer world.
-     */
-    private void createMultiPlayerWorld(Connection connection, AddMultiPlayerWorld e) {
         String worldUUID = e.getWorldUUID();
-        System.out.println("creating multiplayer world with uuid: " + worldUUID);
+        String playerID = e.getPlayerID();
+
+        playerIDToSinglePlayerWorldNames.put(playerID, e.getSinglePlayerWorlds());
+
         if (!worlds.containsKey(worldUUID)) {
-            int numberOfPlayers = Integer.parseInt(worldUUID.split(":")[1]);
-            Session session = new Session(numberOfPlayers);
+            Session session = new Session(1);
             session.addPlayer(connection);
 
             worlds.put(worldUUID, session);
@@ -240,6 +294,37 @@ public class GameServer {
             Session session = worlds.get(worldUUID);
             session.addPlayer(connection);
         }
+    }
+
+    /**
+     * Creates a multiplayer world when requested by a client.
+     *
+     * @param connection The connection object representing the client connection.
+     * @param e          The AddMultiPlayerWorld object indicating the request to create a multiplayer world.
+     */
+    private void createMultiPlayerWorld(Connection connection, AddMultiPlayerWorld e) {
+        String worldUUID = e.getWorldUUID();
+        String playerID = e.getPlayerID();
+
+        playerIDToMultiPlayerWorldNames.put(playerID, e.getMultiplayerWorlds());
+
+        if (!worlds.containsKey(worldUUID)) {
+            int numberOfPlayers = Integer.parseInt(worldUUID.split(":")[1]);
+            Session session = new Session(numberOfPlayers);
+            session.addPlayer(connection);
+
+            worlds.put(worldUUID, session);
+            playerDatas.put(worldUUID, new HashMap<>());
+            opponentDatas.put(worldUUID, new OpponentDataMap(e.getWorldUUID()));
+            removedCrystalsByWorld.put(worldUUID, new HashSet<>());
+            worldIDtoListOfPlayerIDs.put(worldUUID, new ArrayList<>(List.of(playerID)));
+        } else {
+            Session session = worlds.get(worldUUID);
+            session.addPlayer(connection);
+            worldIDtoListOfPlayerIDs.get(worldUUID).add(playerID);
+        }
+
+        playerIDtoConnection.put(playerID, connection);
 
         sendRemovedCrystalsToNewConnection(connection);
     }
@@ -312,36 +397,6 @@ public class GameServer {
             }
         }
         return null;
-    }
-
-    /**
-     * Removes a disconnected player from the server.
-     *
-     * @param connection The connection object representing the disconnected client.
-     * @return The UUID of the world from which the player was removed.
-     */
-    private String removeDisconnectedPlayer(Connection connection) {
-        // string "crazy" is needed bcs sometimes the player is connected to the server
-        // but never added to the session. If we do not implement the extra check with the
-        // string, it might cause unexpected behaviour.
-        String worldUUID = "crazy";
-        for (Map.Entry<String, Session> entry : worlds.entrySet()) {
-            Session session = entry.getValue();
-            List<Connection> players = entry.getValue().getPlayers();
-            for (Connection player : players) {
-                if (player.equals(connection)) {
-                    session.removePlayer(player);
-                    worldUUID = entry.getKey();
-
-                    // removes the info about the disconnected player from the dictionary that
-                    // is sent to all players in that session. This fixes the bug when a dead player
-                    // stays on the screen, after they went back to the main menu.
-                    playerDatas.get(worldUUID).remove(player.getID());
-                    break;
-                }
-            }
-        }
-        return worldUUID;
     }
 
     /**

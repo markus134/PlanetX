@@ -3,8 +3,10 @@ package com.mygdx.game;
 import Bullets.Bullet;
 import Opponents.Opponent;
 import Screens.MenuScreen;
+import Screens.MultiPlayerScreen;
 import Screens.PlayScreen;
 import Screens.SettingsScreen;
+import Screens.SinglePlayerScreen;
 import Sprites.OtherPlayer;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -22,19 +24,27 @@ import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.AskIfSessionIsFull;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
+import serializableObjects.GetMultiPlayerWorldNames;
+import serializableObjects.GetSinglePlayerWorldNames;
 import serializableObjects.OpponentData;
 import serializableObjects.OpponentDataMap;
 import serializableObjects.PlayerData;
 import serializableObjects.PlayerLeavesTheWorld;
+import serializableObjects.RemoveMultiPlayerWorld;
+import serializableObjects.RemoveSinglePlayerWorld;
 import serializableObjects.RevivePlayer;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 
 /**
@@ -42,8 +52,8 @@ import java.util.Set;
  */
 public class MyGDXGame extends Game {
     // Constants
-     private static final String SERVER_ADDRESS = "193.40.255.19";
-//    private static final String SERVER_ADDRESS = "localhost";
+//     private static final String SERVER_ADDRESS = "193.40.255.19";
+    private static final String SERVER_ADDRESS = "localhost";
     private static final int SERVER_TCP_PORT = 8080;
     private static final int SERVER_UDP_PORT = 8081;
 
@@ -68,6 +78,7 @@ public class MyGDXGame extends Game {
     public HashMap<String, OtherPlayer> playerHashMapByUuid = new HashMap<>();
     public AskIfSessionIsFull serverReply;
     public static HashMap<String, PlayScreen> worldUuidToScreen = new HashMap<>();
+    public String playerUUID;
 
     /**
      * Initializes the game, creates music object and menu.
@@ -76,6 +87,13 @@ public class MyGDXGame extends Game {
     public void create() {
         batch = new SpriteBatch();
         initializeMenu();
+        try {
+            createFileWithUUID();
+        } catch (IOException e) {
+            throw new RuntimeException("Error creating a file with the unique id");
+        }
+        getSinglePlayerWorlds();
+        getMultiPlayerWorlds();
     }
 
     /**
@@ -125,8 +143,8 @@ public class MyGDXGame extends Game {
             playScreen = new PlayScreen(this, worldUUID, menu);
         }
 
-        if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID));
-        if (numberOfPlayers == 0) client.sendTCP(new AddMultiPlayerWorld(worldUUID));
+        if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID, playerUUID, SinglePlayerScreen.singlePlayerWorlds));
+        if (numberOfPlayers == 0) client.sendTCP(new AddMultiPlayerWorld(worldUUID, playerUUID, MultiPlayerScreen.multiPlayerWorlds));
     }
 
     /**
@@ -148,6 +166,10 @@ public class MyGDXGame extends Game {
         kryo.register(RevivePlayer.class);
         kryo.register(AskIfSessionIsFull.class);
         kryo.register(PlayerLeavesTheWorld.class);
+        kryo.register(GetSinglePlayerWorldNames.class);
+        kryo.register(RemoveSinglePlayerWorld.class);
+        kryo.register(GetMultiPlayerWorldNames.class);
+        kryo.register(RemoveMultiPlayerWorld.class);
     }
 
     /**
@@ -172,11 +194,10 @@ public class MyGDXGame extends Game {
             @Override
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
-                    if (object instanceof String) {
-                        // this block terminates connection with the server
-//                        Gdx.app.postRunnable(() -> {
-//                            setScreen(menu.getHandleFullWorldScreen());
-//                        });
+                    if (object instanceof GetSinglePlayerWorldNames) {
+                        handleGetSinglePlayerWorldNames((GetSinglePlayerWorldNames) object);
+                    } else if (object instanceof GetMultiPlayerWorldNames) {
+                        handleGetMultiPlayerWorldNames((GetMultiPlayerWorldNames) object);
                     } else if (object instanceof AskIfSessionIsFull) {
                         serverReply = (AskIfSessionIsFull) object;
                     } else {
@@ -214,6 +235,24 @@ public class MyGDXGame extends Game {
         }
 
         receivedPackets.clear();
+    }
+
+
+    private void handleGetSinglePlayerWorldNames(GetSinglePlayerWorldNames reply) {
+        if (reply.getWorldNamesAndIDs() == null) {
+            SinglePlayerScreen.singlePlayerWorlds = new HashMap<>();
+        } else {
+            SinglePlayerScreen.singlePlayerWorlds = reply.getWorldNamesAndIDs();
+        }
+    }
+
+    private void handleGetMultiPlayerWorldNames(GetMultiPlayerWorldNames reply) {
+        if (reply.getWorldNamesAndIDs() == null) {
+            MultiPlayerScreen.multiPlayerWorlds = new HashMap<>();
+        } else {
+            MultiPlayerScreen.multiPlayerWorlds = reply.getWorldNamesAndIDs();
+        }
+        menu.multiPlayerScreen.updateTableValuesAfterRemovingWorld();
     }
 
     /**
@@ -314,6 +353,38 @@ public class MyGDXGame extends Game {
             }
             return false;
         });
+    }
+
+    private void createFileWithUUID() throws IOException {
+        String homeDir = System.getProperty("user.home");
+        Path path = Paths.get(homeDir, ".PlanetX", ".config", ".uniqueID", ".uuid.txt");
+
+        if (Files.exists(path)) {
+            this.playerUUID = Files.readString(path);
+        } else {
+            try {
+                String uuid = UUID.randomUUID().toString();
+                Files.createDirectories(path.getParent());
+                Files.createFile(path);
+                Files.write(path, uuid.getBytes());
+
+                this.playerUUID = Files.readString(path);
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (playerUUID == null) {
+            System.out.println("Something is wrong");
+        }
+    }
+
+    private void getSinglePlayerWorlds() {
+        client.sendTCP(new GetSinglePlayerWorldNames(playerUUID));
+    }
+
+    private void getMultiPlayerWorlds() {
+        client.sendTCP(new GetMultiPlayerWorldNames(playerUUID));
     }
 
     /**

@@ -26,9 +26,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
+import serializableObjects.RemoveSinglePlayerWorld;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +40,7 @@ public class SinglePlayerScreen extends ScreenAdapter {
     private Batch batch;
     private Music music;
     private BackGround backGround;
-    public static Map<String, String> singlePlayerWorlds = new HashMap<>();
+    public static Map<String, String> singlePlayerWorlds;
     private CreateSinglePlayerWorld createMenu;
     private Label.LabelStyle labelForTable = new LabelForTable(60).getLabelStyle();
     private TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
@@ -107,53 +107,56 @@ public class SinglePlayerScreen extends ScreenAdapter {
     }
 
     public void updateDisplayTable() {
-        if (singlePlayerWorlds.size() == 5) newButton.remove();
-        displayTable.clear();
-        if (singlePlayerWorlds.isEmpty()){
-            Label emptyWorldsLabel = new Label("You have not created any worlds yet", labelForTable);
-            Label emptyWorldsLabel2 = new Label("Press the 'Create New' button", labelForTable);
-            displayTable.add(emptyWorldsLabel).row();
-            displayTable.add(emptyWorldsLabel2);
-        } else {
-            for (Map.Entry<String, String> entry: singlePlayerWorlds.entrySet()) {
-                String worldName = entry.getKey();
-                Label label = new Label(worldName, labelForTable);
-                TextButton removeButton = new TextButton("remove", textButtonStyle);
-                removeButton.addListener(new ClickListener() {
-                    @Override
-                    public void clicked(InputEvent event, float x, float y) {
-                        singlePlayerWorlds.remove(worldName);
-                        updateDisplayTable();
-                    }
-                });
-
-                Container<Table> container = new Container<Table>();
-                containers.add(container);
-
-                Table rowTable = new Table();
-                rowTable.add(label).width(600).padRight(280).padLeft(100);
-                rowTable.add(removeButton).width(400);
-                rowTable.row();
-                container.setActor(rowTable);
-                container.setBackground(drawableNormal);
-
-                container.addListener(new ClickListener() {
-                    @Override
-                    public void clicked(InputEvent event, float x, float y) {
-                        container.setBackground(drawableClicked);
-                        for (Container container1 : containers) {
-                            if (!container1.equals(container)) {
-                                container1.setBackground(drawableNormal);
-                            }
+        if (singlePlayerWorlds != null) {
+            if (singlePlayerWorlds.size() == 5) newButton.remove();
+            displayTable.clear();
+            if (singlePlayerWorlds.isEmpty()){
+                Label emptyWorldsLabel = new Label("You have not created any worlds yet", labelForTable);
+                Label emptyWorldsLabel2 = new Label("Press the 'Create New' button", labelForTable);
+                displayTable.add(emptyWorldsLabel).row();
+                displayTable.add(emptyWorldsLabel2);
+            } else {
+                for (Map.Entry<String, String> entry: singlePlayerWorlds.entrySet()) {
+                    String worldName = entry.getKey();
+                    Label label = new Label(worldName, labelForTable);
+                    TextButton removeButton = new TextButton("remove", textButtonStyle);
+                    removeButton.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            game.client.sendTCP(new RemoveSinglePlayerWorld(game.playerUUID, entry.getValue(), worldName));
+                            singlePlayerWorlds.remove(worldName);
+                            updateDisplayTable();
                         }
-                        chosenWorld = ((Label) container.getActor().getChildren().get(0)).getText().toString();
-                        System.out.println(chosenWorld);
-                        System.out.println(singlePlayerWorlds.get(chosenWorld));
-                    }
-                });
+                    });
 
-                displayTable.add(container).fillX();
-                displayTable.row();
+                    Container<Table> container = new Container<Table>();
+                    containers.add(container);
+
+                    Table rowTable = new Table();
+                    rowTable.add(label).width(600).padRight(280).padLeft(100);
+                    rowTable.add(removeButton).width(400);
+                    rowTable.row();
+                    container.setActor(rowTable);
+                    container.setBackground(drawableNormal);
+
+                    container.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            container.setBackground(drawableClicked);
+                            for (Container container1 : containers) {
+                                if (!container1.equals(container)) {
+                                    container1.setBackground(drawableNormal);
+                                }
+                            }
+                            chosenWorld = ((Label) container.getActor().getChildren().get(0)).getText().toString();
+                            System.out.println(chosenWorld);
+                            System.out.println(singlePlayerWorlds.get(chosenWorld));
+                        }
+                    });
+
+                    displayTable.add(container).fillX();
+                    displayTable.row();
+                }
             }
         }
     }

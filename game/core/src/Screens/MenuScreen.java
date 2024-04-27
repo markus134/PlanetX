@@ -29,7 +29,7 @@ public class MenuScreen extends ScreenAdapter {
     private final SettingsScreen settingsScreen;
     public final Music music;
     private final SinglePlayerScreen singlePlayerScreen;
-    private final MultiPlayerScreen multiPlayerScreen;
+    public final MultiPlayerScreen multiPlayerScreen;
 
     /**
      * Constructor for the MenuScreen.
