@@ -28,6 +28,7 @@ public class LabelStyle extends Label.LabelStyle {
         labelStyle.font = font;
     }
 
+
     /**
      * Getter method.
      *

@@ -1,7 +1,7 @@
 package map.generation;
 
-import map.CustomWorld;
 import map.Chunk;
+import map.CustomWorld;
 import util.OpenSimplexNoise;
 
 import java.util.Random;

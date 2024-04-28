@@ -1,15 +1,12 @@
 package map.generation;
 
-import map.CustomWorld;
-import map.Chunk;
-import map.tile.Tile;
-
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.World;
+import map.Chunk;
+import map.CustomWorld;
+import map.tile.Tile;
 
 /**
  * Generate Terrain from Simplex noise.

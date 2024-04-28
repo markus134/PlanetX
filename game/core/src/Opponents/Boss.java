@@ -2,7 +2,6 @@ package Opponents;
 
 import Screens.PlayScreen;
 import Sprites.OtherPlayer;
-import Tools.B2WorldCreator;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.physics.box2d.World;
@@ -47,7 +46,7 @@ public class Boss extends Opponent {
      * @param screen
      */
     public Boss(World world, PlayScreen screen) {
-        super(screen.getBossAtlas().findRegion("boss"), world, screen, MAX_HEALTH, timeForDeath);
+        super(screen.getBossAtlas().findRegion("boss"), world, screen, MAX_HEALTH);
 
         this.playScreen = screen;
         initializeAnimations();
@@ -72,7 +71,7 @@ public class Boss extends Opponent {
      * @param posY
      */
     public Boss(World world, PlayScreen screen, float posX, float posY, int health, String uuid, long bossSpawnTime) {
-        super(screen.getBossAtlas().findRegion("boss"), world, screen, health, timeForDeath);
+        super(screen.getBossAtlas().findRegion("boss"), world, screen, health);
 
         this.playScreen = screen;
         setUuid(uuid);
@@ -112,7 +111,7 @@ public class Boss extends Opponent {
         if (health <= 0) {
             counter++;
             if (counter >= timeForDeath) {
-                B2WorldCreator.markOpponentAsDestroyed(this);
+                playScreen.b2WorldCreator.markOpponentAsDestroyed(this);
             }
         } else {
             updatePosition();

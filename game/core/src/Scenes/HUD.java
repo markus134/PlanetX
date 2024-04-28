@@ -1,6 +1,8 @@
 package Scenes;
 
 import Items.Items;
+import Screens.PlayScreen;
+import Screens.ReusableElements.LabelStyle;
 import Sprites.Player;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -8,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
@@ -24,10 +27,12 @@ public class HUD implements Disposable {
     private static final float HEART_PADDING_LEFT = 10f;
     private static final float HEART_PADDING_TOP = 10f;
     public Stage stage;
-    private Table heartsTable;
-    private Player player;
-    private Image[] heartArray = new Image[5]; // For displaying health assets
+    private final Player player;
+    private final Image[] heartArray = new Image[5]; // For displaying health assets
     private InventoryBar inventoryBar;
+    private WaveManager waveManager;
+    private Label waveLabel;
+    private final PlayScreen playScreen;
 
     /**
      * Constructor for HUD class.
@@ -36,13 +41,15 @@ public class HUD implements Disposable {
      * @param sb     The SpriteBatch to render the HUD.
      * @param player The player object to monitor for health changes.
      */
-    public HUD(SpriteBatch sb, Player player) {
+    public HUD(SpriteBatch sb, Player player, PlayScreen playScreen, int currentRound, int currentTimeInWave) {
         this.player = player;
+        this.playScreen = playScreen;
 
         stage = new Stage(new ExtendViewport(MyGDXGame.V_WIDTH, MyGDXGame.V_HEIGHT), sb);
 
         initializeInventoryBar();
         initializeHeartsTable();
+        initializeWaveDisplayer(currentRound, currentTimeInWave);
 
         updateLabelValues();
     }
@@ -54,7 +61,7 @@ public class HUD implements Disposable {
     private void initializeInventoryBar() {
         inventoryBar = new InventoryBar();
         float inventoryBarX = (stage.getWidth() - inventoryBar.hotbarTable.getWidth()) / 2f;
-        float inventoryBarY = 0; // Assuming you want it at the bottom
+        float inventoryBarY = 0;
         inventoryBar.hotbarTable.setPosition(inventoryBarX, inventoryBarY);
 
         inventoryBar.addItemToSlot(Items.BLASTER, 0);
@@ -67,7 +74,7 @@ public class HUD implements Disposable {
      * The health display is positioned at the top left of the stage.
      */
     private void initializeHeartsTable() {
-        heartsTable = new Table();
+        Table heartsTable = new Table();
         heartsTable.top().left();
         heartsTable.setFillParent(true);
 
@@ -80,6 +87,23 @@ public class HUD implements Disposable {
         stage.addActor(heartsTable);
     }
 
+    private void initializeWaveDisplayer(int currentRound, int currentTimeInWave) {
+        waveManager = new WaveManager(playScreen, currentRound, currentTimeInWave);
+
+        // Create a label to display the current wave
+        Label.LabelStyle labelStyle = new LabelStyle(50).getLabelStyle();
+        waveLabel = new Label("Wave: " + waveManager.getCurrentWave(), labelStyle);
+
+        // Position the label in the top-right corner of the screen
+        waveLabel.setPosition(stage.getWidth() - waveLabel.getWidth() - 20,
+                stage.getHeight() - waveLabel.getHeight());
+
+
+        // Add the label to the stage
+        stage.addActor(waveLabel);
+
+    }
+
     /**
      * Updates the health display and inventory bar position.
      * This method should be called each frame to ensure proper rendering.
@@ -87,6 +111,8 @@ public class HUD implements Disposable {
     public void updateLabelValues() {
         updateHealthAssets();
         updateInventoryBarPosition();
+        updateWaveLabel();
+
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
     }
@@ -110,6 +136,16 @@ public class HUD implements Disposable {
         float inventoryBarX = (stage.getWidth() - inventoryBar.hotbarTable.getWidth()) / 2f;
         float inventoryBarY = 0;
         inventoryBar.hotbarTable.setPosition(inventoryBarX, inventoryBarY);
+    }
+
+    private void updateWaveLabel() {
+        // Update the waveLabel text
+        waveLabel.setText("Wave: " + waveManager.getCurrentWave());
+
+        // Reposition the label to ensure it's in the correct place
+        waveLabel.setPosition(stage.getWidth() - waveLabel.getWidth() - 20,
+                stage.getHeight() - waveLabel.getHeight());
+
     }
 
     /**
@@ -152,6 +188,24 @@ public class HUD implements Disposable {
      */
     public void removeHighlightedItem() {
         inventoryBar.removeHighlightedItem();
+    }
+
+    /**
+     * Get current wave.
+     * @return current wave
+     */
+    public int getCurrentWave() {
+        return waveManager.getCurrentWave();
+    }
+
+    public int getCurrentTime() {
+        return waveManager.getTimeInWave();
+    }
+
+
+
+    public boolean allWavesFinished() {
+        return waveManager.isFinalWave();
     }
 
     /**

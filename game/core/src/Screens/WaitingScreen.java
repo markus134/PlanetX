@@ -25,15 +25,14 @@ public class WaitingScreen extends ScreenAdapter {
 
     private Stage stage;
     private final MyGDXGame game;
-    private MultiPlayerScreen multiPlayerScreen;
+    private final MultiPlayerScreen multiPlayerScreen;
     private Batch batch;
     private BackGround backGround;
     public static int currentPlayers;
     public int previousNumberOfPlayers;
     public static int maxPlayers;
-    private Music music;
+    private final Music music;
     private Table table;
-
     /**
      * Constructor
      *
@@ -125,8 +124,11 @@ public class WaitingScreen extends ScreenAdapter {
         if (currentPlayers == maxPlayers) {
             game.setScreen(game.playScreen);
             music.dispose();
+
             previousNumberOfPlayers = 1;
             currentPlayers = 1;
+
+            return;
         }
 
         Gdx.gl.glClearColor(0, 0, 0, 1);

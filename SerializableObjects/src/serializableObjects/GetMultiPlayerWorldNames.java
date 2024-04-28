@@ -4,13 +4,14 @@ import java.util.Map;
 
 public class GetMultiPlayerWorldNames {
     private Map<String, String> worldNamesAndIDs;
-    private final String playerID;
+    private Map<String, Integer[]> worldNameToWaveData;
+    private final String playerId;
 
     /**
      * Empty constructor
      */
     public GetMultiPlayerWorldNames() {
-        this.playerID = "";
+        this.playerId = "";
     }
 
     /**
@@ -19,7 +20,7 @@ public class GetMultiPlayerWorldNames {
      * @param playerID
      */
     public GetMultiPlayerWorldNames(String playerID) {
-        this.playerID = playerID;
+        this.playerId = playerID;
     }
 
     /**
@@ -40,12 +41,16 @@ public class GetMultiPlayerWorldNames {
         return worldNamesAndIDs;
     }
 
-    /**
-     * Getter method
-     *
-     * @return playerID
-     */
-    public String getPlayerID() {
-        return playerID;
+
+    public String getPlayerId() {
+        return playerId;
+    }
+
+    public void setWorldNameToWaveData(Map<String, Integer[]> worldNameToWaveData) {
+        this.worldNameToWaveData = worldNameToWaveData;
+    }
+
+    public Map<String, Integer[]> getWorldNameToWaveData() {
+        return worldNameToWaveData;
     }
 }

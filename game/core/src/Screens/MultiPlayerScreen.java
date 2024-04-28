@@ -31,6 +31,7 @@ import serializableObjects.AskPlayersWaitingScreen;
 import serializableObjects.RemoveMultiPlayerWorld;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,15 +42,15 @@ public class MultiPlayerScreen extends ScreenAdapter {
     private final MyGDXGame game;
     private Stage stage;
     private Batch batch;
-    private Music music;
     private BackGround backGround;
     public static Map<String, String> multiPlayerWorlds = new HashMap<>();
-    private Label.LabelStyle labelForTable = new LabelForTable(60).getLabelStyle();
-    private TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
+    public static Map<String, Integer[]> worldNameToWaveData = new HashMap<>();
+    private final Label.LabelStyle labelForTable = new LabelForTable(60).getLabelStyle();
+    private final TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
     private Table displayTable;
     private TextButton newButton;
     private Table table;
-    private List<Container> containers = new ArrayList<>();
+    private final List<Container> containers = new ArrayList<>();
     private String chosenWorld;
     private Pixmap pixmapNormal;
     private Pixmap pixmapClicked;
@@ -69,7 +70,6 @@ public class MultiPlayerScreen extends ScreenAdapter {
     public MultiPlayerScreen(MenuScreen menuScreen, MyGDXGame game, Music music) {
         this.menuScreen = menuScreen;
         this.game = game;
-        this.music = music;
         this.newOrJoin = new NewOrJoin(this, game);
         this.handleFullWorld = new HandleFullWorld(this, game);
         this.waitingScreen = new WaitingScreen(this, game, music);
@@ -118,7 +118,9 @@ public class MultiPlayerScreen extends ScreenAdapter {
      * Updates the displayTable
      */
     public void updateDisplayTable() {
+        if (displayTable == null) return;
         if (multiPlayerWorlds.size() == 5) newButton.remove();
+
         displayTable.clear();
         if (multiPlayerWorlds.isEmpty()) {
             Label emptyWorldsLabel = new Label("Press the 'Add' button", labelForTable);
@@ -220,7 +222,21 @@ public class MultiPlayerScreen extends ScreenAdapter {
                 }
 
                 if (chosenWorld != null && !game.serverReply.isFull()) {
-                    game.createScreen(multiPlayerWorlds.get(chosenWorld), 0);
+                    Integer[] waveData = worldNameToWaveData.get(multiPlayerWorlds.get(chosenWorld));
+                    int currentWave;
+                    int currentTimeInWave;
+
+                    System.out.println(Arrays.toString(waveData));
+
+                    if (waveData != null) {
+                        currentWave = waveData[0];
+                        currentTimeInWave = waveData[1];
+                    } else {
+                        currentWave = 1;
+                        currentTimeInWave = 0;
+                    }
+
+                    game.createScreen(multiPlayerWorlds.get(chosenWorld), 0, currentWave, currentTimeInWave);
 
                     game.client.sendTCP(new AskPlayersWaitingScreen(multiPlayerWorlds.get(chosenWorld)));
                     game.setScreen(waitingScreen);

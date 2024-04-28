@@ -2,7 +2,6 @@ package Opponents;
 
 import Screens.PlayScreen;
 import Screens.SettingsScreen;
-import Tools.B2WorldCreator;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -42,7 +41,7 @@ public class Robot extends Opponent {
      * @param screen
      */
     public Robot(World world, PlayScreen screen) {
-        super(screen.getRobotAtlas().findRegion("Robot"), world, screen, MAX_HEALTH, timeForExplosion);
+        super(screen.getRobotAtlas().findRegion("Robot"), world, screen, MAX_HEALTH);
 
         System.out.println("spawning robot 1");
 
@@ -64,7 +63,7 @@ public class Robot extends Opponent {
      * @param posY
      */
     public Robot(World world, PlayScreen screen, float posX, float posY, int health, String uuid) {
-        super(screen.getRobotAtlas().findRegion("Robot"), world, screen, health, timeForExplosion);
+        super(screen.getRobotAtlas().findRegion("Robot"), world, screen, health);
 
         System.out.println("spawning robot 2");
 
@@ -104,7 +103,7 @@ public class Robot extends Opponent {
                 explosion.play(SettingsScreen.soundValue);
             }
             if (counter >= timeForExplosion) {
-                B2WorldCreator.markOpponentAsDestroyed(this);
+                playScreen.b2WorldCreator.markOpponentAsDestroyed(this);
                 explosion.dispose();
             }
         } else {

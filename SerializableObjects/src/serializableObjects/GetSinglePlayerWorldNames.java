@@ -1,9 +1,11 @@
 package serializableObjects;
 
+import java.util.List;
 import java.util.Map;
 
 public class GetSinglePlayerWorldNames {
     private Map<String, String> worldNamesAndIDs;
+    private Map<String, Integer[]> worldNameToWaveData;
     private final String playerID;
 
     /**
@@ -31,6 +33,10 @@ public class GetSinglePlayerWorldNames {
         this.worldNamesAndIDs = worldNamesAndIDs;
     }
 
+    public void setWorldNameToWaveData(Map<String, Integer[]> worldNameToWaveData) {
+        this.worldNameToWaveData = worldNameToWaveData;
+    }
+
     /**
      * Gets the map
      *
@@ -38,6 +44,10 @@ public class GetSinglePlayerWorldNames {
      */
     public Map<String, String> getWorldNamesAndIDs() {
         return worldNamesAndIDs;
+    }
+
+    public Map<String, Integer[]> getWorldNameToWaveData() {
+        return worldNameToWaveData;
     }
 
     /**
@@ -48,4 +58,5 @@ public class GetSinglePlayerWorldNames {
     public String getPlayerID() {
         return playerID;
     }
+
 }

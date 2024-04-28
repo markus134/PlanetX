@@ -1,15 +1,14 @@
 package map;
 
+import Sprites.Player;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.World;
 import map.generation.TerrainGenerator;
 import map.rendering.ChunkRenderer;
-import Sprites.Player;
 
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.math.Vector2;
-
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Handle the world data. Load entities and chunks from a file.

@@ -9,6 +9,7 @@ import Screens.SettingsScreen;
 import Screens.SinglePlayerScreen;
 import Screens.WaitingScreen;
 import Sprites.OtherPlayer;
+import Tools.UUIDFileManager;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
@@ -38,16 +39,13 @@ import serializableObjects.RemoveSinglePlayerWorld;
 import serializableObjects.RevivePlayer;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 
 /**
@@ -82,6 +80,7 @@ public class MyGDXGame extends Game {
     public AskIfSessionIsFull serverReply;
     public static HashMap<String, PlayScreen> worldUuidToScreen = new HashMap<>();
     public String playerUUID;
+    private UUIDFileManager uuidFileManager;
 
     /**
      * Initializes the game, creates music object and menu.
@@ -89,9 +88,16 @@ public class MyGDXGame extends Game {
     @Override
     public void create() {
         batch = new SpriteBatch();
+
+        try {
+            this.uuidFileManager = new UUIDFileManager();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         initializeMenu();
         try {
-            createFileWithUUID();
+            this.playerUUID = uuidFileManager.assignUUID();
+            System.out.println(playerUUID);
         } catch (IOException e) {
             throw new RuntimeException("Error creating a file with the unique id");
         }
@@ -129,18 +135,19 @@ public class MyGDXGame extends Game {
     /**
      * Creates the playScreen.
      */
-    public void createScreen(String worldUUID, int numberOfPlayers) {
+    public void createScreen(String worldUUID, int numberOfPlayers, int currentWave, int currentTimeInWave) {
         if (worldUuidToScreen.containsKey(worldUUID)) {
             playScreen = worldUuidToScreen.get(worldUUID);
 
             if (numberOfPlayers == 0) {
                 for (Map.Entry<String, Opponent> entry : playScreen.opponents.entrySet()) {
                     Opponent opponent = entry.getValue();
+                    System.out.println("destroying body in createScreen " + opponent.getBody());
                     playScreen.world.destroyBody(opponent.getBody());
                 }
             }
         } else {
-            playScreen = new PlayScreen(this, worldUUID, menu);
+            playScreen = new PlayScreen(this, worldUUID, menu, currentWave, currentTimeInWave);
         }
 
         playScreen.opponents.clear();
@@ -150,6 +157,7 @@ public class MyGDXGame extends Game {
         playerDataMap.clear();
         playerHashMapByUuid.clear();
         receivedPackets.clear();
+
 
         if (numberOfPlayers == 1)
             client.sendTCP(new AddSinglePlayerWorld(worldUUID, playerUUID, SinglePlayerScreen.singlePlayerWorlds));
@@ -182,6 +190,9 @@ public class MyGDXGame extends Game {
         kryo.register(RemoveMultiPlayerWorld.class);
         kryo.register(AskPlayersWaitingScreen.class);
         kryo.register(PlayerLeavesWaitingScreen.class);
+        kryo.register(Integer[].class);
+
+
     }
 
     /**
@@ -259,10 +270,14 @@ public class MyGDXGame extends Game {
      * @param reply that is received
      */
     private void handleGetSinglePlayerWorldNames(GetSinglePlayerWorldNames reply) {
+        System.out.println(reply.getWorldNamesAndIDs());
+        System.out.println("data: " + reply.getWorldNameToWaveData());
         if (reply.getWorldNamesAndIDs() == null) {
             SinglePlayerScreen.singlePlayerWorlds = new HashMap<>();
+            SinglePlayerScreen.worldNameToWaveData = new HashMap<>();
         } else {
             SinglePlayerScreen.singlePlayerWorlds = reply.getWorldNamesAndIDs();
+            SinglePlayerScreen.worldNameToWaveData = reply.getWorldNameToWaveData();
         }
     }
 
@@ -274,8 +289,10 @@ public class MyGDXGame extends Game {
     private void handleGetMultiPlayerWorldNames(GetMultiPlayerWorldNames reply) {
         if (reply.getWorldNamesAndIDs() == null) {
             MultiPlayerScreen.multiPlayerWorlds = new HashMap<>();
+            MultiPlayerScreen.worldNameToWaveData = new HashMap<>();
         } else {
             MultiPlayerScreen.multiPlayerWorlds = reply.getWorldNamesAndIDs();
+            MultiPlayerScreen.worldNameToWaveData = reply.getWorldNameToWaveData();
         }
         menu.multiPlayerScreen.updateTableValuesAfterRemovingWorld();
     }
@@ -372,43 +389,13 @@ public class MyGDXGame extends Game {
         playerDict.keySet().removeIf(id -> {
             if (!allConnectionIDs.contains(id)) {
                 for (OtherPlayer otherPlayer : playerDict.get(id)) {
+                    System.out.println("destroying body in removeDisconnectedPlayers " + otherPlayer.b2body);
                     world.destroyBody(otherPlayer.b2body);
                 }
                 return true;
             }
             return false;
         });
-    }
-
-    /**
-     * Creates a file or reads an existing one
-     *
-     * @throws IOException if something goes wrong
-     */
-    private void createFileWithUUID() throws IOException {
-        String homeDir = System.getProperty("user.home");
-        Path path = Paths.get(homeDir, ".PlanetX", ".config", ".uniqueID", ".uuid.txt");
-
-        if (Files.exists(path)) {
-            System.out.println(path);
-            this.playerUUID = Files.readString(path);
-        } else {
-            try {
-                String uuid = UUID.randomUUID().toString();
-                Files.createDirectories(path.getParent());
-                Files.createFile(path);
-                Files.write(path, uuid.getBytes());
-                System.out.println(path);
-
-                this.playerUUID = Files.readString(path);
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        if (playerUUID == null) {
-            System.out.println("Something is wrong");
-        }
     }
 
     /**
@@ -445,11 +432,23 @@ public class MyGDXGame extends Game {
         WaitingScreen.maxPlayers = reply.getMaxPlayers();
     }
 
+    public void updateMenu() {
+        menu.multiPlayerScreen.updateDisplayTable();
+        menu.singlePlayerScreen.updateDisplayTable();
+    }
+
     /**
      * Disposes of resources and closes the network client when the game is closed.
      */
     @Override
     public void dispose() {
+        try {
+            uuidFileManager.releaseUUID(this.playerUUID);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        client.sendTCP(new PlayerLeavesTheWorld(playScreen.worldUUID, playScreen.hud.getCurrentWave(), playScreen.hud.getCurrentTime()));
         client.close();
         try {
             client.dispose();

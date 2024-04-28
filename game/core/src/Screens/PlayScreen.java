@@ -7,7 +7,7 @@ import Opponents.Boss;
 import Opponents.Monster;
 import Opponents.Opponent;
 import Opponents.Robot;
-import Scenes.DeathScene;
+import Scenes.GameOverScene;
 import Scenes.Debug;
 import Scenes.ExitToMainMenu;
 import Scenes.HUD;
@@ -34,6 +34,8 @@ import serializableObjects.OpponentData;
 import serializableObjects.OpponentDataMap;
 import serializableObjects.PlayerData;
 import serializableObjects.PlayerLeavesTheWorld;
+import serializableObjects.RemoveMultiPlayerWorld;
+import serializableObjects.RemoveSinglePlayerWorld;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,10 +49,10 @@ import java.util.Set;
 
 public class PlayScreen implements Screen {
     public final MyGDXGame game;
-    public static OrthographicCamera gameCam = new OrthographicCamera();
+    public OrthographicCamera gameCam = new OrthographicCamera();
     private final Viewport gamePort;
     private final TiledMap map;
-    private TmxMapLoader mapLoader = new TmxMapLoader();
+    private final TmxMapLoader mapLoader = new TmxMapLoader();
     private final OrthogonalTiledMapRenderer renderer;
     public World world;
     private final Box2DDebugRenderer b2dr;
@@ -73,7 +75,7 @@ public class PlayScreen implements Screen {
     public HashMap<String, Opponent> opponents = new HashMap<>();
     public OpponentDataMap opponentDataMap;
     private final PlayScreenInputHandler handler;
-    private final B2WorldCreator b2WorldCreator;
+    public final B2WorldCreator b2WorldCreator;
     public Set<String> destroyedOpponents = new HashSet<>();
     public Set<String> allDestroyedOpponents = new HashSet<>();
     public Set<String> allDestroyedPlayers = new HashSet<>();
@@ -82,7 +84,7 @@ public class PlayScreen implements Screen {
     public List<Crystal> crystals = new ArrayList<>();
     public final ExitToMainMenu pauseDialog;
     private final MenuScreen menuScreen;
-    public final DeathScene deathScene;
+    public final GameOverScene gameOverScene;
     private int deathSceneCounter = 0;
     private static final int ROBOT_ID = 1;
     private static final int BOSS_ID = 2;
@@ -90,9 +92,6 @@ public class PlayScreen implements Screen {
     private static final int MOB_SPAWN_INTERVAL = 5; // a mob is spawned each 5 seconds
     private int mobSpawnIntervalCounter = 0;
     private static final int MOB_PER_PLAYER = 10; // 10 mobs per player
-    private static final int TIME_FOR_PLAYERS_TO_CHILL_AT_THE_BEGINNING = 30; // players have 30 seconds at
-    // the beginning when no mobs are spawned
-    private int chillTimeCounter = 0;
 
     /**
      * Constructor for the PlayScreen.
@@ -100,7 +99,7 @@ public class PlayScreen implements Screen {
      * @param game The Game instance representing the main game.
      * @param menu
      */
-    public PlayScreen(MyGDXGame game, String worldUUID, MenuScreen menu) {
+    public PlayScreen(MyGDXGame game, String worldUUID, MenuScreen menu, int currentRound, int currentTimeInWave) {
         this.menuScreen = menu;
         this.game = game;
         this.worldUUID = worldUUID;
@@ -118,9 +117,9 @@ public class PlayScreen implements Screen {
         player = new Player(world, this);
 
         debug = new Debug(game.batch, player);
-        hud = new HUD(game.batch, player);
+        hud = new HUD(game.batch, player, this, currentRound, currentTimeInWave);
         pauseDialog = new ExitToMainMenu(game.batch, this);
-        deathScene = new DeathScene(game.batch, this, this.player);
+        gameOverScene = new GameOverScene(game.batch, this, this.player);
 
         // Initialize BulletManager
         bulletManager = new BulletManager(world);
@@ -179,9 +178,26 @@ public class PlayScreen implements Screen {
      */
     public void update(float dt) throws IOException {
         world.step(1 / 60f, 6, 2);
-
         player.update(dt);
 
+        updateOpponents(dt);
+
+        bulletManager.update(dt);
+
+        handleDestroyedOpponents();
+        handlePlayerDeath();
+        spawnNewOpponents();
+        updateGameCamera();
+        sendPlayerData();
+        handleMobSpawning();
+
+        destroyedOpponents.clear();
+    }
+
+    /**
+     * Updates opponents' logic and sends their data to the server.
+     */
+    private void updateOpponents(float dt) {
         // updating opponents and adding info to the opponentDataMap, which is sent to the server
         for (Map.Entry<String, Opponent> entry : opponents.entrySet()) {
             Opponent opponent = entry.getValue();
@@ -199,12 +215,14 @@ public class PlayScreen implements Screen {
             }
 
         }
+    }
 
-        bulletManager.update(dt);
+    /**
+     * Handles destroyed opponents, removing them from various data structures.
+     */
+    private void handleDestroyedOpponents() {
         b2WorldCreator.destroyDeadOpponents();
         b2WorldCreator.destroyDeadPlayers();
-
-        game.client.sendTCP(opponentDataMap);
 
         for (String id : destroyedOpponents) {
             if (opponentDataMap.getMap().containsKey(id)) {
@@ -224,65 +242,104 @@ public class PlayScreen implements Screen {
             }
         }
 
-        if (player.shouldBeDestroyed) {
+        game.client.sendTCP(opponentDataMap);
+    }
+
+    /**
+     * Handles the player's death and triggers the death scene if needed.
+     */
+    private void handlePlayerDeath() {
+        if (player.shouldBeDestroyed || hud.allWavesFinished()) {
             if (deathSceneCounter == 0) {
-                deathScene.showStage();
+                if (hud.allWavesFinished()) {
+                    gameOverScene.addText("You have won.");
+                }
+                gameOverScene.showStage();
                 deathSceneCounter++;
+
+                game.playerDataMap.clear();
+                game.playerDict.clear();
+
+                if (SinglePlayerScreen.singlePlayerWorlds.containsValue(worldUUID)) {
+                    game.client.sendTCP(new RemoveSinglePlayerWorld(game.playerUUID, worldUUID, SinglePlayerScreen.singlePlayerWorlds.get(worldUUID)));
+                } else {
+                    game.client.sendTCP(new RemoveMultiPlayerWorld(game.playerUUID, worldUUID, MultiPlayerScreen.multiPlayerWorlds.get(worldUUID)));
+                }
+
+                SinglePlayerScreen.singlePlayerWorlds.remove(getWorldNameByUUID(SinglePlayerScreen.singlePlayerWorlds, worldUUID));
+                MultiPlayerScreen.multiPlayerWorlds.remove(getWorldNameByUUID(MultiPlayerScreen.multiPlayerWorlds, worldUUID));
+
+
+                game.updateMenu();
             }
         }
+    }
 
-        // opponentDataMap is constantly being updated by all client instances
-        // this block of code makes new instances of the robot or boss if it is an opponent with a new ID
+    private String getWorldNameByUUID(Map<String, String> worldMap, String worldUUID) {
+        for (Map.Entry<String, String> entry : worldMap.entrySet()) {
+            if (entry.getValue().equals(worldUUID)) {
+                return entry.getKey();
+            }
+        }
+        return null; // UUID not found in the given map
+    }
+
+    /**
+     * Spawns new opponents based on opponentDataMap if not already spawned.
+     */
+    private void spawnNewOpponents() {
         HashMap<String, OpponentData> map = opponentDataMap.getMap();
         for (Map.Entry<String, OpponentData> entry : map.entrySet()) {
             String key = entry.getKey();
             OpponentData opponentData = entry.getValue();
+            if (shouldSkipOpponent(opponentData, key)) continue;
 
-            // Skip if opponent already exists or has been destroyed, or if health is 0
-            if (opponentIds.contains(key) || destroyedOpponents.contains(key) || opponentData.getHealth() == 0) {
-                continue;
-            }
-
-            // Instantiate the appropriate opponent type based on mob ID
-            Opponent opponent;
-            switch (opponentData.getMob()) {
-                case ROBOT_ID:
-                    opponent = new Robot(world, this, opponentData.getX(), opponentData.getY(),
-                            opponentData.getHealth(), opponentData.getUuid());
-                    break;
-                case BOSS_ID:
-                    opponent = new Boss(world, this, opponentData.getX(), opponentData.getY(),
-                            opponentData.getHealth(), opponentData.getUuid(), opponentData.getMobSpawnTime());
-                    break;
-                case MONSTER_ID:
-                    opponent = new Monster(world, this, opponentData.getX(), opponentData.getY(),
-                            opponentData.getHealth(), opponentData.getUuid());
-                    break;
-                default:
-                    // Handle unexpected mob ID
-                    continue;
-            }
-
-            // Add the opponent to the opponents map and mark its ID as processed
+            Opponent opponent = createOpponent(opponentData);
             opponents.put(key, opponent);
             opponentIds.add(key);
         }
+    }
 
+    /**
+     * Determines whether an opponent should be skipped.
+     */
+    private boolean shouldSkipOpponent(OpponentData data, String key) {
+        return opponentIds.contains(key) ||
+                destroyedOpponents.contains(key) ||
+                data.getHealth() == 0;
+    }
 
+    /**
+     * Updates the game camera's position and view.
+     */
+    private void updateGameCamera() {
         gameCam.position.x = player.b2body.getPosition().x;
         gameCam.position.y = player.b2body.getPosition().y;
-
         gameCam.update();
         renderer.setView(gameCam);
+    }
 
-        // It is used to send the position of the player to the server
-        if (prevPosX != gameCam.position.x
-                || prevPosY != gameCam.position.y
-                || player.prevState != player.currentState
-                || player.getCurrentFrameIndex() != prevFrameIndex
-                || player.getIsMining()
-                || prevRunningRight != player.runningRight) {
+    /**
+     * Creates an opponent instance based on the mob ID.
+     */
+    private Opponent createOpponent(OpponentData data) {
+        switch (data.getMob()) {
+            case ROBOT_ID:
+                return new Robot(world, this, data.getX(), data.getY(), data.getHealth(), data.getUuid());
+            case BOSS_ID:
+                return new Boss(world, this, data.getX(), data.getY(), data.getHealth(), data.getUuid(), data.getMobSpawnTime());
+            case MONSTER_ID:
+                return new Monster(world, this, data.getX(), data.getY(), data.getHealth(), data.getUuid());
+            default:
+                throw new IllegalArgumentException("Unknown mob ID: " + data.getMob());
+        }
+    }
 
+    /**
+     * Sends player data to the server if position or state has changed.
+     */
+    private void sendPlayerData() {
+        if (hasPlayerDataChanged()) {
             game.client.sendTCP(new PlayerData(
                     gameCam.position.x,
                     gameCam.position.y,
@@ -293,28 +350,47 @@ public class PlayScreen implements Screen {
                     worldUUID
             ));
 
-            prevPosX = gameCam.position.x;
-            prevPosY = gameCam.position.y;
-            player.prevState = player.currentState;
-            prevFrameIndex = player.getCurrentFrameIndex();
-            prevRunningRight = player.runningRight;
+            updatePreviousPlayerData();
         }
+    }
 
-        System.out.println(chillTimeCounter);
-        System.out.println("rendering playscreen");
-        if (TIME_FOR_PLAYERS_TO_CHILL_AT_THE_BEGINNING * 60 > chillTimeCounter) {
-            chillTimeCounter++;
-        } else {
-            if (mobSpawnIntervalCounter >= MOB_SPAWN_INTERVAL * 60
-                    && opponentIds.size() <= MOB_PER_PLAYER * (game.playerDict.size() + 1)) {
-                b2WorldCreator.spawnMob();
-                mobSpawnIntervalCounter = 0;
-            }
-            mobSpawnIntervalCounter++;
+    /**
+     * Checks if the player data has changed.
+     */
+    private boolean hasPlayerDataChanged() {
+        return prevPosX != gameCam.position.x ||
+                prevPosY != gameCam.position.y ||
+                player.prevState != player.currentState ||
+                player.getCurrentFrameIndex() != prevFrameIndex ||
+                player.getIsMining() ||
+                prevRunningRight != player.runningRight;
+    }
+
+    /**
+     * Updates the previous player data for tracking changes.
+     */
+    private void updatePreviousPlayerData() {
+        prevPosX = gameCam.position.x;
+        prevPosY = gameCam.position.y;
+        player.prevState = player.currentState;
+        prevFrameIndex = player.getCurrentFrameIndex();
+        prevRunningRight = player.runningRight;
+    }
+
+    /**
+     * Handles the spawning of mobs if the time and conditions are met.
+     */
+    private void handleMobSpawning() {
+
+        if (mobSpawnIntervalCounter >= MOB_SPAWN_INTERVAL * 60 &&
+                opponentIds.size() <= MOB_PER_PLAYER * (game.playerDict.size() + 1)) {
+            b2WorldCreator.spawnMob();
+            mobSpawnIntervalCounter = 0;
         }
+        mobSpawnIntervalCounter++;
+
 
         destroyedOpponents.clear();
-        System.out.println("got here");
     }
 
     /**
@@ -324,9 +400,8 @@ public class PlayScreen implements Screen {
      */
     @Override
     public void render(float delta) {
-
-        System.out.println("RENDER PART START");
         handler.handleInput();
+
         try {
             update(delta);
         } catch (IOException e) {
@@ -377,10 +452,9 @@ public class PlayScreen implements Screen {
 
         hud.updateLabelValues();
         if (pauseDialog.isToShow()) pauseDialog.renderStage();
-        if (deathScene.isToShow()) {
-            deathScene.renderStage();
+        if (gameOverScene.isToShow()) {
+            gameOverScene.renderStage();
         }
-        System.out.println("RENDER PART END");
     }
 
     /**
@@ -400,7 +474,10 @@ public class PlayScreen implements Screen {
         //debug.stage.getViewport().update(width, height, true);
         hud.stage.getViewport().update(width, height, true);
         pauseDialog.stage.getViewport().update(width, height, true);
-        deathScene.stage.getViewport().update(width, height, true);
+        gameOverScene.stage.getViewport().update(width, height, true);
+
+        pauseDialog.centerDialog();
+        gameOverScene.centerScene();
     }
 
     @Override
@@ -418,18 +495,11 @@ public class PlayScreen implements Screen {
     }
 
     /**
-     * Changes player's screen to the main menu screen if the player dies
+     * Changes player's screen to the main menu screen.
      */
-    public void goToMenuWhenPlayerIsDead() throws IOException {
-        //world.destroyBody(player.b2body);
-        // game.playerDict.clear();
-        // game.dispose();
-
+    public void goToMenu() {
         music.dispose();
-        game.client.sendTCP(new PlayerLeavesTheWorld(worldUUID));
-
-//        MyGDXGame.client.close();
-//        MyGDXGame.client.dispose();
+        game.client.sendTCP(new PlayerLeavesTheWorld(worldUUID, hud.getCurrentWave(), hud.getCurrentTime()));
 
         // starts the music
         menuScreen.music.play();
@@ -449,7 +519,7 @@ public class PlayScreen implements Screen {
         robotAtlas.dispose();
         bossAtlas.dispose();
         monsterAtlas.dispose();
-        deathScene.dispose();
+        gameOverScene.dispose();
         pauseDialog.dispose();
     }
 }

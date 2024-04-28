@@ -11,10 +11,8 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mygdx.game.MyGDXGame;
 
-import java.io.IOException;
 
-
-public class DeathScene implements Disposable {
+public class GameOverScene implements Disposable {
 
     public final Stage stage;
     private final Dialog deathScene;
@@ -26,7 +24,7 @@ public class DeathScene implements Disposable {
      * @param sb
      * @param playScreen
      */
-    public DeathScene(SpriteBatch sb, PlayScreen playScreen, Player player) {
+    public GameOverScene(SpriteBatch sb, PlayScreen playScreen, Player player) {
         this.stage = new Stage(new ExtendViewport((float) MyGDXGame.V_WIDTH / 2,
                 (float) MyGDXGame.V_HEIGHT / 2), sb);
 
@@ -34,19 +32,15 @@ public class DeathScene implements Disposable {
         deathScene = new Dialog("", skin) {
             protected void result(Object object) {
                 if (object.equals(true)) {
-                    try {
-                        playScreen.allDestroyedPlayers.add(player.getUuid());
-                        playScreen.goToMenuWhenPlayerIsDead();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    playScreen.allDestroyedPlayers.add(player.getUuid());
+                    playScreen.goToMenu();
                 }
                 toShow = false;
             }
         };
         deathScene.text("Game Over!");
         deathScene.button("Go to menu", true);
-        deathScene.center();
+        centerScene();
         deathScene.setMovable(false);
     }
 
@@ -54,6 +48,7 @@ public class DeathScene implements Disposable {
      * Show the popUp menu
      */
     public void showStage() {
+        System.out.println("showing");
         if (!deathScene.hasParent()) {
             stage.addActor(deathScene);
         }
@@ -69,6 +64,28 @@ public class DeathScene implements Disposable {
      */
     public boolean isToShow() {
         return toShow;
+    }
+
+    /**
+     * Center the scene. Made a separate method instead of using just doing pauseDialog.center() to avoid bugs
+     * with resizing
+     */
+    public void centerScene() {
+        float stageWidth = stage.getWidth();
+        float stageHeight = stage.getHeight();
+
+        float dialogWidth = deathScene.getWidth();
+        float dialogHeight = deathScene.getHeight();
+
+        // Center the dialog based on the stage dimensions
+        float posX = (stageWidth - dialogWidth) / 2;
+        float posY = (stageHeight - dialogHeight) / 2;
+
+        deathScene.setPosition(posX, posY);
+    }
+
+    public void addText(String text) {
+        deathScene.text(text);
     }
 
     /**

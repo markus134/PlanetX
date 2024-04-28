@@ -43,6 +43,7 @@ public class GameServer {
     private final Map<String, Map<String, String>> playerIDToSinglePlayerWorldNames = new HashMap<>();
     // playerID, world name, world id
     private final Map<String, Map<String, String>> playerIDToMultiPlayerWorldNames = new HashMap<>();
+    private final Map<String, Integer[]> worldIDToWaveData = new HashMap<>();
 
     /**
      * Constructor for GameServer. Initializes the KryoNet server and binds it to the specified ports.
@@ -71,6 +72,7 @@ public class GameServer {
         kryo.register(RemoveMultiPlayerWorld.class);
         kryo.register(AskPlayersWaitingScreen.class);
         kryo.register(PlayerLeavesWaitingScreen.class);
+        kryo.register(Integer[].class);
 
         server.start();
         try {
@@ -94,11 +96,11 @@ public class GameServer {
                     }
 
                     if (object instanceof AskPlayersWaitingScreen request) {
-                        handleAskPlayersWaitingScreen(connection, request);
+                        handleAskPlayersWaitingScreen(request);
                     }
 
                     if (object instanceof RemoveMultiPlayerWorld request) {
-                        handleRemoveMultiPlayerWorld(connection, request);
+                        handleRemoveMultiPlayerWorld(request);
                     }
 
                     if (object instanceof GetMultiPlayerWorldNames request) {
@@ -106,7 +108,7 @@ public class GameServer {
                     }
 
                     if (object instanceof RemoveSinglePlayerWorld request) {
-                        handleRemoveSinglePlayerWorld(connection, request);
+                        handleRemoveSinglePlayerWorld(request);
                     }
 
                     if (object instanceof GetSinglePlayerWorldNames request) {
@@ -183,7 +185,8 @@ public class GameServer {
         }
     }
 
-    private void handleAskPlayersWaitingScreen(Connection connection, AskPlayersWaitingScreen request) {
+
+    private void handleAskPlayersWaitingScreen(AskPlayersWaitingScreen request) {
         String worldID = request.getWorldID();
 
         Session session = worlds.get(worldID);
@@ -199,10 +202,9 @@ public class GameServer {
      * Removes a multiplayer world. If one player decides to remove a world, it is removed everywhere, so no one can
      * play in that world anymore
      *
-     * @param connection The connection object representing the client connection.
      * @param message    that is received
      */
-    private void handleRemoveMultiPlayerWorld(Connection connection, RemoveMultiPlayerWorld message) {
+    private void handleRemoveMultiPlayerWorld(RemoveMultiPlayerWorld message) {
         String worldID = message.getWorldID();
         String worldName = message.getWorldName();
 
@@ -215,6 +217,7 @@ public class GameServer {
             for (String pID : worldIDtoListOfPlayerIDs.get(worldID)) {
                 if (playerIDToMultiPlayerWorldNames.containsKey(pID)) {
                     playerIDToMultiPlayerWorldNames.get(pID).remove(worldName);
+                    worldIDToWaveData.remove(worldID);
 
                     if (playerIDtoConnection.containsKey(pID)) {
                         handleGetMultiPlayerWorldNames(playerIDtoConnection.get(pID), new GetMultiPlayerWorldNames(pID));
@@ -229,10 +232,9 @@ public class GameServer {
     /**
      * Removes a single player world
      *
-     * @param connection The connection object representing the client connection.
      * @param message    that is received
      */
-    private void handleRemoveSinglePlayerWorld(Connection connection, RemoveSinglePlayerWorld message) {
+    private void handleRemoveSinglePlayerWorld(RemoveSinglePlayerWorld message) {
         String playerID = message.getPlayerID();
         String worldID = message.getWorldID();
         String worldName = message.getWorldName();
@@ -244,6 +246,7 @@ public class GameServer {
 
         if (playerIDToSinglePlayerWorldNames.containsKey(playerID)) {
             playerIDToSinglePlayerWorldNames.get(playerID).remove(worldName);
+            worldIDToWaveData.remove(worldID);
         }
     }
 
@@ -255,6 +258,7 @@ public class GameServer {
      */
     private void handleGetSinglePlayerWorldNames(Connection connection, GetSinglePlayerWorldNames request) {
         request.setWorldNamesAndIDs(playerIDToSinglePlayerWorldNames.get(request.getPlayerID()));
+        request.setWorldNameToWaveData(worldIDToWaveData);
         connection.sendTCP(request);
     }
 
@@ -265,7 +269,8 @@ public class GameServer {
      * @param request    that is received
      */
     private void handleGetMultiPlayerWorldNames(Connection connection, GetMultiPlayerWorldNames request) {
-        request.setWorldNamesAndIDs(playerIDToMultiPlayerWorldNames.get(request.getPlayerID()));
+        request.setWorldNamesAndIDs(playerIDToMultiPlayerWorldNames.get(request.getPlayerId()));
+        request.setWorldNameToWaveData(worldIDToWaveData);
         connection.sendTCP(request);
     }
 
@@ -294,7 +299,12 @@ public class GameServer {
      */
     public void handlePlayerLeavesTheWorld(Connection connection, PlayerLeavesTheWorld message) {
         String worldID = message.getWorldID();
+        int currentWave = message.getCurrentWave();
+        int currentTimeInWave = message.getCurrentTime();
+
+        worldIDToWaveData.put(worldID, new Integer[] {currentWave, currentTimeInWave});
         Session session = worlds.get(worldID);
+        if (session == null) return;
 
         session.removePlayer(connection);
         playerDatas.get(worldID).remove(connection.getID());
@@ -349,6 +359,7 @@ public class GameServer {
         String playerID = e.getPlayerID();
 
         playerIDToSinglePlayerWorldNames.put(playerID, e.getSinglePlayerWorlds());
+        worldIDToWaveData.put(worldUUID, new Integer[]{ 1, 0});
 
         if (!worlds.containsKey(worldUUID)) {
             Session session = new Session(1);
@@ -374,7 +385,11 @@ public class GameServer {
         String worldUUID = e.getWorldUUID();
         String playerID = e.getPlayerID();
 
+
+        System.out.println(playerID);
+
         playerIDToMultiPlayerWorldNames.put(playerID, e.getMultiplayerWorlds());
+        worldIDToWaveData.put(worldUUID, new Integer[]{1, 0});
 
         if (!worlds.containsKey(worldUUID)) {
             int numberOfPlayers = Integer.parseInt(worldUUID.split(":")[1]);
@@ -406,6 +421,8 @@ public class GameServer {
      */
     private void updatePlayerData(Connection connection, PlayerData data) {
         String worldUUID = data.getWorldUUID();
+        if (!worlds.containsKey(worldUUID)) return;
+
         if (worlds.get(worldUUID).getPlayers().contains(connection)) {
 
             Map<Integer, Object> map = playerDatas.get(worldUUID);
@@ -443,6 +460,8 @@ public class GameServer {
         HashMap<String, OpponentData> map = data.getMap();
 
         OpponentDataMap opponentDataMap = opponentDatas.get(worldUUID);
+        if (opponentDataMap == null) return;
+
         for (Map.Entry<String, OpponentData> entry : map.entrySet()) {
             opponentDataMap.put(entry.getKey(), entry.getValue());
         }

@@ -29,6 +29,7 @@ import com.mygdx.game.MyGDXGame;
 import serializableObjects.RemoveSinglePlayerWorld;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -38,16 +39,17 @@ public class SinglePlayerScreen extends ScreenAdapter {
     private final MyGDXGame game;
     private Stage stage;
     private Batch batch;
-    private Music music;
+    private final Music music;
     private BackGround backGround;
     public static Map<String, String> singlePlayerWorlds;
-    private CreateSinglePlayerWorld createMenu;
-    private Label.LabelStyle labelForTable = new LabelForTable(60).getLabelStyle();
-    private TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
+    public static Map<String, Integer[]> worldNameToWaveData;
+    private final CreateSinglePlayerWorld createMenu;
+    private final Label.LabelStyle labelForTable = new LabelForTable(60).getLabelStyle();
+    private final TextButton.TextButtonStyle textButtonStyle = new PurpleTextButtonStyle().getTextButtonStyle();
     private Table displayTable;
     private TextButton newButton;
     private Table table;
-    private List<Container> containers = new ArrayList<>();
+    private final List<Container> containers = new ArrayList<>();
     private String chosenWorld;
     private Pixmap pixmapNormal;
     private Pixmap pixmapClicked;
@@ -107,6 +109,8 @@ public class SinglePlayerScreen extends ScreenAdapter {
     }
 
     public void updateDisplayTable() {
+        if (displayTable == null) return;
+
         if (singlePlayerWorlds != null) {
             if (singlePlayerWorlds.size() == 5) newButton.remove();
             displayTable.clear();
@@ -129,7 +133,7 @@ public class SinglePlayerScreen extends ScreenAdapter {
                         }
                     });
 
-                    Container<Table> container = new Container<Table>();
+                    Container<Table> container = new Container<>();
                     containers.add(container);
 
                     Table rowTable = new Table();
@@ -186,7 +190,21 @@ public class SinglePlayerScreen extends ScreenAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (chosenWorld != null) {
-                    game.createScreen(singlePlayerWorlds.get(chosenWorld), 1);
+                    Integer[] waveData = worldNameToWaveData.get(singlePlayerWorlds.get(chosenWorld));
+                    int currentWave;
+                    int currentTimeInWave;
+
+                    System.out.println(Arrays.toString(waveData));
+
+                    if (waveData != null) {
+                        currentWave = waveData[0];
+                        currentTimeInWave = waveData[1];
+                    } else {
+                        currentWave = 1;
+                        currentTimeInWave = 0;
+                    }
+
+                    game.createScreen(singlePlayerWorlds.get(chosenWorld), 1, currentWave, currentTimeInWave);
                     game.setScreen(game.playScreen);
                     music.dispose();
                 }
