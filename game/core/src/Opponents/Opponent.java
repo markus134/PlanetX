@@ -138,7 +138,7 @@ public abstract class Opponent extends Sprite {
 
         fdef.shape = shape;
         fdef.filter.categoryBits = MyGDXGame.OPPONENT_CATEGORY;
-        fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.WORLD_CATEGORY | MyGDXGame.PLAYER_CATEGORY;
+        fdef.filter.maskBits = MyGDXGame.BULLET_CATEGORY | MyGDXGame.OTHER_PLAYER_CATEGORY | MyGDXGame.WORLD_CATEGORY | MyGDXGame.PLAYER_CATEGORY | MyGDXGame.OPPONENT_CATEGORY;
         b2body.createFixture(fdef);
 
         b2body.setUserData(this);

@@ -10,9 +10,9 @@ import com.badlogic.gdx.utils.Timer;
  * Displays the current wave number.
  */
 public class WaveManager extends Actor {
-    public static final int TOTAL_WAVES = 6;  // Total number of waves, last one isn't really a wave and is meant to end the game
-    public static final float WAVE_DURATION = 60f;  // Duration of each wave in seconds
-
+    public static final int TOTAL_WAVES = 5;  // Total number of waves, last one isn't really a wave and is meant to end the game
+    public static final float WAVE_DURATION = 5f;  // Duration of each wave in seconds
+    private boolean finishedAllWaves = false;
     private int currentWave;  // The current wave number (1-5)
     private float timeInWave;  // The elapsed time in the current wave
     private final Timer.Task waveTimerTask;  // Timer task to track the wave time
@@ -30,12 +30,16 @@ public class WaveManager extends Actor {
             @Override
             public void run() {
                 System.out.println(timeInWave);
-                if (!playScreen.opponents.isEmpty()) {
+
+                // Start counting when the grace period is over and the player is viewing playScreen
+                if (!playScreen.opponents.isEmpty() && playScreen.game.getScreen().equals(playScreen)) {
                     timeInWave++;  // Increment the timer every second
 
                     // If the wave duration is reached, advance to the next wave
                     if (timeInWave >= WAVE_DURATION && currentWave < TOTAL_WAVES) {
                         goToNextWave();  // Move to the next wave
+                    } else if (timeInWave >= WAVE_DURATION){
+                        finishedAllWaves = true;
                     }
                 }
             }
@@ -70,7 +74,7 @@ public class WaveManager extends Actor {
      * @return True if the final wave has been reached, false otherwise.
      */
     public boolean isFinalWave() {
-        return currentWave == TOTAL_WAVES;
+        return finishedAllWaves;
     }
 
     /**

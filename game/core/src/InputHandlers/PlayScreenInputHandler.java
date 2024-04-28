@@ -291,7 +291,7 @@ public class PlayScreenInputHandler implements InputProcessor {
 
         // Convert screen coordinates to world coordinates
         touchPoint.set(screenX, screenY, 0);
-        PlayScreen.gameCam.unproject(touchPoint);
+        playScreen.gameCam.unproject(touchPoint);
 
         float x = playScreen.player.getX() + playScreen.player.getWidth() / 2;
         float y = playScreen.player.getY() + playScreen.player.getHeight() / 2;

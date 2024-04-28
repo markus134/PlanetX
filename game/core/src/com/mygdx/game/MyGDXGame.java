@@ -142,16 +142,21 @@ public class MyGDXGame extends Game {
             if (numberOfPlayers == 0) {
                 for (Map.Entry<String, Opponent> entry : playScreen.opponents.entrySet()) {
                     Opponent opponent = entry.getValue();
+                    System.out.println("destroying body in createScreen " + opponent.getBody());
                     playScreen.world.destroyBody(opponent.getBody());
                 }
-
-                playScreen.opponents.clear();
-                playScreen.opponentDataMap.getMap().clear();
-                playScreen.opponentIds.clear();
             }
         } else {
             playScreen = new PlayScreen(this, worldUUID, menu);
         }
+
+        playScreen.opponents.clear();
+        playScreen.opponentDataMap.getMap().clear();
+        playScreen.opponentIds.clear();
+        playerDict.clear();
+        playerDataMap.clear();
+        playerHashMapByUuid.clear();
+        receivedPackets.clear();
 
         if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID, playerUUID, SinglePlayerScreen.singlePlayerWorlds));
         if (numberOfPlayers == 0) client.sendTCP(new AddMultiPlayerWorld(worldUUID, playerUUID, MultiPlayerScreen.multiPlayerWorlds));
@@ -363,6 +368,7 @@ public class MyGDXGame extends Game {
         playerDict.keySet().removeIf(id -> {
             if (!allConnectionIDs.contains(id)) {
                 for (OtherPlayer otherPlayer : playerDict.get(id)) {
+                    System.out.println("destroying body in removeDisconnectedPlayers " + otherPlayer.b2body);
                     world.destroyBody(otherPlayer.b2body);
                 }
                 return true;

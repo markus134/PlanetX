@@ -47,10 +47,10 @@ import java.util.Set;
 
 public class PlayScreen implements Screen {
     public final MyGDXGame game;
-    public static OrthographicCamera gameCam = new OrthographicCamera();
+    public OrthographicCamera gameCam = new OrthographicCamera();
     private final Viewport gamePort;
     private final TiledMap map;
-    private TmxMapLoader mapLoader = new TmxMapLoader();
+    private final TmxMapLoader mapLoader = new TmxMapLoader();
     private final OrthogonalTiledMapRenderer renderer;
     public World world;
     private final Box2DDebugRenderer b2dr;
@@ -73,7 +73,7 @@ public class PlayScreen implements Screen {
     public HashMap<String, Opponent> opponents = new HashMap<>();
     public OpponentDataMap opponentDataMap;
     private final PlayScreenInputHandler handler;
-    private final B2WorldCreator b2WorldCreator;
+    public final B2WorldCreator b2WorldCreator;
     public Set<String> destroyedOpponents = new HashSet<>();
     public Set<String> allDestroyedOpponents = new HashSet<>();
     public Set<String> allDestroyedPlayers = new HashSet<>();
@@ -470,18 +470,11 @@ public class PlayScreen implements Screen {
     }
 
     /**
-     * Changes player's screen to the main menu screen if the player dies
+     * Changes player's screen to the main menu screen.
      */
-    public void goToMenuWhenPlayerIsDead() throws IOException {
-        //world.destroyBody(player.b2body);
-        // game.playerDict.clear();
-        // game.dispose();
-
+    public void goToMenu() {
         music.dispose();
         game.client.sendTCP(new PlayerLeavesTheWorld(worldUUID));
-
-//        MyGDXGame.client.close();
-//        MyGDXGame.client.dispose();
 
         // starts the music
         menuScreen.music.play();

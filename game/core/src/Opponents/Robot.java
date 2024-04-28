@@ -104,7 +104,7 @@ public class Robot extends Opponent {
                 explosion.play(SettingsScreen.soundValue);
             }
             if (counter >= timeForExplosion) {
-                B2WorldCreator.markOpponentAsDestroyed(this);
+                playScreen.b2WorldCreator.markOpponentAsDestroyed(this);
                 explosion.dispose();
             }
         } else {

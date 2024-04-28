@@ -2,7 +2,7 @@ package serializableObjects;
 
 public class PlayerLeavesTheWorld {
 
-    private String worldID;
+    private final String worldID;
 
     /**
      * Empty constructor

@@ -34,15 +34,15 @@ import java.util.Set;
 import java.util.UUID;
 
 public class B2WorldCreator {
-    private static final Set<Opponent> opponentsToDestroy = new HashSet<>();
-    public static Set<OtherPlayer> playersToDestroy = new HashSet<>();
+    private final Set<Opponent> opponentsToDestroy = new HashSet<>();
+    public Set<OtherPlayer> playersToDestroy = new HashSet<>();
     private final World world;
     private static final int CRYSTALS_LAYER_INDEX = 4;
     private static final int START_POSITION_LAYER_INDEX = 5;
     private static final int WALLS_LAYER_INDEX = 6;
     private static final int OPPONENT_SPAWN_LAYER_INDEX = 7;
     private final List<Rectangle> opponentSpawnPoints = new ArrayList<>();
-    private PlayScreen playScreen;
+    private final PlayScreen playScreen;
 
     /**
      * Constructor
@@ -256,6 +256,7 @@ public class B2WorldCreator {
     public void destroyDeadOpponents() {
         // Destroy opponents marked for destruction
         for (Opponent opponent : opponentsToDestroy) {
+            System.out.println("destroying opponent " + opponent);
             world.destroyBody(opponent.getBody());
 
             String uniqueId = opponent.getUuid();
@@ -274,6 +275,7 @@ public class B2WorldCreator {
     public void destroyDeadPlayers() {
         // Destroy robots marked for destruction
         for (OtherPlayer player : playersToDestroy) {
+            System.out.println("destroying player " + player);
             //System.out.println("Destroying player");
             world.destroyBody(player.b2body);
 
@@ -285,7 +287,7 @@ public class B2WorldCreator {
         playersToDestroy.clear();
     }
 
-    public static void markOpponentAsDestroyed(Opponent opponent) {
+    public void markOpponentAsDestroyed(Opponent opponent) {
         opponentsToDestroy.add(opponent);
     }
 }

@@ -34,12 +34,8 @@ public class DeathScene implements Disposable {
         deathScene = new Dialog("", skin) {
             protected void result(Object object) {
                 if (object.equals(true)) {
-                    try {
-                        playScreen.allDestroyedPlayers.add(player.getUuid());
-                        playScreen.goToMenuWhenPlayerIsDead();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    playScreen.allDestroyedPlayers.add(player.getUuid());
+                    playScreen.goToMenu();
                 }
                 toShow = false;
             }

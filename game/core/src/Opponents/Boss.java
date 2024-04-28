@@ -112,7 +112,7 @@ public class Boss extends Opponent {
         if (health <= 0) {
             counter++;
             if (counter >= timeForDeath) {
-                B2WorldCreator.markOpponentAsDestroyed(this);
+                playScreen.b2WorldCreator.markOpponentAsDestroyed(this);
             }
         } else {
             updatePosition();

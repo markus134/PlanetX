@@ -34,11 +34,7 @@ public class ExitToMainMenu implements Disposable {
             protected void result(Object object) {
                 if (object.equals(true)) {
                     System.out.println("Exiting to main menu...");
-                    try {
-                        playScreen.goToMenuWhenPlayerIsDead();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    playScreen.goToMenu();
                 } else {
                     System.out.println("Resuming game...");
                     playScreen.changeInputToHandler();
