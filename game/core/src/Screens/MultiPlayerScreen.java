@@ -27,6 +27,7 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.AskIfSessionIsFull;
+import serializableObjects.AskPlayersWaitingScreen;
 import serializableObjects.RemoveMultiPlayerWorld;
 
 import java.util.ArrayList;
@@ -71,7 +72,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
         this.music = music;
         this.newOrJoin = new NewOrJoin(this, game);
         this.handleFullWorld = new HandleFullWorld(this, game);
-        this.waitingScreen = new WaitingScreen(game, music);
+        this.waitingScreen = new WaitingScreen(this, game, music);
     }
 
     /**
@@ -221,10 +222,11 @@ public class MultiPlayerScreen extends ScreenAdapter {
                 if (chosenWorld != null && !game.serverReply.isFull()) {
                     game.createScreen(multiPlayerWorlds.get(chosenWorld), 0);
 
+                    game.client.sendTCP(new AskPlayersWaitingScreen(multiPlayerWorlds.get(chosenWorld)));
                     game.setScreen(waitingScreen);
-                    //
+
 //                    game.setScreen(game.playScreen);
-                    //
+//                    music.dispose();
 
                 } else {
                     game.setScreen(handleFullWorld);
@@ -246,6 +248,7 @@ public class MultiPlayerScreen extends ScreenAdapter {
 
     /**
      * Getter method
+     *
      * @return handleFullWorld
      */
     public HandleFullWorld getHandleFullWorld() {

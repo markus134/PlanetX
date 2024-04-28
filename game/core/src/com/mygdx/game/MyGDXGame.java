@@ -7,6 +7,7 @@ import Screens.MultiPlayerScreen;
 import Screens.PlayScreen;
 import Screens.SettingsScreen;
 import Screens.SinglePlayerScreen;
+import Screens.WaitingScreen;
 import Sprites.OtherPlayer;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -22,6 +23,7 @@ import crystals.Crystal;
 import serializableObjects.AddMultiPlayerWorld;
 import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.AskIfSessionIsFull;
+import serializableObjects.AskPlayersWaitingScreen;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
 import serializableObjects.GetMultiPlayerWorldNames;
@@ -30,6 +32,7 @@ import serializableObjects.OpponentData;
 import serializableObjects.OpponentDataMap;
 import serializableObjects.PlayerData;
 import serializableObjects.PlayerLeavesTheWorld;
+import serializableObjects.PlayerLeavesWaitingScreen;
 import serializableObjects.RemoveMultiPlayerWorld;
 import serializableObjects.RemoveSinglePlayerWorld;
 import serializableObjects.RevivePlayer;
@@ -135,17 +138,23 @@ public class MyGDXGame extends Game {
                     Opponent opponent = entry.getValue();
                     playScreen.world.destroyBody(opponent.getBody());
                 }
-
-                playScreen.opponents.clear();
-                playScreen.opponentDataMap.getMap().clear();
-                playScreen.opponentIds.clear();
             }
         } else {
             playScreen = new PlayScreen(this, worldUUID, menu);
         }
 
-        if (numberOfPlayers == 1) client.sendTCP(new AddSinglePlayerWorld(worldUUID, playerUUID, SinglePlayerScreen.singlePlayerWorlds));
-        if (numberOfPlayers == 0) client.sendTCP(new AddMultiPlayerWorld(worldUUID, playerUUID, MultiPlayerScreen.multiPlayerWorlds));
+        playScreen.opponents.clear();
+        playScreen.opponentDataMap.getMap().clear();
+        playScreen.opponentIds.clear();
+        playerDict.clear();
+        playerDataMap.clear();
+        playerHashMapByUuid.clear();
+        receivedPackets.clear();
+
+        if (numberOfPlayers == 1)
+            client.sendTCP(new AddSinglePlayerWorld(worldUUID, playerUUID, SinglePlayerScreen.singlePlayerWorlds));
+        if (numberOfPlayers == 0)
+            client.sendTCP(new AddMultiPlayerWorld(worldUUID, playerUUID, MultiPlayerScreen.multiPlayerWorlds));
     }
 
     /**
@@ -171,6 +180,8 @@ public class MyGDXGame extends Game {
         kryo.register(RemoveSinglePlayerWorld.class);
         kryo.register(GetMultiPlayerWorldNames.class);
         kryo.register(RemoveMultiPlayerWorld.class);
+        kryo.register(AskPlayersWaitingScreen.class);
+        kryo.register(PlayerLeavesWaitingScreen.class);
     }
 
     /**
@@ -201,7 +212,10 @@ public class MyGDXGame extends Game {
                         handleGetMultiPlayerWorldNames((GetMultiPlayerWorldNames) object);
                     } else if (object instanceof AskIfSessionIsFull) {
                         serverReply = (AskIfSessionIsFull) object;
-                        handleAskIfSessionIsFull();
+                    } else if (object instanceof AskPlayersWaitingScreen) {
+                        handleAskPlayersWaitingScreen((AskPlayersWaitingScreen) object);
+                    } else if (object instanceof PlayerLeavesWaitingScreen) {
+                        handlePlayerLeavesWaitingScreen((PlayerLeavesWaitingScreen) object);
                     } else {
                         receivedPackets.add(object); // Store received packet in a list, this is because render is only called 60 times a second
                     }
@@ -239,7 +253,11 @@ public class MyGDXGame extends Game {
         receivedPackets.clear();
     }
 
-
+    /**
+     * Handles the singlePlayer world names
+     *
+     * @param reply that is received
+     */
     private void handleGetSinglePlayerWorldNames(GetSinglePlayerWorldNames reply) {
         if (reply.getWorldNamesAndIDs() == null) {
             SinglePlayerScreen.singlePlayerWorlds = new HashMap<>();
@@ -248,6 +266,11 @@ public class MyGDXGame extends Game {
         }
     }
 
+    /**
+     * Receives the multiPlayer world names
+     *
+     * @param reply that is received
+     */
     private void handleGetMultiPlayerWorldNames(GetMultiPlayerWorldNames reply) {
         if (reply.getWorldNamesAndIDs() == null) {
             MultiPlayerScreen.multiPlayerWorlds = new HashMap<>();
@@ -306,17 +329,12 @@ public class MyGDXGame extends Game {
         playScreen.crystals.remove(Crystal.getCrystalById(crystal.getId()));
     }
 
-    private void handleAskIfSessionIsFull() {
-        menu.multiPlayerScreen.waitingScreen.currentPlayers = serverReply.getCurrentAmountOfPlayers();
-        menu.multiPlayerScreen.waitingScreen.maxPlayers = serverReply.getMaxAmountOfPlayers();
-    }
-
     /**
      * Updates player data received from the server.
      *
-     * @param id The ID of the player.
+     * @param id         The ID of the player.
      * @param playerData The player data received.
-     * @param world The Box2D world.
+     * @param world      The Box2D world.
      */
     private void updatePlayer(int id, PlayerData playerData, World world) {
         float otherPlayerPosX = playerData.getX();
@@ -348,7 +366,7 @@ public class MyGDXGame extends Game {
      * Removes disconnected players.
      *
      * @param allConnectionIDs The IDs of all connected players.
-     * @param world The Box2D world.
+     * @param world            The Box2D world.
      */
     private void removeDisconnectedPlayers(List<Integer> allConnectionIDs, World world) {
         playerDict.keySet().removeIf(id -> {
@@ -362,6 +380,11 @@ public class MyGDXGame extends Game {
         });
     }
 
+    /**
+     * Creates a file or reads an existing one
+     *
+     * @throws IOException if something goes wrong
+     */
     private void createFileWithUUID() throws IOException {
         String homeDir = System.getProperty("user.home");
         Path path = Paths.get(homeDir, ".PlanetX", ".config", ".uniqueID", ".uuid.txt");
@@ -388,12 +411,38 @@ public class MyGDXGame extends Game {
         }
     }
 
+    /**
+     * Gets the singlePlayer worlds
+     */
     private void getSinglePlayerWorlds() {
         client.sendTCP(new GetSinglePlayerWorldNames(playerUUID));
     }
 
+    /**
+     * Gets the multiplayer worlds
+     */
     private void getMultiPlayerWorlds() {
         client.sendTCP(new GetMultiPlayerWorldNames(playerUUID));
+    }
+
+    /**
+     * Updates the waiting screen values
+     *
+     * @param reply
+     */
+    private void handleAskPlayersWaitingScreen(AskPlayersWaitingScreen reply) {
+        WaitingScreen.currentPlayers = reply.getCurrentPlayers();
+        WaitingScreen.maxPlayers = reply.getMaxPlayers();
+    }
+
+    /**
+     * Updates the waiting screen values
+     *
+     * @param reply
+     */
+    private void handlePlayerLeavesWaitingScreen(PlayerLeavesWaitingScreen reply) {
+        WaitingScreen.currentPlayers = reply.getCurrentPlayers();
+        WaitingScreen.maxPlayers = reply.getMaxPlayers();
     }
 
     /**

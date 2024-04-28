@@ -18,6 +18,7 @@ public class AskIfSessionIsFull {
 
     /**
      * Constructor
+     *
      * @param worldID string
      */
     public AskIfSessionIsFull(String worldID) {
@@ -26,6 +27,7 @@ public class AskIfSessionIsFull {
 
     /**
      * Sets the value
+     *
      * @param full boolean
      */
     public void setFull(boolean full) {
@@ -34,6 +36,7 @@ public class AskIfSessionIsFull {
 
     /**
      * Checks if it is full
+     *
      * @return boolean
      */
     public boolean isFull() {
@@ -42,24 +45,45 @@ public class AskIfSessionIsFull {
 
     /**
      * Getter method
+     *
      * @return the world id
      */
     public String getWorldID() {
         return worldID;
     }
 
+    /**
+     * Getter method
+     *
+     * @return the current amount of players
+     */
     public int getCurrentAmountOfPlayers() {
         return currentAmountOfPlayers;
     }
 
+    /**
+     * Getter method
+     *
+     * @return the max amount of players
+     */
     public int getMaxAmountOfPlayers() {
         return maxAmountOfPlayers;
     }
 
+    /**
+     * Sets the current amount of players
+     *
+     * @param currentAmountOfPlayers to set
+     */
     public void setCurrentAmountOfPlayers(int currentAmountOfPlayers) {
         this.currentAmountOfPlayers = currentAmountOfPlayers;
     }
 
+    /**
+     * Sets the max amount of players
+     *
+     * @param maxAmountOfPlayers to set
+     */
     public void setMaxAmountOfPlayers(int maxAmountOfPlayers) {
         this.maxAmountOfPlayers = maxAmountOfPlayers;
     }
