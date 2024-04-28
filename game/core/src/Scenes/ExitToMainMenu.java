@@ -11,8 +11,6 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mygdx.game.MyGDXGame;
 
-import java.io.IOException;
-
 public class ExitToMainMenu implements Disposable {
 
     public final Stage stage;

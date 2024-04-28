@@ -11,10 +11,8 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mygdx.game.MyGDXGame;
 
-import java.io.IOException;
 
-
-public class DeathScene implements Disposable {
+public class GameOverScene implements Disposable {
 
     public final Stage stage;
     private final Dialog deathScene;
@@ -26,7 +24,7 @@ public class DeathScene implements Disposable {
      * @param sb
      * @param playScreen
      */
-    public DeathScene(SpriteBatch sb, PlayScreen playScreen, Player player) {
+    public GameOverScene(SpriteBatch sb, PlayScreen playScreen, Player player) {
         this.stage = new Stage(new ExtendViewport((float) MyGDXGame.V_WIDTH / 2,
                 (float) MyGDXGame.V_HEIGHT / 2), sb);
 
@@ -84,6 +82,10 @@ public class DeathScene implements Disposable {
         float posY = (stageHeight - dialogHeight) / 2;
 
         deathScene.setPosition(posX, posY);
+    }
+
+    public void addText(String text) {
+        deathScene.text(text);
     }
 
     /**

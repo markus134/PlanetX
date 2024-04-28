@@ -1,9 +1,8 @@
 package map.rendering;
 
-import map.CustomWorld;
-import map.Chunk;
-
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import map.Chunk;
+import map.CustomWorld;
 
 /**
  * Define the methods and attributes that every renderer class

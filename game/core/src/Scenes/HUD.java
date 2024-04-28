@@ -5,9 +5,7 @@ import Screens.PlayScreen;
 import Screens.ReusableElements.LabelStyle;
 import Sprites.Player;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -18,9 +16,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mygdx.game.MyGDXGame;
-
-import static Scenes.WaveManager.TOTAL_WAVES;
-import static Scenes.WaveManager.WAVE_DURATION;
 
 /**
  * HUD class represents the Heads-Up Display in the game.
@@ -46,7 +41,7 @@ public class HUD implements Disposable {
      * @param sb     The SpriteBatch to render the HUD.
      * @param player The player object to monitor for health changes.
      */
-    public HUD(SpriteBatch sb, Player player, PlayScreen playScreen) {
+    public HUD(SpriteBatch sb, Player player, PlayScreen playScreen, int currentRound, int currentTimeInWave) {
         this.player = player;
         this.playScreen = playScreen;
 
@@ -54,7 +49,7 @@ public class HUD implements Disposable {
 
         initializeInventoryBar();
         initializeHeartsTable();
-        initializeWaveDisplayer();
+        initializeWaveDisplayer(currentRound, currentTimeInWave);
 
         updateLabelValues();
     }
@@ -92,8 +87,8 @@ public class HUD implements Disposable {
         stage.addActor(heartsTable);
     }
 
-    private void initializeWaveDisplayer() {
-        waveManager = new WaveManager(playScreen);
+    private void initializeWaveDisplayer(int currentRound, int currentTimeInWave) {
+        waveManager = new WaveManager(playScreen, currentRound, currentTimeInWave);
 
         // Create a label to display the current wave
         Label.LabelStyle labelStyle = new LabelStyle(50).getLabelStyle();
@@ -195,9 +190,19 @@ public class HUD implements Disposable {
         inventoryBar.removeHighlightedItem();
     }
 
+    /**
+     * Get current wave.
+     * @return current wave
+     */
     public int getCurrentWave() {
         return waveManager.getCurrentWave();
     }
+
+    public int getCurrentTime() {
+        return waveManager.getTimeInWave();
+    }
+
+
 
     public boolean allWavesFinished() {
         return waveManager.isFinalWave();

@@ -39,16 +39,13 @@ import serializableObjects.RemoveSinglePlayerWorld;
 import serializableObjects.RevivePlayer;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 
 /**
@@ -138,7 +135,7 @@ public class MyGDXGame extends Game {
     /**
      * Creates the playScreen.
      */
-    public void createScreen(String worldUUID, int numberOfPlayers) {
+    public void createScreen(String worldUUID, int numberOfPlayers, int currentWave, int currentTimeInWave) {
         if (worldUuidToScreen.containsKey(worldUUID)) {
             playScreen = worldUuidToScreen.get(worldUUID);
 
@@ -150,7 +147,7 @@ public class MyGDXGame extends Game {
                 }
             }
         } else {
-            playScreen = new PlayScreen(this, worldUUID, menu);
+            playScreen = new PlayScreen(this, worldUUID, menu, currentWave, currentTimeInWave);
         }
 
         playScreen.opponents.clear();
@@ -193,6 +190,9 @@ public class MyGDXGame extends Game {
         kryo.register(RemoveMultiPlayerWorld.class);
         kryo.register(AskPlayersWaitingScreen.class);
         kryo.register(PlayerLeavesWaitingScreen.class);
+        kryo.register(Integer[].class);
+
+
     }
 
     /**
@@ -270,10 +270,14 @@ public class MyGDXGame extends Game {
      * @param reply that is received
      */
     private void handleGetSinglePlayerWorldNames(GetSinglePlayerWorldNames reply) {
+        System.out.println(reply.getWorldNamesAndIDs());
+        System.out.println("data: " + reply.getWorldNameToWaveData());
         if (reply.getWorldNamesAndIDs() == null) {
             SinglePlayerScreen.singlePlayerWorlds = new HashMap<>();
+            SinglePlayerScreen.worldNameToWaveData = new HashMap<>();
         } else {
             SinglePlayerScreen.singlePlayerWorlds = reply.getWorldNamesAndIDs();
+            SinglePlayerScreen.worldNameToWaveData = reply.getWorldNameToWaveData();
         }
     }
 
@@ -285,8 +289,10 @@ public class MyGDXGame extends Game {
     private void handleGetMultiPlayerWorldNames(GetMultiPlayerWorldNames reply) {
         if (reply.getWorldNamesAndIDs() == null) {
             MultiPlayerScreen.multiPlayerWorlds = new HashMap<>();
+            MultiPlayerScreen.worldNameToWaveData = new HashMap<>();
         } else {
             MultiPlayerScreen.multiPlayerWorlds = reply.getWorldNamesAndIDs();
+            MultiPlayerScreen.worldNameToWaveData = reply.getWorldNameToWaveData();
         }
         menu.multiPlayerScreen.updateTableValuesAfterRemovingWorld();
     }
@@ -426,6 +432,11 @@ public class MyGDXGame extends Game {
         WaitingScreen.maxPlayers = reply.getMaxPlayers();
     }
 
+    public void updateMenu() {
+        menu.multiPlayerScreen.updateDisplayTable();
+        menu.singlePlayerScreen.updateDisplayTable();
+    }
+
     /**
      * Disposes of resources and closes the network client when the game is closed.
      */
@@ -437,7 +448,7 @@ public class MyGDXGame extends Game {
             throw new RuntimeException(e);
         }
 
-        client.sendTCP(new PlayerLeavesTheWorld(playScreen.worldUUID));
+        client.sendTCP(new PlayerLeavesTheWorld(playScreen.worldUUID, playScreen.hud.getCurrentWave(), playScreen.hud.getCurrentTime()));
         client.close();
         try {
             client.dispose();

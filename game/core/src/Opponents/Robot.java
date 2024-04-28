@@ -2,7 +2,6 @@ package Opponents;
 
 import Screens.PlayScreen;
 import Screens.SettingsScreen;
-import Tools.B2WorldCreator;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;

@@ -28,7 +28,7 @@ public class MenuScreen extends ScreenAdapter {
     private BackGround backGround;
     private final SettingsScreen settingsScreen;
     public final Music music;
-    private final SinglePlayerScreen singlePlayerScreen;
+    public final SinglePlayerScreen singlePlayerScreen;
     public final MultiPlayerScreen multiPlayerScreen;
 
     /**

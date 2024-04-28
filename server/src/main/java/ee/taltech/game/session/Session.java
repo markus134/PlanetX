@@ -9,6 +9,7 @@ public class Session {
     private final int maxPlayers;
     private final List<Connection> players;
 
+
     /**
      * Constructor
      *
@@ -17,6 +18,7 @@ public class Session {
     public Session(int maxPlayers) {
         this.maxPlayers = maxPlayers;
         this.players = new ArrayList<>();
+
     }
 
     /**
@@ -60,7 +62,7 @@ public class Session {
     /**
      * Checks if the session is empty
      *
-     * @return
+     * @return whether there are no players
      */
     public boolean isEmpty() {
         return players.isEmpty();

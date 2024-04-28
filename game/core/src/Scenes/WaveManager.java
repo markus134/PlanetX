@@ -11,19 +11,18 @@ import com.badlogic.gdx.utils.Timer;
  */
 public class WaveManager extends Actor {
     public static final int TOTAL_WAVES = 5;  // Total number of waves, last one isn't really a wave and is meant to end the game
-    public static final float WAVE_DURATION = 5f;  // Duration of each wave in seconds
+    public static final float WAVE_DURATION = 60f;  // Duration of each wave in seconds
     private boolean finishedAllWaves = false;
     private int currentWave;  // The current wave number (1-5)
-    private float timeInWave;  // The elapsed time in the current wave
+    private int timeInWave;  // The elapsed time in the current wave
     private final Timer.Task waveTimerTask;  // Timer task to track the wave time
-
     /**
      * Constructor for the WaveManager class.
      * Initializes the wave manager with the first wave.
      */
-    public WaveManager(PlayScreen playScreen) {
-        currentWave = 1;  // Start with the first wave
-        timeInWave = 0;  // Reset the time
+    public WaveManager(PlayScreen playScreen, int currentWave1, int timeInWave1) {
+        this.currentWave = currentWave1;
+        this.timeInWave = timeInWave1;
 
         // Initialize the timer task
         waveTimerTask = new Timer.Task() {
@@ -79,10 +78,9 @@ public class WaveManager extends Actor {
 
     /**
      * Gets the elapsed time in the current wave.
-     *
      * @return The elapsed time in the current wave.
      */
-    public float getTimeInWave() {
+    public int getTimeInWave() {
         return timeInWave;
     }
 
