@@ -245,6 +245,7 @@ public class B2WorldCreator {
             playScreen.opponents.remove(uniqueId);
             playScreen.destroyedOpponents.add(uniqueId);
             playScreen.allDestroyedOpponents.add(uniqueId);
+
         }
 
         opponentsToDestroy.clear();

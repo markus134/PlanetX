@@ -66,6 +66,10 @@ public class Session {
         return players.isEmpty();
     }
 
+    /**
+     * Getter method
+     * @return max players int
+     */
     public int getMaxPlayers() {
         return maxPlayers;
     }

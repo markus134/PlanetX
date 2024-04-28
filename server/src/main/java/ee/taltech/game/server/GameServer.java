@@ -9,6 +9,7 @@ import main.java.ee.taltech.game.session.Session;
 import serializableObjects.AddMultiPlayerWorld;
 import serializableObjects.AddSinglePlayerWorld;
 import serializableObjects.AskIfSessionIsFull;
+import serializableObjects.AskPlayersWaitingScreen;
 import serializableObjects.BulletData;
 import serializableObjects.CrystalToRemove;
 import serializableObjects.GetMultiPlayerWorldNames;
@@ -17,6 +18,7 @@ import serializableObjects.OpponentData;
 import serializableObjects.OpponentDataMap;
 import serializableObjects.PlayerData;
 import serializableObjects.PlayerLeavesTheWorld;
+import serializableObjects.PlayerLeavesWaitingScreen;
 import serializableObjects.RemoveMultiPlayerWorld;
 import serializableObjects.RemoveSinglePlayerWorld;
 import serializableObjects.RevivePlayer;
@@ -67,6 +69,8 @@ public class GameServer {
         kryo.register(RemoveSinglePlayerWorld.class);
         kryo.register(GetMultiPlayerWorldNames.class);
         kryo.register(RemoveMultiPlayerWorld.class);
+        kryo.register(AskPlayersWaitingScreen.class);
+        kryo.register(PlayerLeavesWaitingScreen.class);
 
         server.start();
         try {
@@ -84,6 +88,14 @@ public class GameServer {
              */
             public void received(Connection connection, Object object) {
                 if (!(object instanceof FrameworkMessage.KeepAlive)) {
+
+                    if (object instanceof PlayerLeavesWaitingScreen message) {
+                        handlePlayerLeavesWaitingScreen(connection, message);
+                    }
+
+                    if (object instanceof AskPlayersWaitingScreen request) {
+                        handleAskPlayersWaitingScreen(connection, request);
+                    }
 
                     if (object instanceof RemoveMultiPlayerWorld request) {
                         handleRemoveMultiPlayerWorld(connection, request);
@@ -156,6 +168,40 @@ public class GameServer {
         });
     }
 
+    private void handlePlayerLeavesWaitingScreen(Connection connection, PlayerLeavesWaitingScreen message) {
+        String worldID = message.getWorldID();
+        Session session = worlds.get(worldID);
+
+        session.removePlayer(connection);
+        playerDatas.get(worldID).remove(connection.getID());
+
+        message.setCurrentPlayers(session.getPlayers().size());
+        message.setMaxPlayers(session.getMaxPlayers());
+
+        for (String id : worldIDtoListOfPlayerIDs.get(worldID)) {
+            playerIDtoConnection.get(id).sendTCP(message);
+        }
+    }
+
+    private void handleAskPlayersWaitingScreen(Connection connection, AskPlayersWaitingScreen request) {
+        String worldID = request.getWorldID();
+
+        Session session = worlds.get(worldID);
+        request.setCurrentPlayers(session.getPlayers().size());
+        request.setMaxPlayers(session.getMaxPlayers());
+
+        for (String id : worldIDtoListOfPlayerIDs.get(worldID)) {
+            playerIDtoConnection.get(id).sendTCP(request);
+        }
+    }
+
+    /**
+     * Removes a multiplayer world. If one player decides to remove a world, it is removed everywhere, so no one can
+     * play in that world anymore
+     *
+     * @param connection The connection object representing the client connection.
+     * @param message    that is received
+     */
     private void handleRemoveMultiPlayerWorld(Connection connection, RemoveMultiPlayerWorld message) {
         String worldID = message.getWorldID();
         String worldName = message.getWorldName();
@@ -165,12 +211,14 @@ public class GameServer {
         opponentDatas.remove(worldID);
         removedCrystalsByWorld.remove(worldID);
 
-        for (String pID : worldIDtoListOfPlayerIDs.get(worldID)) {
-            if (playerIDToMultiPlayerWorldNames.containsKey(pID)) {
-                playerIDToMultiPlayerWorldNames.get(pID).remove(worldName);
+        if (worldIDtoListOfPlayerIDs.containsKey(worldID)) {
+            for (String pID : worldIDtoListOfPlayerIDs.get(worldID)) {
+                if (playerIDToMultiPlayerWorldNames.containsKey(pID)) {
+                    playerIDToMultiPlayerWorldNames.get(pID).remove(worldName);
 
-                if (playerIDtoConnection.containsKey(pID)) {
-                    handleGetMultiPlayerWorldNames(playerIDtoConnection.get(pID), new GetMultiPlayerWorldNames(pID));
+                    if (playerIDtoConnection.containsKey(pID)) {
+                        handleGetMultiPlayerWorldNames(playerIDtoConnection.get(pID), new GetMultiPlayerWorldNames(pID));
+                    }
                 }
             }
         }
@@ -178,6 +226,12 @@ public class GameServer {
         worldIDtoListOfPlayerIDs.remove(worldID);
     }
 
+    /**
+     * Removes a single player world
+     *
+     * @param connection The connection object representing the client connection.
+     * @param message    that is received
+     */
     private void handleRemoveSinglePlayerWorld(Connection connection, RemoveSinglePlayerWorld message) {
         String playerID = message.getPlayerID();
         String worldID = message.getWorldID();
@@ -188,16 +242,28 @@ public class GameServer {
         opponentDatas.remove(worldID);
         removedCrystalsByWorld.remove(worldID);
 
-        if (playerIDToSinglePlayerWorldNames.containsKey(playerID)){
+        if (playerIDToSinglePlayerWorldNames.containsKey(playerID)) {
             playerIDToSinglePlayerWorldNames.get(playerID).remove(worldName);
         }
     }
 
+    /**
+     * Sends the info with the singlePlayer worlds the player has
+     *
+     * @param connection The connection object representing the client connection.
+     * @param request    that is received
+     */
     private void handleGetSinglePlayerWorldNames(Connection connection, GetSinglePlayerWorldNames request) {
         request.setWorldNamesAndIDs(playerIDToSinglePlayerWorldNames.get(request.getPlayerID()));
         connection.sendTCP(request);
     }
 
+    /**
+     * Sends the info with the multiPlayer worlds the player has
+     *
+     * @param connection The connection object representing the client connection.
+     * @param request    that is received
+     */
     private void handleGetMultiPlayerWorldNames(Connection connection, GetMultiPlayerWorldNames request) {
         request.setWorldNamesAndIDs(playerIDToMultiPlayerWorldNames.get(request.getPlayerID()));
         connection.sendTCP(request);
@@ -205,8 +271,9 @@ public class GameServer {
 
     /**
      * Handles revive data
+     *
      * @param connection of the player
-     * @param data reviveData
+     * @param data       reviveData
      */
     public void handleRevivePlayer(Connection connection, RevivePlayer data) {
         String worldID = getWorldUUIDForConnection(connection);
@@ -245,23 +312,11 @@ public class GameServer {
 
         if (!worlds.containsKey(worldID)) {
             request.setFull(false);
-            request.setCurrentAmountOfPlayers(1);
-            int numberOfPlayers = Integer.parseInt(worldID.split(":")[1]);
-            request.setMaxAmountOfPlayers(numberOfPlayers);
         } else {
             Session session = worlds.get(worldID);
             request.setFull(session.isFull());
-            request.setCurrentAmountOfPlayers(session.getPlayers().size() + 1);
-            request.setMaxAmountOfPlayers(session.getMaxPlayers());
         }
 
-        if (worldIDtoListOfPlayerIDs.containsKey(worldID)) {
-            for (String pID : worldIDtoListOfPlayerIDs.get(worldID)) {
-                if (playerIDtoConnection.containsKey(pID)) {
-                    playerIDtoConnection.get(pID).sendTCP(request);
-                }
-            }
-        }
         connection.sendTCP(request);
     }
 
@@ -337,8 +392,6 @@ public class GameServer {
             worldIDtoListOfPlayerIDs.get(worldUUID).add(playerID);
         }
 
-        System.out.println(worlds);
-        System.out.println(worlds.get(worldUUID).getPlayers());
 
         playerIDtoConnection.put(playerID, connection);
 

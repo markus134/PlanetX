@@ -301,6 +301,7 @@ public class PlayScreen implements Screen {
         }
 
         System.out.println(chillTimeCounter);
+        System.out.println("rendering playscreen");
         if (TIME_FOR_PLAYERS_TO_CHILL_AT_THE_BEGINNING * 60 > chillTimeCounter) {
             chillTimeCounter++;
         } else {
@@ -313,6 +314,7 @@ public class PlayScreen implements Screen {
         }
 
         destroyedOpponents.clear();
+        System.out.println("got here");
     }
 
     /**
@@ -323,6 +325,7 @@ public class PlayScreen implements Screen {
     @Override
     public void render(float delta) {
 
+        System.out.println("RENDER PART START");
         handler.handleInput();
         try {
             update(delta);
@@ -376,8 +379,8 @@ public class PlayScreen implements Screen {
         if (pauseDialog.isToShow()) pauseDialog.renderStage();
         if (deathScene.isToShow()) {
             deathScene.renderStage();
-            System.out.println("death scene has to be rendered");
         }
+        System.out.println("RENDER PART END");
     }
 
     /**
