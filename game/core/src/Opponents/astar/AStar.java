@@ -10,7 +10,7 @@ import java.util.*;
  * @version 2.1, 2017-02-23
  */
 public class AStar {
-    private static final int DEFAULT_HV_COST = 10; // Horizontal - Vertical Cost
+    private static final int DEFAULT_HV_COST = 2; // Horizontal - Vertical Cost
     private static final int DEFAULT_DIAGONAL_COST = 14;
     private int hvCost;
     private int diagonalCost;
@@ -52,7 +52,6 @@ public class AStar {
                     setBlock(i, j);
                 }
             }
-
         }
 
 

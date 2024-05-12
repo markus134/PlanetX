@@ -24,7 +24,7 @@ public abstract class Opponent extends Sprite {
     private static final float ANIMATION_SPEED = 0.1f;
     private static final float LINEAR_DAMPING = 4f;
     private static final float VELOCITY_THRESHOLD = 0.5f;
-    private static final long PATH_UPDATE_INTERVAL = 250;
+    private static final long PATH_UPDATE_INTERVAL = 50;
     private AStar aStar;
     protected int health;
     private String uuid;
@@ -44,6 +44,7 @@ public abstract class Opponent extends Sprite {
     private List<Node> path;
 
     protected long spawnTime;
+    private int currentTargetIndex = 0;
 
 
     public Opponent(TextureAtlas.AtlasRegion atlas, World world, PlayScreen screen, int health) {
@@ -90,23 +91,39 @@ public abstract class Opponent extends Sprite {
      * Seeks for the closest enemy and moves the body of the opponent in that direction.
      */
     protected void updatePosition() {
-        if (path == null) return;
+        if (path == null || path.isEmpty()) return;
 
-        float opponentX = this.b2body.getPosition().x;
-        float opponentY = this.b2body.getPosition().y;
+        float opponentX = this.b2body.getPosition().x - getWidth() / 2;
+        float opponentY = this.b2body.getPosition().y - getHeight() / 2;
 
         int enemyX = (int) (opponentX * 100 / 32);
         int enemyY = (int) (opponentY * 100 / 32);
 
-        if (path.size() < 2) return;
-        Node target = path.get(path.size() - 2);
+        // Ensure currentTargetIndex is within bounds
+        if (currentTargetIndex >= path.size()) {
+            currentTargetIndex = path.size() - 1;
+        }
 
-        int targetX = target.getRow() + 1;
+        Node target = path.get(currentTargetIndex);
+
+        int targetX = target.getRow();
         int targetY = target.getCol();
 
-        System.out.println("target " + targetX + " " + targetY);
         System.out.println("enemy " + enemyX + " " + enemyY);
 
+        // If the opponent reaches the current target node, update the target
+        if (enemyX == targetX && enemyY == targetY) {
+            currentTargetIndex++;
+            if (currentTargetIndex >= path.size()) {
+                // Reached the end of the path
+                return;
+            }
+            target = path.get(currentTargetIndex);
+            targetX = target.getRow();
+            targetY = target.getCol();
+        }
+
+        System.out.println("target " + targetX + " " + targetY);
 
         if (targetX - enemyX != 0) {
             if (targetX > enemyX) {
@@ -123,11 +140,13 @@ public abstract class Opponent extends Sprite {
                 this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
             }
         }
-
-
     }
 
     public void updatePath() {
+        if (health < 0) {
+            pathUpdateTimer.cancel(); // Stop the timer if opponent is dead
+            return;
+        }
         float shortestDistance = Float.MAX_VALUE;
         float closestX = 0;
         float closestY = 0;
@@ -169,27 +188,28 @@ public abstract class Opponent extends Sprite {
 
         System.out.println(String.format("Enemy %d %d", enemyX, enemyY));
         System.out.println(String.format("Player %d %d", playerX, playerY));
+        System.out.println("Need to go from " + initialNode + " to " + finalNode);
+        if (aStar != null) {
+            System.out.println(aStar.getSearchArea()[playerY][playerX].isBlock());
+
+        }
         int[][] collisions = TileMapReader.getCollisions();
 
-        aStar = new AStar(collisions[0].length, collisions.length, initialNode, finalNode, 1, 2);
+        aStar = new AStar(collisions[0].length, collisions.length, finalNode, initialNode);
+        aStar.setBlocks(collisions);
 
 
         System.out.println(closestX + " " + closestY);
 //        System.out.println("player coords: " + playerX + " " + playerY);
 //        System.out.println("enemy coords: " + enemyX + " " + enemyY);
         path = aStar.findPath();
+        currentTargetIndex = 0;
 
-        if (path == null) {
-            System.out.println(Arrays.deepToString(collisions));
-            //TileMapReader.printCollisionArray(collisions);
-            System.exit(1);
-            return;
-        };
         System.out.println("path starts");
         for (Node node : path) {
-            System.out.println(node);
+            System.out.println(node + " " + aStar.getSearchArea()[node.getCol()][node.getRow()].isBlock());
         }
-        System.out.println("path ends");
+//        System.out.println("path ends");
     }
 
     /**
