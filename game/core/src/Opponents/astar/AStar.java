@@ -45,31 +45,13 @@ public class AStar {
         }
     }
 
-    public void setBlocks(int[][] map) {
+    public void setBlocksWithNeighboringCells(int[][] map) {
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
-                if (map[i][j] == 1) {
+                if (map[i][j] == 1 || map[i][j] == 2) {
                     setBlock(i, j);
                 }
             }
-        }
-
-
-    }
-
-    /**
-     * Helper for printing the array.
-     */
-    public void printCollisionArray() {
-        for (Node[] row : this.searchArea) {
-            for (Node value : row) {
-                if (value.isBlock()) {
-                    System.out.print("# ");
-                } else {
-                    System.out.print("  ");
-                }
-            }
-            System.out.println();
         }
     }
 
@@ -231,10 +213,5 @@ public class AStar {
 
     private void setDiagonalCost(int diagonalCost) {
         this.diagonalCost = diagonalCost;
-    }
-
-    public void reset() {
-        this.openList = new PriorityQueue<>(Comparator.comparingInt(Node::getF));
-        this.closedSet = new HashSet<>();
     }
 }

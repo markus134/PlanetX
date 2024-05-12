@@ -90,12 +90,7 @@ public class MenuScreen extends ScreenAdapter {
             public void clicked(InputEvent event, float x, float y) {
 
                 // this block terminates connection with the server
-                game.client.close();
-                try {
-                    game.client.dispose();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                game.dispose();
 
                 // terminates the window
                 Gdx.app.exit();

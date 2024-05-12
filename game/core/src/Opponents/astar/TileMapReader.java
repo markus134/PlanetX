@@ -11,6 +11,7 @@ import java.util.Arrays;
 
 public class TileMapReader {
     private static int[][] collisions;
+
     /**
      * Read tile map data from level/map.tmx and make a map from it.
      * 1 and 0 represent respectively the impassable and passable tiles.
@@ -33,44 +34,17 @@ public class TileMapReader {
             for (int i = 0; i < collisionList.getLength(); i++) {
                 Element collision = (Element) collisionList.item(i);
                 if (collision.getParentNode().getAttributes().getNamedItem("name").getNodeValue().equals("collisions")) {
-                    int x = (int) Math.floor(Double.parseDouble(collision.getAttribute("x")));
-                    int y = (int) Math.floor(Double.parseDouble(collision.getAttribute("y")));
+
+                    // Added the offset 32 because it helped to prevent mobs getting stuck
+                    int x = (int) Math.floor(Double.parseDouble(collision.getAttribute("x"))) - 32;
+                    int y = (int) Math.floor(Double.parseDouble(collision.getAttribute("y"))) + 32;
 
                     collisions[y / 32][x / 32] = 1;
-
-                    // Add collisions around the current collision block including diagonals
-                    for (int dy = -1; dy <= 1; dy++) {
-                        for (int dx = -1; dx <= 1; dx++) {
-                            int newX = x / 32 + dx;
-                            int newY = y / 32 + dy;
-                            if (newX >= 0 && newX < mapWidth && newY >= 0 && newY < mapHeight) {
-                                if (collisions[newY][newX] != 1) {
-                                    collisions[newY][newX] = 1; // or any other value to represent surrounding collisions
-                                }
-                            }
-                        }
-                    }
                 }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * Helper for printing the array.
-     */
-    public static void printCollisionArray(int[][] collisions) {
-        for (int[] row : collisions) {
-            for (int value : row) {
-                if (value == 1) {
-                    System.out.print("# ");
-                } else {
-                    System.out.print("  ");
-                }
-            }
-            System.out.println();
         }
     }
 

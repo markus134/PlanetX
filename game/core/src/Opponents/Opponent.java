@@ -24,12 +24,12 @@ public abstract class Opponent extends Sprite {
     private static final float ANIMATION_SPEED = 0.1f;
     private static final float LINEAR_DAMPING = 4f;
     private static final float VELOCITY_THRESHOLD = 0.5f;
-    private static final long PATH_UPDATE_INTERVAL = 50;
-    private AStar aStar;
+    private static final long PATH_UPDATE_INTERVAL = 300;
+    public static final int TILE_WIDTH = 32;
+    public static final int TILE_HEIGHT = 32;
     protected int health;
     private String uuid;
     protected int counter = 0;
-
     protected final ArrayList<TextureRegion> allFrames = new ArrayList<>();
     protected Body b2body;
     protected World world;
@@ -40,12 +40,10 @@ public abstract class Opponent extends Sprite {
     protected RunDirection prevRunDirection;
     protected boolean runningRight;
     protected float stateTimer;
-    private Timer pathUpdateTimer;
+    private final Timer pathUpdateTimer;
     private List<Node> path;
-
     protected long spawnTime;
     private int currentTargetIndex = 0;
-
 
     public Opponent(TextureAtlas.AtlasRegion atlas, World world, PlayScreen screen, int health) {
         super(atlas);
@@ -96,8 +94,8 @@ public abstract class Opponent extends Sprite {
         float opponentX = this.b2body.getPosition().x - getWidth() / 2;
         float opponentY = this.b2body.getPosition().y - getHeight() / 2;
 
-        int enemyX = (int) (opponentX * 100 / 32);
-        int enemyY = (int) (opponentY * 100 / 32);
+        int enemyX = (int) (opponentX * 100 / TILE_WIDTH);
+        int enemyY = (int) (opponentY * 100 / TILE_HEIGHT);
 
         // Ensure currentTargetIndex is within bounds
         if (currentTargetIndex >= path.size()) {
@@ -108,8 +106,6 @@ public abstract class Opponent extends Sprite {
 
         int targetY = target.getRow();
         int targetX = target.getCol();
-
-        System.out.println("enemy " + enemyX + " " + enemyY);
 
         // If the opponent reaches the current target node, update the target
         if (enemyX == targetX && enemyY == targetY) {
@@ -123,25 +119,27 @@ public abstract class Opponent extends Sprite {
             targetX = target.getCol();
         }
 
-        System.out.println("target " + targetX + " " + targetY + " index " + currentTargetIndex);
 
         if (targetX - enemyX != 0) {
             if (targetX > enemyX) {
-                this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
+                this.b2body.applyLinearImpulse(new Vector2(0.05f, 0f), this.b2body.getWorldCenter(), true);
             } else {
-                this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
+                this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0f), this.b2body.getWorldCenter(), true);
             }
         }
 
         if (targetY - enemyY != 0) {
             if (targetY > enemyY) {
-                this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
+                this.b2body.applyLinearImpulse(new Vector2(0f, 0.05f), this.b2body.getWorldCenter(), true);
             } else {
-                this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
+                this.b2body.applyLinearImpulse(new Vector2(0f, -0.05f), this.b2body.getWorldCenter(), true);
             }
         }
     }
 
+    /**
+     * Update path. This is called every PATH_UPDATE_INTERVAL milliseconds.
+     */
     public void updatePath() {
         if (health < 0) {
             pathUpdateTimer.cancel(); // Stop the timer if opponent is dead
@@ -154,12 +152,12 @@ public abstract class Opponent extends Sprite {
         float opponentX = this.b2body.getPosition().x - getWidth() / 2;
         float opponentY = this.b2body.getPosition().y - getHeight() / 2;
 
-
+        // Find the closest alive player
         for (PlayerData info : playScreen.game.playerDataMap.values()) {
             if (info.getHealth() <= 0) continue; // Don't try to go towards dead players
 
-            float playerX = info.getX();
-            float playerY = info.getY();
+            float playerX = info.getX() - (64 / MyGDXGame.PPM) / 2;
+            float playerY = info.getY() - (64 / MyGDXGame.PPM) / 2;
 
             float deltaX = playerX - opponentX;
             float deltaY = playerY - opponentY;
@@ -177,54 +175,26 @@ public abstract class Opponent extends Sprite {
         // If we haven't found any player then don't go anywhere
         if (shortestDistance == Float.MAX_VALUE) return;
 
-        int playerX = (int) (closestX * 100 / 32);
-        int playerY = (int) (closestY * 100 / 32);
+        int playerX = (int) (closestX * MyGDXGame.PPM / TILE_WIDTH);
+        int playerY = (int) (closestY * MyGDXGame.PPM / TILE_HEIGHT);
 
-        int enemyX = (int) (opponentX * 100 / 32);
-        int enemyY = (int) (opponentY * 100 / 32);
+        int enemyX = (int) (opponentX * MyGDXGame.PPM / TILE_WIDTH);
+        int enemyY = (int) (opponentY * MyGDXGame.PPM / TILE_HEIGHT);
 
         Node finalNode = new Node(enemyY, enemyX);
         Node initialNode = new Node(playerY, playerX);
 
-        System.out.println(String.format("Enemy %d %d", enemyX, enemyY));
-        System.out.println(String.format("Player %d %d", playerX, playerY));
-        System.out.println("Need to go from " + initialNode + " to " + finalNode);
-        if (aStar != null) {
-            System.out.println(aStar.getSearchArea()[playerY][playerX].isBlock());
-
-        }
         int[][] collisions = TileMapReader.getCollisions();
 
-        aStar = new AStar(collisions[0].length, collisions.length, finalNode, initialNode);
-        reverseFirstLayer(collisions);
-        aStar.setBlocks(collisions);
+        // I put the finalNode and initialNode backwards, so we would get the path from initial to final, not final
+        // to initial
+        AStar aStar = new AStar(collisions[0].length, collisions.length, finalNode, initialNode);
+        Collections.reverse(Arrays.asList(collisions));
+        aStar.setBlocksWithNeighboringCells(collisions);
 
-
-        System.out.println(closestX + " " + closestY);
-//        System.out.println("player coords: " + playerX + " " + playerY);
-//        System.out.println("enemy coords: " + enemyX + " " + enemyY);
         path = aStar.findPath();
+
         currentTargetIndex = 0;
-
-        System.out.println("path starts");
-        for (Node node : path) {
-            System.out.println(node + " " + aStar.getSearchArea()[node.getCol()][node.getRow()].isBlock());
-        }
-//        System.out.println("path ends");
-    }
-
-    public void reverseFirstLayer(int[][] arr) {
-        int start = 0;
-        int end = arr.length - 1;
-
-        while (start < end) {
-            int[] temp = arr[start];
-            arr[start] = arr[end];
-            arr[end] = temp;
-
-            start++;
-            end--;
-        }
     }
 
     /**

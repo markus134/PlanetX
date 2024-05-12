@@ -453,7 +453,10 @@ public class MyGDXGame extends Game {
             throw new RuntimeException(e);
         }
 
-        client.sendTCP(new PlayerLeavesTheWorld(playScreen.worldUUID, playScreen.hud.getCurrentWave(), playScreen.hud.getCurrentTime()));
+        if (playScreen != null) {
+            client.sendTCP(new PlayerLeavesTheWorld(playScreen.worldUUID, playScreen.hud.getCurrentWave(), playScreen.hud.getCurrentTime()));
+        }
+
         client.close();
         try {
             client.dispose();
