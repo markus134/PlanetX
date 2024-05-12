@@ -174,14 +174,17 @@ public class GameServer {
         String worldID = message.getWorldID();
         Session session = worlds.get(worldID);
 
-        session.removePlayer(connection);
-        playerDatas.get(worldID).remove(connection.getID());
+        if (session != null && playerDatas.containsKey(worldID)) {
+            session.removePlayer(connection);
+            playerDatas.get(worldID).remove(connection.getID());
+            message.setCurrentPlayers(session.getPlayers().size());
+            message.setMaxPlayers(session.getMaxPlayers());
+        }
 
-        message.setCurrentPlayers(session.getPlayers().size());
-        message.setMaxPlayers(session.getMaxPlayers());
-
-        for (String id : worldIDtoListOfPlayerIDs.get(worldID)) {
-            playerIDtoConnection.get(id).sendTCP(message);
+        if (worldIDtoListOfPlayerIDs.containsKey(worldID)) {
+            for (String id : worldIDtoListOfPlayerIDs.get(worldID)) {
+                playerIDtoConnection.get(id).sendTCP(message);
+            }
         }
     }
 
@@ -189,12 +192,16 @@ public class GameServer {
     private void handleAskPlayersWaitingScreen(AskPlayersWaitingScreen request) {
         String worldID = request.getWorldID();
 
-        Session session = worlds.get(worldID);
-        request.setCurrentPlayers(session.getPlayers().size());
-        request.setMaxPlayers(session.getMaxPlayers());
+        if (worlds.containsKey(worldID)) {
+            Session session = worlds.get(worldID);
+            request.setCurrentPlayers(session.getPlayers().size());
+            request.setMaxPlayers(session.getMaxPlayers());
+        }
 
-        for (String id : worldIDtoListOfPlayerIDs.get(worldID)) {
-            playerIDtoConnection.get(id).sendTCP(request);
+        if (worldIDtoListOfPlayerIDs.containsKey(worldID)) {
+            for (String id : worldIDtoListOfPlayerIDs.get(worldID)) {
+                playerIDtoConnection.get(id).sendTCP(request);
+            }
         }
     }
 
@@ -304,7 +311,7 @@ public class GameServer {
 
         worldIDToWaveData.put(worldID, new Integer[] {currentWave, currentTimeInWave});
         Session session = worlds.get(worldID);
-        if (session == null) return;
+        if (session == null || !playerDatas.containsKey(worldID)) return;
 
         session.removePlayer(connection);
         playerDatas.get(worldID).remove(connection.getID());

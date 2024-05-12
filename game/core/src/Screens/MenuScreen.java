@@ -97,6 +97,12 @@ public class MenuScreen extends ScreenAdapter {
                     throw new RuntimeException(e);
                 }
 
+                try {
+                    game.uuidFileManager.releaseUUID(game.playerUUID);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
                 // terminates the window
                 Gdx.app.exit();
 

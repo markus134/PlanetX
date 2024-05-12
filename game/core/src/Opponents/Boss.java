@@ -1,7 +1,10 @@
 package Opponents;
 
 import Screens.PlayScreen;
+import Screens.SettingsScreen;
 import Sprites.OtherPlayer;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.physics.box2d.World;
@@ -36,6 +39,7 @@ public class Boss extends Opponent {
     private static final int TELEPORT_INTERVAL = 15; // Teleport interval in seconds
     private PlayerData closestPlayer;
     private boolean teleporting = false;
+    private Sound sound = Gdx.audio.newSound(Gdx.files.internal("WeaponSounds/bossSound.mp3"));
 
 
     /**
@@ -110,6 +114,9 @@ public class Boss extends Opponent {
     public void update(float delta) {
         if (health <= 0) {
             counter++;
+            if (counter <= 1) {
+                sound.play(SettingsScreen.soundValue);
+            }
             if (counter >= timeForDeath) {
                 playScreen.b2WorldCreator.markOpponentAsDestroyed(this);
             }
