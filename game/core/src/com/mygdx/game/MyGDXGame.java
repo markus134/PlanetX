@@ -2,6 +2,7 @@ package com.mygdx.game;
 
 import Bullets.Bullet;
 import Opponents.Opponent;
+import Opponents.astar.TileMapReader;
 import Screens.MenuScreen;
 import Screens.MultiPlayerScreen;
 import Screens.PlayScreen;
@@ -130,6 +131,10 @@ public class MyGDXGame extends Game {
             throw new RuntimeException(e);
         }
         setupClientListener();
+
+
+        TileMapReader.readTileMapData();
+//        TileMapReader.printCollisionArray();
     }
 
     /**
@@ -448,7 +453,10 @@ public class MyGDXGame extends Game {
             throw new RuntimeException(e);
         }
 
-        client.sendTCP(new PlayerLeavesTheWorld(playScreen.worldUUID, playScreen.hud.getCurrentWave(), playScreen.hud.getCurrentTime()));
+        if (playScreen != null) {
+            client.sendTCP(new PlayerLeavesTheWorld(playScreen.worldUUID, playScreen.hud.getCurrentWave(), playScreen.hud.getCurrentTime()));
+        }
+
         client.close();
         try {
             client.dispose();

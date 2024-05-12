@@ -13,7 +13,7 @@ import serializableObjects.PlayerData;
 
 public class Monster extends Opponent {
 
-    private static final float MONSTER_RADIUS = 24 / MyGDXGame.PPM;
+    private static final float MONSTER_RADIUS = 16 / MyGDXGame.PPM;
     private static final float MONSTER_HEIGHT = 100 / MyGDXGame.PPM;
     private static final float MONSTER_WIDTH = 100 / MyGDXGame.PPM;
     private static final int FRAME_WIDTH = 64;

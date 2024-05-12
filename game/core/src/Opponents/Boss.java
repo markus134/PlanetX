@@ -315,7 +315,7 @@ public class Boss extends Opponent {
     private void teleportToClosestPlayer() {
         calculateClosestPlayer();
 
-        if (closestPlayer != null) {
+        if (closestPlayer != null && health > 0) {
             // Set teleporting to true so we could start the animation
             teleporting = true;
 
