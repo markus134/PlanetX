@@ -1,7 +1,10 @@
 package Opponents;
 
 import Screens.PlayScreen;
+import Screens.SettingsScreen;
 import Sprites.OtherPlayer;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.physics.box2d.World;
@@ -29,6 +32,7 @@ public class Monster extends Opponent {
     private static final float ATTACK_DURATION = 0.8f;
     private static final int ATTACK_DAMAGE = 10;
     private PlayerData closestPlayer;
+    private Sound sound = Gdx.audio.newSound(Gdx.files.internal("WeaponSounds/monsterSound.mp3"));
 
 
     /**
@@ -90,6 +94,9 @@ public class Monster extends Opponent {
     public void update(float delta) {
         if (health <= 0) {
             counter++;
+            if (counter <= 1) {
+                sound.play(SettingsScreen.soundValue);
+            }
             if (counter >= timeForDeath) {
                 playScreen.b2WorldCreator.markOpponentAsDestroyed(this);
             }

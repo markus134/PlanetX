@@ -81,7 +81,7 @@ public class MyGDXGame extends Game {
     public AskIfSessionIsFull serverReply;
     public static HashMap<String, PlayScreen> worldUuidToScreen = new HashMap<>();
     public String playerUUID;
-    private UUIDFileManager uuidFileManager;
+    public UUIDFileManager uuidFileManager;
 
     /**
      * Initializes the game, creates music object and menu.

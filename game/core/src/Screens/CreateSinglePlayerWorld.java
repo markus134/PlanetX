@@ -81,8 +81,8 @@ public class CreateSinglePlayerWorld extends ScreenAdapter {
 
                     table.clear();
 
-                    Label errorLabel1 = new Label("The world with such name already exists", labelForTable);
-                    Label errorLabel2 = new Label("Enter another name", labelForTable);
+                    Label errorLabel1 = new Label("ERROR", labelForTable);
+                    Label errorLabel2 = new Label("Enter world name", labelForTable);
 
                     table.add(titleLabel).expandX().center().colspan(2).padBottom(10).row();
                     table.add(errorLabel1).center().colspan(2).padTop(10).row();
