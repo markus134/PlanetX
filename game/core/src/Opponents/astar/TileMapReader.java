@@ -37,9 +37,9 @@ public class TileMapReader {
 
                     collisions[y / 32][x / 32] = 1;
 
-                    // Add collisions around the current collision block including a buffer of two blocks
-                    for (int dy = -2; dy <= 2; dy++) {
-                        for (int dx = -2; dx <= 2; dx++) {
+                    // Add collisions around the current collision block including diagonals
+                    for (int dy = -1; dy <= 1; dy++) {
+                        for (int dx = -1; dx <= 1; dx++) {
                             int newX = x / 32 + dx;
                             int newY = y / 32 + dy;
                             if (newX >= 0 && newX < mapWidth && newY >= 0 && newY < mapHeight) {
