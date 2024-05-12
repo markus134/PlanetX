@@ -106,8 +106,8 @@ public abstract class Opponent extends Sprite {
 
         Node target = path.get(currentTargetIndex);
 
-        int targetX = target.getRow();
-        int targetY = target.getCol();
+        int targetY = target.getRow();
+        int targetX = target.getCol();
 
         System.out.println("enemy " + enemyX + " " + enemyY);
 
@@ -119,11 +119,11 @@ public abstract class Opponent extends Sprite {
                 return;
             }
             target = path.get(currentTargetIndex);
-            targetX = target.getRow();
-            targetY = target.getCol();
+            targetY = target.getRow();
+            targetX = target.getCol();
         }
 
-        System.out.println("target " + targetX + " " + targetY);
+        System.out.println("target " + targetX + " " + targetY + " index " + currentTargetIndex);
 
         if (targetX - enemyX != 0) {
             if (targetX > enemyX) {
@@ -183,8 +183,8 @@ public abstract class Opponent extends Sprite {
         int enemyX = (int) (opponentX * 100 / 32);
         int enemyY = (int) (opponentY * 100 / 32);
 
-        Node finalNode = new Node(enemyX, enemyY);
-        Node initialNode = new Node(playerX, playerY);
+        Node finalNode = new Node(enemyY, enemyX);
+        Node initialNode = new Node(playerY, playerX);
 
         System.out.println(String.format("Enemy %d %d", enemyX, enemyY));
         System.out.println(String.format("Player %d %d", playerX, playerY));
@@ -196,6 +196,7 @@ public abstract class Opponent extends Sprite {
         int[][] collisions = TileMapReader.getCollisions();
 
         aStar = new AStar(collisions[0].length, collisions.length, finalNode, initialNode);
+        reverseFirstLayer(collisions);
         aStar.setBlocks(collisions);
 
 
@@ -210,6 +211,20 @@ public abstract class Opponent extends Sprite {
             System.out.println(node + " " + aStar.getSearchArea()[node.getCol()][node.getRow()].isBlock());
         }
 //        System.out.println("path ends");
+    }
+
+    public static void reverseFirstLayer(int[][] arr) {
+        int start = 0;
+        int end = arr.length - 1;
+
+        while (start < end) {
+            int[] temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+
+            start++;
+            end--;
+        }
     }
 
     /**

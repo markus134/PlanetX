@@ -11,7 +11,7 @@ import java.util.*;
  */
 public class AStar {
     private static final int DEFAULT_HV_COST = 2; // Horizontal - Vertical Cost
-    private static final int DEFAULT_DIAGONAL_COST = 14;
+    private static final int DEFAULT_DIAGONAL_COST = 2;
     private int hvCost;
     private int diagonalCost;
     private Node[][] searchArea;
@@ -148,6 +148,7 @@ public class AStar {
 
     private void checkNode(Node currentNode, int col, int row, int cost) {
         Node adjacentNode = getSearchArea()[row][col];
+        //System.out.println("checking node " + currentNode + ", blocked: " + adjacentNode.isBlock());
         if (!adjacentNode.isBlock() && !getClosedSet().contains(adjacentNode)) {
             if (!getOpenList().contains(adjacentNode)) {
                 adjacentNode.setNodeData(currentNode, cost);

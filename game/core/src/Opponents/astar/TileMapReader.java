@@ -36,6 +36,19 @@ public class TileMapReader {
                     int y = (int) Math.floor(Double.parseDouble(collision.getAttribute("y")));
 
                     collisions[y / 32][x / 32] = 1;
+
+                    // Add collisions around the current collision block including a buffer of two blocks
+                    for (int dy = -2; dy <= 2; dy++) {
+                        for (int dx = -2; dx <= 2; dx++) {
+                            int newX = x / 32 + dx;
+                            int newY = y / 32 + dy;
+                            if (newX >= 0 && newX < mapWidth && newY >= 0 && newY < mapHeight) {
+                                if (collisions[newY][newX] != 1) {
+                                    collisions[newY][newX] = 1; // or any other value to represent surrounding collisions
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
