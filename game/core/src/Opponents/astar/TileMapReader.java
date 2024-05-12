@@ -7,6 +7,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
+import java.util.Arrays;
 
 public class TileMapReader {
     private static int[][] collisions;
@@ -79,7 +80,7 @@ public class TileMapReader {
      * @return collisions
      */
     public static int[][] getCollisions() {
-        return collisions;
+        return Arrays.copyOf(collisions, collisions.length);
     }
 
 }

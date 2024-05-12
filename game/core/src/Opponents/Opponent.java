@@ -213,7 +213,7 @@ public abstract class Opponent extends Sprite {
 //        System.out.println("path ends");
     }
 
-    public static void reverseFirstLayer(int[][] arr) {
+    public void reverseFirstLayer(int[][] arr) {
         int start = 0;
         int end = arr.length - 1;
 
