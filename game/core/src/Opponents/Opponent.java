@@ -1,5 +1,8 @@
 package Opponents;
 
+import Opponents.astar.AStar;
+import Opponents.astar.Node;
+import Opponents.astar.TileMapReader;
 import Screens.PlayScreen;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -15,12 +18,14 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.PlayerData;
 
-import java.util.ArrayList;
+import java.util.*;
 
 public abstract class Opponent extends Sprite {
     private static final float ANIMATION_SPEED = 0.1f;
     private static final float LINEAR_DAMPING = 4f;
     private static final float VELOCITY_THRESHOLD = 0.5f;
+    private static final long PATH_UPDATE_INTERVAL = 250;
+    private AStar aStar;
     protected int health;
     private String uuid;
     protected int counter = 0;
@@ -35,6 +40,8 @@ public abstract class Opponent extends Sprite {
     protected RunDirection prevRunDirection;
     protected boolean runningRight;
     protected float stateTimer;
+    private Timer pathUpdateTimer;
+    private List<Node> path;
 
     protected long spawnTime;
 
@@ -51,6 +58,14 @@ public abstract class Opponent extends Sprite {
         stateTimer = 0;
         runningRight = true;
         spawnTime = System.currentTimeMillis();
+
+        pathUpdateTimer = new Timer();
+        pathUpdateTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                updatePath();
+            }
+        }, PATH_UPDATE_INTERVAL, PATH_UPDATE_INTERVAL);
     }
 
     /**
@@ -75,12 +90,50 @@ public abstract class Opponent extends Sprite {
      * Seeks for the closest enemy and moves the body of the opponent in that direction.
      */
     protected void updatePosition() {
+        if (path == null) return;
+
+        float opponentX = this.b2body.getPosition().x;
+        float opponentY = this.b2body.getPosition().y;
+
+        int enemyX = (int) (opponentX * 100 / 32);
+        int enemyY = (int) (opponentY * 100 / 32);
+
+        if (path.size() < 2) return;
+        Node target = path.get(path.size() - 2);
+
+        int targetX = target.getRow() + 1;
+        int targetY = target.getCol();
+
+        System.out.println("target " + targetX + " " + targetY);
+        System.out.println("enemy " + enemyX + " " + enemyY);
+
+
+        if (targetX - enemyX != 0) {
+            if (targetX > enemyX) {
+                this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
+            } else {
+                this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
+            }
+        }
+
+        if (targetY - enemyY != 0) {
+            if (targetY > enemyY) {
+                this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
+            } else {
+                this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
+            }
+        }
+
+
+    }
+
+    public void updatePath() {
         float shortestDistance = Float.MAX_VALUE;
         float closestX = 0;
         float closestY = 0;
 
-        float opponentX = this.b2body.getPosition().x;
-        float opponentY = this.b2body.getPosition().y;
+        float opponentX = this.b2body.getPosition().x - getWidth() / 2;
+        float opponentY = this.b2body.getPosition().y - getHeight() / 2;
 
 
         for (PlayerData info : playScreen.game.playerDataMap.values()) {
@@ -105,22 +158,38 @@ public abstract class Opponent extends Sprite {
         // If we haven't found any player then don't go anywhere
         if (shortestDistance == Float.MAX_VALUE) return;
 
-        if (Math.abs(closestX - opponentX) > 0.1) {
-            if (closestX > opponentX) {
-                this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
-            } else {
-                this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
-            }
-        }
+        int playerX = (int) (closestX * 100 / 32);
+        int playerY = (int) (closestY * 100 / 32);
 
-        if (Math.abs(closestY - opponentY) > 0.1) {
-            if (closestY > opponentY) {
-                this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
-            } else {
-                this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
-            }
-        }
+        int enemyX = (int) (opponentX * 100 / 32);
+        int enemyY = (int) (opponentY * 100 / 32);
 
+        Node finalNode = new Node(enemyX, enemyY);
+        Node initialNode = new Node(playerX, playerY);
+
+        System.out.println(String.format("Enemy %d %d", enemyX, enemyY));
+        System.out.println(String.format("Player %d %d", playerX, playerY));
+        int[][] collisions = TileMapReader.getCollisions();
+
+        aStar = new AStar(collisions[0].length, collisions.length, initialNode, finalNode, 1, 2);
+
+
+        System.out.println(closestX + " " + closestY);
+//        System.out.println("player coords: " + playerX + " " + playerY);
+//        System.out.println("enemy coords: " + enemyX + " " + enemyY);
+        path = aStar.findPath();
+
+        if (path == null) {
+            System.out.println(Arrays.deepToString(collisions));
+            //TileMapReader.printCollisionArray(collisions);
+            System.exit(1);
+            return;
+        };
+        System.out.println("path starts");
+        for (Node node : path) {
+            System.out.println(node);
+        }
+        System.out.println("path ends");
     }
 
     /**

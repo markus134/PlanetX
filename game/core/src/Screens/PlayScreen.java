@@ -89,9 +89,9 @@ public class PlayScreen implements Screen {
     private static final int ROBOT_ID = 1;
     private static final int BOSS_ID = 2;
     private static final int MONSTER_ID = 3;
-    private static final int MOB_SPAWN_INTERVAL = 5; // a mob is spawned each 5 seconds
+    private static final int MOB_SPAWN_INTERVAL = 999999;//5; // a mob is spawned each 5 seconds
     private int mobSpawnIntervalCounter = 0;
-    private static final int MOB_PER_PLAYER = 10; // 10 mobs per player
+    private static final int MOB_PER_PLAYER = 0; // 10 mobs per player
 
     /**
      * Constructor for the PlayScreen.
