@@ -80,7 +80,8 @@ public class CreateMultiPlayerWorld extends ScreenAdapter {
                 String worldName = worldNameTextField.getText();
                 String numberOfPlayers = numberOfPlayersTextField.getText();
                 table.clear();
-                if (!MultiPlayerScreen.multiPlayerWorlds.containsKey(worldName) && !worldName.isBlank()) {
+                if (!MultiPlayerScreen.multiPlayerWorlds.containsKey(worldName) && !worldName.isBlank() &&
+                        !numberOfPlayers.isBlank() && isConvertibleToInt(numberOfPlayers)) {
 
                     MultiPlayerScreen.multiPlayerWorlds.put(worldName, UUID.randomUUID() + ":" + numberOfPlayers);
                     Label titleLabel2 = new Label("Info", labelStyle);
@@ -108,8 +109,8 @@ public class CreateMultiPlayerWorld extends ScreenAdapter {
                     table.add(okButton);
                 } else {
 
-                    Label errorLabel1 = new Label("The world with such name already exists", labelForTable);
-                    Label errorLabel2 = new Label("Enter another name", labelForTable);
+                    Label errorLabel1 = new Label("ERROR", labelForTable);
+                    Label errorLabel2 = new Label("Enter world name", labelForTable);
 
                     table.add(titleLabel).expandX().center().colspan(2).padBottom(10).row();
                     table.add(errorLabel1).center().colspan(2).padTop(10).row();
@@ -117,6 +118,8 @@ public class CreateMultiPlayerWorld extends ScreenAdapter {
                     table.row();
                     table.add(worldNameTextField).center().colspan(2).padTop(30);
                     table.row();
+                    table.add(enterNumberOfPlayersLabel).center().colspan(2).row();
+                    table.add(numberOfPlayersTextField).center().colspan(2).row();
                     table.add(backButton).padTop(30);
                     table.add(saveButton).padTop(30);
                 }
@@ -178,5 +181,20 @@ public class CreateMultiPlayerWorld extends ScreenAdapter {
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+    }
+
+    /**
+     * Check if the given string is convertible to integer and bigger than 1
+     *
+     * @param str to check
+     * @return boolean
+     */
+    private boolean isConvertibleToInt(String str) {
+        try {
+            int a = Integer.parseInt(str);
+            return a > 1;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

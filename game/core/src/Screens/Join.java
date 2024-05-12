@@ -69,20 +69,23 @@ public class Join extends ScreenAdapter {
         TextButton backButton = new TextButton("Back", textButtonStyle);
         TextButton saveButton = new TextButton("Save", textButtonStyle);
 
+        String pattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}:[0-9]+$";
+
         saveButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 String worldName = worldNameTextField.getText();
                 String worldCode = worldCodeTextField.getText();
                 table.clear();
-                if (!MultiPlayerScreen.multiPlayerWorlds.containsKey(worldName) && !worldName.isBlank()) {
+                if (!MultiPlayerScreen.multiPlayerWorlds.containsKey(worldName) && !worldName.isBlank() &&
+                        worldCode.matches(pattern)) {
 
                     MultiPlayerScreen.multiPlayerWorlds.put(worldName, worldCode);
                     game.setScreen(multiPlayerScreen);
                 } else {
 
-                    Label errorLabel1 = new Label("The world with such name already exists", labelForTable);
-                    Label errorLabel2 = new Label("Enter another name", labelForTable);
+                    Label errorLabel1 = new Label("Error", labelForTable);
+                    Label errorLabel2 = new Label("Enter world name", labelForTable);
 
                     table.add(titleLabel).expandX().center().colspan(2).padBottom(10).row();
                     table.add(errorLabel1).center().colspan(2).padTop(10).row();
@@ -90,6 +93,8 @@ public class Join extends ScreenAdapter {
                     table.row();
                     table.add(worldNameTextField).center().colspan(2).padTop(30);
                     table.row();
+                    table.add(enterWorldCodeLabel).center().colspan(2).row();
+                    table.add(worldCodeTextField).center().colspan(2).row();
                     table.add(backButton).padTop(30);
                     table.add(saveButton).padTop(30);
                 }
