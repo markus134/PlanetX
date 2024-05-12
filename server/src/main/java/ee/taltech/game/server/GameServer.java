@@ -450,9 +450,11 @@ public class GameServer {
     private void updateBulletData(Connection connection, BulletData data) {
         String worldUUID = data.getWorldUUID();
 
-        for (Connection con : worlds.get(worldUUID).getPlayers()) {
-            if (con.getID() != connection.getID()) {
-                con.sendTCP(data);
+        if (worlds.get(worldUUID) != null) {
+            for (Connection con : worlds.get(worldUUID).getPlayers()) {
+                if (con.getID() != connection.getID()) {
+                    con.sendTCP(data);
+                }
             }
         }
     }

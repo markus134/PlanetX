@@ -8,7 +8,7 @@ For a more in-depth description, check out our project wiki : https://gitlab.cs.
 
 ## Current state of the game
 
-At the moment, the project is not finished. When started a menu appears. There you have multiple options: 
+When started a menu appears. There you have multiple options: 
 1. Singleplayer
 2. Multiplayer
 3. Settings
@@ -22,26 +22,22 @@ Pressing Settings navigates you to the settings screen where you can change the 
 
 Exit - exits the game.
 
-If you enter a world, you can see your character in the middle of the map. Use A, S, W, D to move. You can also see the inventory bar at the bottom of the screen. There you have 2 items right from the start. The first one, which is the one automatically selected at the beginning, is a blaster. You can shoot using mouse. Also if you use mouse wheel or key from 1 to 8, you can change the selected inventory slot. The second item is a drill, it is used to mine crystals. You can see them on the map - blue ones. To mine one, select the drill, and hold mouse right click for ± 1 second. The crystal should be removed from the map and occur in you inventory. Crystals are used to restore hp. If your hp is not full, select a crystal and press mouse button to consume one. Now you should have +1 heart.
+When you enter a world, you can see your character in the middle of the map. Use A, S, W, D to move. You can also see the inventory bar at the bottom of the screen. There you have 2 items right from the start. The first one, which is the one automatically selected at the beginning, is a blaster. You can shoot using mouse. Also if you use mouse wheel or key from 1 to 8, you can change the selected inventory slot. The second item is a drill, it is used to mine crystals. You can see them on the map - blue ones. To mine one, select the drill, and hold mouse right click for ± 1 second. The crystal should be removed from the map and occur in you inventory. Crystals are used to restore hp. If your hp is not full, select a crystal and press mouse button to consume one. Now you should have +1 heart.
 
-In the game there are mobs. When you join the game, you have around 30 seconds to move around and collect the crystals. Then mobs start spawning. Currently, there are 3 types of mobs:
+In the game there are mobs. They start spawning as soon as you enter the world. There are 3 types of mobs:
 1. Robots - small and sneaky, they drive towards you. They do not deal damage on contact, but do, in fact, make it harder for you to move if you allow them to swarm you. When destroyed they blow up. The explosion deals damage to all nearby players.
 2. Monsters - they fight in melee. They deal damage when they jump on you. When killed a death animation is played.
 3. Boss - not very mobile, but deals a ton of damage. If they get close to you, you are in trouble. They are big, that's why walls make it hard for them to move freely, but do not worry, we gave them a special ability - they can teleport to the closest player once in a while.
 
 If you happen to lose all your hp, it is not over yet. Your spacesuit will protect you! You will stay in a capsule created by your spacesuit until a friend you are playing with revives you. To revive a player in a capsule, come close to them and hold down the "R" key. After a second, they will be back and ready to fight the mobs! But be careful, after someone gets revived their hp is not max. This means they might need to mine and consume some crystals to be out of danger. If a player happens to lose all hp for the second time, it is officially over for them. A scene will appear saying that the game is over. Pressing the button on the screen will return you to the main menu.
 
-In case you want to leave the game before you lose all your hp, press "Escape"/"ESC" and then choose "Yes".
+The idea of the game is to survive 5 waves of mobs. Each new wave is harder than the previous one. During the latter waves the probability of boss spawning is higher, so good luck trying to win.
 
-Currently, the idea of the game is to survive as long as possible. Obviously, the game is not ready yet, so the idea will change in the nearest future.
+In case you want to leave the game before you lose all your hp, press "Escape"/"ESC" and then choose "Yes". If you leave the game before comple it and then rejoin, the game will continue from the place where you ended.
 
 NB! Players can deal damage to each other with their blasters. Be careful.
 
-NB! At the moment, mobs do not use any complicated pathfinding algorithm. So they might get stuck.
-
 NB! If you do not want to wait for the mobs to spawn, you can press "B", "N", "M" buttons to spawn some near your spawning point.
-
-NB! The map that is currently in use is temporary. Our team is working on a map generation algorithm.
 
 ## Getting started
 
