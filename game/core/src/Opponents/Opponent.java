@@ -9,11 +9,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.PlayerData;
@@ -250,7 +246,7 @@ public abstract class Opponent extends Sprite {
         // to initial
         AStar aStar = new AStar(collisions[0].length, collisions.length, finalNode, initialNode);
         Collections.reverse(Arrays.asList(collisions));
-        aStar.setBlocksWithNeighboringCells(collisions);
+        aStar.setBlocks(collisions);
 
         path = aStar.findPath();
 

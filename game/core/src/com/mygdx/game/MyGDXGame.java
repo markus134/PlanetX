@@ -3,12 +3,7 @@ package com.mygdx.game;
 import Bullets.Bullet;
 import Opponents.Opponent;
 import Opponents.astar.TileMapReader;
-import Screens.MenuScreen;
-import Screens.MultiPlayerScreen;
-import Screens.PlayScreen;
-import Screens.SettingsScreen;
-import Screens.SinglePlayerScreen;
-import Screens.WaitingScreen;
+import Screens.*;
 import Sprites.OtherPlayer;
 import Tools.UUIDFileManager;
 import com.badlogic.gdx.Game;
@@ -22,31 +17,10 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import crystals.Crystal;
-import serializableObjects.AddMultiPlayerWorld;
-import serializableObjects.AddSinglePlayerWorld;
-import serializableObjects.AskIfSessionIsFull;
-import serializableObjects.AskPlayersWaitingScreen;
-import serializableObjects.BulletData;
-import serializableObjects.CrystalToRemove;
-import serializableObjects.GetMultiPlayerWorldNames;
-import serializableObjects.GetSinglePlayerWorldNames;
-import serializableObjects.OpponentData;
-import serializableObjects.OpponentDataMap;
-import serializableObjects.PlayerData;
-import serializableObjects.PlayerLeavesTheWorld;
-import serializableObjects.PlayerLeavesWaitingScreen;
-import serializableObjects.RemoveMultiPlayerWorld;
-import serializableObjects.RemoveSinglePlayerWorld;
-import serializableObjects.RevivePlayer;
+import serializableObjects.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 /**
