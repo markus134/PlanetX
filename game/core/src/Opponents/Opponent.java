@@ -59,12 +59,15 @@ public abstract class Opponent extends Sprite {
         spawnTime = System.currentTimeMillis();
 
         pathUpdateTimer = new Timer();
-        pathUpdateTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                updatePath();
-            }
-        }, PATH_UPDATE_INTERVAL, PATH_UPDATE_INTERVAL);
+
+        if (playScreen.isSinglePlayerWorld()) {
+            pathUpdateTimer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    updatePath();
+                }
+            }, PATH_UPDATE_INTERVAL, PATH_UPDATE_INTERVAL);
+        }
     }
 
     /**
@@ -89,6 +92,14 @@ public abstract class Opponent extends Sprite {
      * Seeks for the closest enemy and moves the body of the opponent in that direction.
      */
     protected void updatePosition() {
+        if (playScreen.isSinglePlayerWorld()) {
+            updatePositionSinglePlayerWorld();
+        } else {
+            updatePositionMultiplayerWorld();
+        }
+    }
+
+    public void updatePositionSinglePlayerWorld() {
         if (path == null || path.isEmpty()) return;
 
         float opponentX = this.b2body.getPosition().x - getWidth() / 2;
@@ -135,6 +146,55 @@ public abstract class Opponent extends Sprite {
                 this.b2body.applyLinearImpulse(new Vector2(0f, -0.05f), this.b2body.getWorldCenter(), true);
             }
         }
+    }
+
+    public void updatePositionMultiplayerWorld() {
+        float shortestDistance = Float.MAX_VALUE;
+        float closestX = 0;
+        float closestY = 0;
+
+        float opponentX = this.b2body.getPosition().x;
+        float opponentY = this.b2body.getPosition().y;
+
+
+        for (PlayerData info : playScreen.game.playerDataMap.values()) {
+            if (info.getHealth() <= 0) continue; // Don't try to go towards dead players
+
+            float playerX = info.getX();
+            float playerY = info.getY();
+
+            float deltaX = playerX - opponentX;
+            float deltaY = playerY - opponentY;
+
+            float actualDistance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            if (actualDistance < shortestDistance) {
+                shortestDistance = actualDistance;
+                closestX = playerX;
+                closestY = playerY;
+            }
+        }
+
+
+        // If we haven't found any player then don't go anywhere
+        if (shortestDistance == Float.MAX_VALUE) return;
+
+        if (Math.abs(closestX - opponentX) > 0.1) {
+            if (closestX > opponentX) {
+                this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
+            } else {
+                this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
+            }
+        }
+
+        if (Math.abs(closestY - opponentY) > 0.1) {
+            if (closestY > opponentY) {
+                this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
+            } else {
+                this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
+            }
+        }
+
     }
 
     /**

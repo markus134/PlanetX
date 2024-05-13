@@ -25,7 +25,6 @@ import com.mygdx.game.MyGDXGame;
 import java.util.UUID;
 
 public class CreateMultiPlayerWorld extends ScreenAdapter {
-
     private Stage stage;
     private final MultiPlayerScreen multiPlayerScreen;
     private final MyGDXGame game;

@@ -56,7 +56,8 @@ public class PlayScreenInputHandler implements InputProcessor {
      * Handles player input.
      */
     public void handleInput() {
-        if (keyPresses > 0 && !playScreen.player.getIsMining() && !playScreen.player.isInShell() && !playScreen.player.getIsReviving()) {
+        if (keyPresses > 0 && !playScreen.player.getIsMining() && !playScreen.player.isInShell()
+                && !playScreen.player.getIsReviving() && playScreen.player.getHealth() > 0) {
             for (Integer keypress : keysPressed) {
                 switch (keypress) {
                     case Input.Keys.W:
@@ -114,7 +115,7 @@ public class PlayScreenInputHandler implements InputProcessor {
                         }
                         break;
                     case Input.Keys.R:
-                        System.out.println("Clicked r, reviving: " + playScreen.player.getIsReviving());
+                        System.out.println("Clicked r, reviving: " + playScreen.player.getIsReviving() + ", close: " + isCloseToDeadPlayer(playScreen.player.getX(), playScreen.player.getY()));
                         if (!playScreen.player.getIsReviving() && isCloseToDeadPlayer(playScreen.player.getX(), playScreen.player.getY())) {
                             revivingStartTime = TimeUtils.nanoTime();
                             playScreen.player.setIsReviving(true);

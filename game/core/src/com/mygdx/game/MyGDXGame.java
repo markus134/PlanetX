@@ -152,7 +152,8 @@ public class MyGDXGame extends Game {
                 }
             }
         } else {
-            playScreen = new PlayScreen(this, worldUUID, menu, currentWave, currentTimeInWave);
+            playScreen = new PlayScreen(this, worldUUID, menu, currentWave, currentTimeInWave,
+                    numberOfPlayers == 1);
         }
 
         playScreen.opponents.clear();
