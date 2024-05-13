@@ -95,6 +95,9 @@ public abstract class Opponent extends Sprite {
         }
     }
 
+    /**
+     * Update position on single player world. On single player worlds the opponent uses the A* algorithm
+     */
     public void updatePositionSinglePlayerWorld() {
         if (path == null || path.isEmpty()) return;
 
@@ -144,6 +147,9 @@ public abstract class Opponent extends Sprite {
         }
     }
 
+    /**
+     * Update position on multiplayer world. This doesn't use A* as it caused significant issues with synchronization.
+     */
     public void updatePositionMultiplayerWorld() {
         float shortestDistance = Float.MAX_VALUE;
         float closestX = 0;
