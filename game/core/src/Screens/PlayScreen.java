@@ -7,9 +7,9 @@ import Opponents.Boss;
 import Opponents.Monster;
 import Opponents.Opponent;
 import Opponents.Robot;
-import Scenes.GameOverScene;
 import Scenes.Debug;
 import Scenes.ExitToMainMenu;
+import Scenes.GameOverScene;
 import Scenes.HUD;
 import Sprites.OtherPlayer;
 import Sprites.Player;
@@ -30,20 +30,10 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.MyGDXGame;
 import crystals.Crystal;
-import serializableObjects.OpponentData;
-import serializableObjects.OpponentDataMap;
-import serializableObjects.PlayerData;
-import serializableObjects.PlayerLeavesTheWorld;
-import serializableObjects.RemoveMultiPlayerWorld;
-import serializableObjects.RemoveSinglePlayerWorld;
+import serializableObjects.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 
@@ -52,7 +42,6 @@ public class PlayScreen implements Screen {
     public OrthographicCamera gameCam = new OrthographicCamera();
     private final Viewport gamePort;
     private final TiledMap map;
-    private final TmxMapLoader mapLoader = new TmxMapLoader();
     private final OrthogonalTiledMapRenderer renderer;
     public World world;
     private final Box2DDebugRenderer b2dr;
@@ -92,6 +81,7 @@ public class PlayScreen implements Screen {
     private static final int MOB_SPAWN_INTERVAL = 5; // a mob is spawned each 5 seconds
     private int mobSpawnIntervalCounter = 0;
     private static final int MOB_PER_PLAYER = 10; // 10 mobs per player
+    private boolean singlePlayerWorld;
 
     /**
      * Constructor for the PlayScreen.
@@ -99,13 +89,16 @@ public class PlayScreen implements Screen {
      * @param game The Game instance representing the main game.
      * @param menu
      */
-    public PlayScreen(MyGDXGame game, String worldUUID, MenuScreen menu, int currentRound, int currentTimeInWave) {
+    public PlayScreen(MyGDXGame game, String worldUUID, MenuScreen menu, int currentRound, int currentTimeInWave, boolean singlePlayerWorld) {
         this.menuScreen = menu;
         this.game = game;
         this.worldUUID = worldUUID;
+        this.singlePlayerWorld = singlePlayerWorld;
+
         opponentDataMap = new OpponentDataMap(worldUUID);
         gamePort = new FitViewport(MyGDXGame.V_WIDTH / MyGDXGame.PPM, MyGDXGame.V_HEIGHT / MyGDXGame.PPM, gameCam);
 
+        TmxMapLoader mapLoader = new TmxMapLoader();
         map = mapLoader.load("level/map.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1 / MyGDXGame.PPM);
         gameCam.position.set(gamePort.getWorldWidth() / 2, gamePort.getWorldHeight() / 2, 0);
@@ -411,6 +404,7 @@ public class PlayScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        System.out.println(isSinglePlayerWorld());
         renderer.render();
 
         // Uncomment the following line if you want to see box2d lines
@@ -455,6 +449,14 @@ public class PlayScreen implements Screen {
         if (gameOverScene.isToShow()) {
             gameOverScene.renderStage();
         }
+    }
+
+    /**
+     * Check if world is single player.
+     * @return whether world is single player
+     */
+    public boolean isSinglePlayerWorld() {
+        return singlePlayerWorld;
     }
 
     /**

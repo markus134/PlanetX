@@ -9,11 +9,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.MyGDXGame;
 import serializableObjects.PlayerData;
@@ -59,12 +55,15 @@ public abstract class Opponent extends Sprite {
         spawnTime = System.currentTimeMillis();
 
         pathUpdateTimer = new Timer();
-        pathUpdateTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                updatePath();
-            }
-        }, PATH_UPDATE_INTERVAL, PATH_UPDATE_INTERVAL);
+
+        if (playScreen.isSinglePlayerWorld()) {
+            pathUpdateTimer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    updatePath();
+                }
+            }, PATH_UPDATE_INTERVAL, PATH_UPDATE_INTERVAL);
+        }
     }
 
     /**
@@ -89,6 +88,17 @@ public abstract class Opponent extends Sprite {
      * Seeks for the closest enemy and moves the body of the opponent in that direction.
      */
     protected void updatePosition() {
+        if (playScreen.isSinglePlayerWorld()) {
+            updatePositionSinglePlayerWorld();
+        } else {
+            updatePositionMultiplayerWorld();
+        }
+    }
+
+    /**
+     * Update position on single player world. On single player worlds the opponent uses the A* algorithm
+     */
+    public void updatePositionSinglePlayerWorld() {
         if (path == null || path.isEmpty()) return;
 
         float opponentX = this.b2body.getPosition().x - getWidth() / 2;
@@ -135,6 +145,58 @@ public abstract class Opponent extends Sprite {
                 this.b2body.applyLinearImpulse(new Vector2(0f, -0.05f), this.b2body.getWorldCenter(), true);
             }
         }
+    }
+
+    /**
+     * Update position on multiplayer world. This doesn't use A* as it caused significant issues with synchronization.
+     */
+    public void updatePositionMultiplayerWorld() {
+        float shortestDistance = Float.MAX_VALUE;
+        float closestX = 0;
+        float closestY = 0;
+
+        float opponentX = this.b2body.getPosition().x;
+        float opponentY = this.b2body.getPosition().y;
+
+
+        for (PlayerData info : playScreen.game.playerDataMap.values()) {
+            if (info.getHealth() <= 0) continue; // Don't try to go towards dead players
+
+            float playerX = info.getX();
+            float playerY = info.getY();
+
+            float deltaX = playerX - opponentX;
+            float deltaY = playerY - opponentY;
+
+            float actualDistance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            if (actualDistance < shortestDistance) {
+                shortestDistance = actualDistance;
+                closestX = playerX;
+                closestY = playerY;
+            }
+        }
+
+
+        // If we haven't found any player then don't go anywhere
+        if (shortestDistance == Float.MAX_VALUE) return;
+
+        if (Math.abs(closestX - opponentX) > 0.1) {
+            if (closestX > opponentX) {
+                this.b2body.applyLinearImpulse(new Vector2(0.05f, 0), this.b2body.getWorldCenter(), true);
+            } else {
+                this.b2body.applyLinearImpulse(new Vector2(-0.05f, 0), this.b2body.getWorldCenter(), true);
+            }
+        }
+
+        if (Math.abs(closestY - opponentY) > 0.1) {
+            if (closestY > opponentY) {
+                this.b2body.applyLinearImpulse(new Vector2(0, 0.05f), this.b2body.getWorldCenter(), true);
+            } else {
+                this.b2body.applyLinearImpulse(new Vector2(0, -0.05f), this.b2body.getWorldCenter(), true);
+            }
+        }
+
     }
 
     /**
@@ -190,7 +252,7 @@ public abstract class Opponent extends Sprite {
         // to initial
         AStar aStar = new AStar(collisions[0].length, collisions.length, finalNode, initialNode);
         Collections.reverse(Arrays.asList(collisions));
-        aStar.setBlocksWithNeighboringCells(collisions);
+        aStar.setBlocks(collisions);
 
         path = aStar.findPath();
 

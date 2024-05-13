@@ -9,7 +9,7 @@ public class DesktopLauncher {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         config.setForegroundFPS(60);
         config.useVsync(false); // Vsync resulted in some weird bugs happening on Linux
-        config.setTitle("Game");
+        config.setTitle("Planet X");
         new Lwjgl3Application(new MyGDXGame(), config);
     }
 }

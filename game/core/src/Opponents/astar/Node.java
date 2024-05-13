@@ -16,16 +16,30 @@ public class Node {
     private boolean isBlock;
     private Node parent;
 
+    /**
+     * Constructor for node.
+     * @param row y coordinate
+     * @param col x coordinate
+     */
     public Node(int row, int col) {
         super();
         this.row = row;
         this.col = col;
     }
 
+    /**
+     * Calculate heuristic. This uses Manhattan distance as the heuristic.
+     * @param finalNode
+     */
     public void calculateHeuristic(Node finalNode) {
         this.h = Math.abs(finalNode.getRow() - getRow()) + Math.abs(finalNode.getCol() - getCol());
     }
 
+    /**
+     * Set node data.
+     * @param currentNode
+     * @param cost
+     */
     public void setNodeData(Node currentNode, int cost) {
         int gCost = currentNode.getG() + cost;
         setParent(currentNode);
@@ -33,6 +47,12 @@ public class Node {
         calculateFinalCost();
     }
 
+    /**
+     * Check for a better path
+     * @param currentNode
+     * @param cost
+     * @return whether it's a better path
+     */
     public boolean checkBetterPath(Node currentNode, int cost) {
         int gCost = currentNode.getG() + cost;
         if (gCost < getG()) {
@@ -42,6 +62,11 @@ public class Node {
         return false;
     }
 
+    /**
+     * Calculate final cost. Final cost is g(n) + h(n).
+     * g(n) represents the cost from start node to n
+     * h(n) is the heuristic
+     */
     private void calculateFinalCost() {
         int finalCost = getG() + getH();
         setF(finalCost);

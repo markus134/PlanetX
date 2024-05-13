@@ -1,11 +1,6 @@
 package Screens;
 
-import Screens.ReusableElements.BackGround;
-import Screens.ReusableElements.LabelStyle;
-import Screens.ReusableElements.MenuSlider;
-import Screens.ReusableElements.PurpleSkin;
-import Screens.ReusableElements.PurpleTextButtonStyle;
-import Screens.ReusableElements.SoundButton;
+import Screens.ReusableElements.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Music;

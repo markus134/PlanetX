@@ -1,11 +1,6 @@
 package Screens;
 
-import Screens.ReusableElements.BackGround;
-import Screens.ReusableElements.LabelForTable;
-import Screens.ReusableElements.LabelStyle;
-import Screens.ReusableElements.PurpleTextButtonStyle;
-import Screens.ReusableElements.ResizableTextField;
-import Screens.ReusableElements.TextFieldStyleForInput;
+import Screens.ReusableElements.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
