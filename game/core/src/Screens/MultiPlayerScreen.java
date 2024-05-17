@@ -215,37 +215,39 @@ public class MultiPlayerScreen extends ScreenAdapter {
         connectButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.client.sendTCP(new AskIfSessionIsFull(multiPlayerWorlds.get(chosenWorld)));
-                while (game.serverReply == null) {
-                    // waiting for the reply
-                    System.out.println("waiting");
-                }
-
-                if (chosenWorld != null && !game.serverReply.isFull()) {
-                    Integer[] waveData = worldNameToWaveData.get(multiPlayerWorlds.get(chosenWorld));
-                    int currentWave;
-                    int currentTimeInWave;
-
-                    System.out.println(Arrays.toString(waveData));
-
-                    if (waveData != null) {
-                        currentWave = waveData[0];
-                        currentTimeInWave = waveData[1];
-                    } else {
-                        currentWave = 1;
-                        currentTimeInWave = 0;
+                if (chosenWorld != null) {
+                    game.client.sendTCP(new AskIfSessionIsFull(multiPlayerWorlds.get(chosenWorld)));
+                    while (game.serverReply == null) {
+                        // waiting for the reply
+                        System.out.println("waiting");
                     }
 
-                    game.createScreen(multiPlayerWorlds.get(chosenWorld), 0, currentWave, currentTimeInWave);
+                    if (!game.serverReply.isFull()) {
+                        Integer[] waveData = worldNameToWaveData.get(multiPlayerWorlds.get(chosenWorld));
+                        int currentWave;
+                        int currentTimeInWave;
 
-                    game.client.sendTCP(new AskPlayersWaitingScreen(multiPlayerWorlds.get(chosenWorld)));
-                    game.setScreen(waitingScreen);
+                        System.out.println(Arrays.toString(waveData));
+
+                        if (waveData != null) {
+                            currentWave = waveData[0];
+                            currentTimeInWave = waveData[1];
+                        } else {
+                            currentWave = 1;
+                            currentTimeInWave = 0;
+                        }
+
+                        game.createScreen(multiPlayerWorlds.get(chosenWorld), 0, currentWave, currentTimeInWave);
+
+                        game.client.sendTCP(new AskPlayersWaitingScreen(multiPlayerWorlds.get(chosenWorld)));
+                        game.setScreen(waitingScreen);
 
 //                    game.setScreen(game.playScreen);
 //                    music.dispose();
 
-                } else {
-                    game.setScreen(handleFullWorld);
+                    } else {
+                        game.setScreen(handleFullWorld);
+                    }
                 }
                 game.serverReply = null;
             }
